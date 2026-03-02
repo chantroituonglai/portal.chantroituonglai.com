@@ -1,0 +1,28 @@
+{
+  "sections": [
+    {
+      "name": "header",
+      "description": "PHP declarations and HTML head"
+    },
+    {
+      "name": "editor_toolbar",
+      "description": "Toolbar chứa các nút chức năng cho editor"
+    },
+    {
+      "name": "editor_container",
+      "description": "Container chính của editor bao gồm TinyMCE và các công cụ soạn thảo"
+    },
+    {
+      "name": "sidebar_panel",
+      "description": "Panel điều khiển bên cạnh chứa các tùy chọn và quản lý draft"
+    },
+    {
+      "name": "modals",
+      "description": "Các modal dialog cho các chức năng như tạo draft mới, xuất bản, cài đặt"
+    },
+    {
+      "name": "scripts",
+      "description": "JavaScript imports và initialization cho editor"
+    }
+  ]
+} 

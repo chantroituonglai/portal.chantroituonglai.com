@@ -1,0 +1,32 @@
+.ppi-line-discount-wrapper{margin-top:4px; display:flex; flex-direction:column; gap:5px; align-items:center}
+.ppi-line-discount{max-width:110px;display:inline-block}
+.accounting-template td.rate .ppi-line-discount-wrapper{opacity:.9}
+.accounting-template td.amount span{display:inline-block;margin-top:2px}
+
+/* Line Discounts Module Styles */
+.ppi-discount-col{min-width:120px;text-align:center}
+.ppi-tax-col{width:110px;min-width:90px;max-width:140px}
+.line-discount-container{display:flex;flex-direction:column;gap:5px;align-items:center}
+.discount-input-group{display:flex;min-width:100px;width:120px}
+.pii-hidden{display:none}
+
+/* Adapt to module inputs */
+.ppi-line-discount,.ppi-line-discount-amount{border:1px solid #ddd;padding:4px 6px;font-size:12px;border-radius:8px}
+.ppi-discount-type,.ppi-tax-mode{min-width:100px}
+
+/* Amount note */
+.ppi-line-discount-note{font-size:11px;color:#28a745;font-weight:bold;min-width:60px;text-align:center}
+
+/* Responsive */
+@media (max-width:768px){
+	.line-discount-container{gap:2px}
+	.discount-input-group{width:90px}
+	.ppi-line-discount{width:50px;font-size:11px}
+	.ppi-line-discount-note{font-size:10px}
+}
+
+/* Focus styles */
+.ppi-line-discount:focus,.ppi-line-discount-amount:focus{border-color:#84c529;outline:none;box-shadow:0 0 0 2px rgba(132,197,41,.2)}
+
+/* Discount highlight */
+.has-discount{}

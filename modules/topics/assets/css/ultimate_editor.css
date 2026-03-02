@@ -1,0 +1,31 @@
+/* Add this at the end of the file */
+
+/* Tag indicator styles */
+#tags-container .tag-item {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+#tags-container .tag-item .tag-indicator {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    margin-left: 5px;
+}
+
+#tags-container .tag-item.existing-tag {
+    border-left: 3px solid #28a745;
+}
+
+#tags-container .tag-item.new-tag {
+    border-left: 3px solid #fd7e14;
+}
+
+/* Loading indicator for tags */
+#tags-loading {
+    display: inline-block;
+    margin-left: 10px;
+    color: #666;
+} 

@@ -1,0 +1,53 @@
+<!-- SECTION: editor_container -->
+<div class="row">
+    <div class="col-md-9">
+        <!-- Editor container section -->
+        <div class="panel_s">
+            <div class="panel-body">
+                <!-- Title input -->
+                <div class="form-group">
+                    <label for="draft-title" class="control-label"><?= _l('title') ?></label>
+                    <input type="text" id="draft-title" name="draft_title" class="form-control" placeholder="<?= _l('enter_title') ?>" value="<?= isset($active_draft) ? $active_draft->draft_title : '' ?>">
+                </div>
+                
+                <!-- TinyMCE editor container -->
+                <div class="form-group">
+                    <label for="draft-content" class="control-label"><?= _l('content') ?></label>
+                    <textarea id="draft-content" name="draft_content" class="form-control tinymce-editor"><?= isset($active_draft) ? $active_draft->draft_content : '' ?></textarea>
+                </div>
+                
+                <!-- Word count and stats -->
+                <div class="editor-stats">
+                    <div class="d-flex justify-content-between mb-4">
+                        <div class="stats-left">
+                            <span class="text-muted"><?= _l('word_count') ?>: <span id="word-count">0</span></span>
+                            <span class="text-muted ml-3"><?= _l('characters') ?>: <span id="char-count">0</span></span>
+                        </div>
+                        <div class="stats-right">
+                            <span class="text-muted"><?= _l('readability_score') ?>: <span id="readability-score">N/A</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section manager -->
+                <div class="section-manager mt-4 border-top pt-4">
+                    <h4 class="section-manager-title"><?= _l('content_sections') ?></h4>
+                    <p class="text-muted"><?= _l('drag_sections_to_reorder') ?></p>
+                    
+                    <div id="sections-container" class="sections-list">
+                        <!-- Sections will be loaded here via JavaScript -->
+                        <div class="section-empty-state text-center p-3 border rounded">
+                            <i class="fa fa-info-circle"></i> <?= _l('no_sections_defined') ?>
+                        </div>
+                    </div>
+                    
+                    <button id="add-section-btn" class="btn btn-info mt-3">
+                        <i class="fa fa-plus-circle"></i> <?= _l('add_section') ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar will be loaded in sidebar_panel section -->
+<!-- END SECTION: editor_container --> 

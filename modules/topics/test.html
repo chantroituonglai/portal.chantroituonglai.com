@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfex CRM · Topics Management · Topic Detail</title>
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- Minimal custom CSS (không dùng @apply) -->
+  <style>
+    :root { --shadow-1: 0 1px 2px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.1); }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:#f3f4f6; color:#1f2937; }
+    .card { background:#fff; padding:1.5rem; border-radius:.75rem; box-shadow:var(--shadow-1); }
+    .btn { padding:.5rem 1rem; border-radius:.5rem; font-weight:600; font-size:.875rem; transition: all .15s; }
+    .btn-primary { background:#2563eb; color:#fff; }
+    .btn-primary:hover { background:#1d4ed8; }
+    .btn-secondary { background:#e5e7eb; color:#374151; }
+    .btn-secondary:hover { background:#d1d5db; }
+    .btn-outline { border:1px solid #e5e7eb; color:#374151; background:#fff; }
+    .btn-outline:hover { background:#f9fafb; }
+    .input-field, .select-field {
+      width:100%; border:1px solid #e5e7eb; border-radius:.5rem; padding:.5rem .75rem; font-size:.875rem;
+      box-shadow:0 1px 0 rgba(0,0,0,.02) inset; background:#fff;
+    }
+    .input-field:focus, .select-field:focus { outline:2px solid #3b82f6; outline-offset:0; border-color:#3b82f6; }
+
+    .sticky-footer { position: sticky; bottom: 0; background:#fff; border-top:1px solid #e5e7eb; padding:1rem; box-shadow:0 -4px 10px rgba(0,0,0,.04); z-index:40; }
+    .debug-logs-bar { position:fixed; bottom:0; left:0; background:#111827; color:#fff; font-size:.75rem; padding:.375rem .5rem; border-top-right-radius:.5rem; z-index:50; box-shadow:0 -2px 10px rgba(0,0,0,.25); }
+
+    /* Kanban */
+    .kanban-columns-wrapper { display:flex; flex-wrap:nowrap; overflow-x:auto; padding:1rem; margin-left:-1rem; margin-right:-1rem; gap:1rem; }
+    .kanban-columns-wrapper::-webkit-scrollbar { height:8px; }
+    .kanban-columns-wrapper::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:999px; }
+    .kanban-column { flex:0 0 20rem; background:#f3f4f6; border-radius:.75rem; box-shadow:var(--shadow-1); display:flex; flex-direction:column; padding:1rem; }
+    .kanban-task-list { overflow-y:auto; max-height: calc(100vh - 420px); padding-right:.25rem; }
+    .kanban-task-item { background:#fff; border:1px solid #e5e7eb; border-radius:.5rem; padding:.75rem; margin-bottom:.75rem; box-shadow:0 1px 1px rgba(0,0,0,.03); cursor:grab; }
+    .kanban-task-item:active { cursor:grabbing; }
+    .drop-target { outline:2px dashed #60a5fa; outline-offset:2px; }
+    .task-count-badge { font-size:.75rem; font-weight:600; color:#6b7280; background:#fff; border:1px solid #e5e7eb; border-radius:999px; padding:.125rem .5rem; }
+
+    /* Toggle */
+    .toggle { position: relative; width:44px; height:24px; background:#d1d5db; border-radius:999px; transition:.2s; }
+    .toggle input { display:none; }
+    .toggle .knob { position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:999px; transition: transform .2s; box-shadow:0 1px 2px rgba(0,0,0,.15); }
+    .toggle input:checked + .knob { transform: translateX(20px); }
+  /* ========== BADGE / CHIP ========== */
+  .badge{display:inline-flex;align-items:center;font-size:.75rem;font-weight:700;border-radius:.5rem;padding:.25rem .5rem;}
+  .badge-green{background:#16a34a;color:#fff;}
+  .badge-yellow{background:#f59e0b;color:#111827;}
+  .badge-blue{background:#3b82f6;color:#fff;}
+  .badge-gray{background:#e5e7eb;color:#111827;}
+  .chip{display:inline-flex;align-items:center;gap:.4rem;border:1px solid #e5e7eb;border-radius:.5rem;padding:.25rem .5rem;background:#fff;}
+  /* ========== MODAL ========== */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:60;}
+  .modal{background:#fff;border-radius:.75rem;box-shadow:0 20px 50px rgba(0,0,0,.25);max-width:900px;width:96%;}
+  .modal-header{background:#0ea5e9;color:#fff;padding:1rem 1.25rem;border-top-left-radius:.75rem;border-top-right-radius:.75rem;}
+  .code-block{background:#0b1020;color:#f8fafc;border-radius:.5rem;padding:1rem;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;overflow:auto;}
+  /* hover nhẹ cho card clickable */
+  .kanban-task-item{cursor:pointer;}
+  .kanban-task-item:hover{box-shadow:0 2px 6px rgba(0,0,0,.06);}
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <button class="text-gray-600 hover:text-gray-800" aria-label="Toggle sidebar">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+        <span class="text-xl font-semibold text-gray-900">Perfex CRM · Topics Management</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="text-gray-600 hover:text-gray-800" aria-label="Notifications"><i class="fas fa-bell"></i></button>
+        <button class="text-gray-600 hover:text-gray-800" aria-label="Help"><i class="fas fa-question-circle"></i></button>
+        <button class="text-gray-600 hover:text-gray-800" aria-label="More"><i class="fas fa-ellipsis-h"></i></button>
+        <div class="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1 text-sm font-medium">
+          <span class="w-6 h-6 bg-blue-600 rounded-full grid place-items-center text-white text-xs font-bold">N</span>
+          <span>N.T.H</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm text-gray-600 flex items-center gap-2">
+      <span>Topics</span><span class="text-gray-400">›</span>
+      <span>Magic Writer</span><span class="text-gray-400">›</span>
+      <span class="font-semibold text-gray-900">Topic Detail</span>
+    </nav>
+
+    <!-- Topic Header -->
+    <section class="card mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">TOPIC DETAIL — Magic Writer</h1>
+      <div class="flex flex-wrap items-center justify-between text-sm text-gray-600">
+        <div class="flex items-center gap-6">
+          <span class="flex items-center">
+            ID:
+            <span id="topic-id" class="font-medium text-gray-900 ml-1">TPC-8A1F</span>
+            <button id="copy-id-btn" class="ml-2 text-blue-600 hover:text-blue-800 px-2 py-1 rounded" title="Copy Topic ID">
+              <i class="fas fa-copy text-xs mr-1"></i>Copy
+            </button>
+          </span>
+          <span class="flex items-center">
+            Status:
+            <span class="ml-1 flex items-center">
+              <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>Published
+            </span>
+          </span>
+        </div>
+        <span>Last update: 10:24</span>
+      </div>
+
+      <div class="border-t border-gray-200 my-4"></div>
+
+      <!-- Command Bar -->
+      <div class="flex flex-wrap gap-2">
+        <button class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save & Close</button>
+        <button class="btn btn-outline" id="run-workflow"><i class="fas fa-play mr-2"></i>Run Workflow</button>
+        <button class="btn btn-outline" id="add-action-btn"><i class="fas fa-plus mr-2"></i>Add Action Button</button>
+        <button class="btn btn-outline"><i class="fas fa-share-alt mr-2"></i>Share</button>
+        <button class="btn btn-outline px-3 py-1"><i class="fas fa-ellipsis-h"></i></button>
+      </div>
+    </section>
+
+    <!-- Pivot Navigation -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-2 flex space-x-2" role="tablist" aria-label="Pivot">
+      <button class="btn btn-primary" data-tab="overview" aria-selected="true" role="tab">Overview</button>
+      <button class="btn btn-secondary" data-tab="log" aria-selected="false" role="tab">Log</button>
+    </div>
+
+    <!-- Main Content Grid (Overview tab content) -->
+    <section id="tab-overview">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Left Column - Topic Info & Execution Results -->
+        <div class="lg:col-span-1 flex flex-col space-y-6">
+          <!-- Topic Info Card -->
+          <div class="card">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Topic Info</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Topic ID</label>
+                <div class="flex items-center mt-1">
+                  <span class="flex-grow input-field bg-gray-50 pointer-events-none text-gray-700">TPC-8A1F</span>
+                  <button class="ml-2 btn btn-outline"><i class="fas fa-eye mr-1"></i>Show</button>
+                </div>
+              </div>
+              <div>
+                <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+                <input type="text" id="title" class="input-field" value="Magic Writer">
+              </div>
+              <div>
+                <label for="action-type" class="block text-sm font-medium text-gray-700">Action Type</label>
+                <select id="action-type" class="select-field">
+                  <option>Draft Writing</option>
+                  <option>Social Post</option>
+                </select>
+              </div>
+              <div>
+                <label for="action-state" class="block text-sm font-medium text-gray-700">Action State</label>
+                <div class="flex items-center mt-1 w-full">
+                  <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center">
+                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>Draft
+                  </span>
+                  <select class="select-field ml-2 flex-grow">
+                    <option>Draft</option>
+                    <option>Published</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label for="target" class="block text-sm font-medium text-gray-700">Target</label>
+                <input type="text" id="target" class="input-field" placeholder="Picker">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Action Buttons:</label>
+                <div class="space-y-2">
+                  <label class="flex items-center text-sm text-gray-700">
+                    <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                    <span class="ml-2">Load from History</span>
+                  </label>
+                  <button class="btn btn-outline w-full"><i class="fas fa-plus mr-2"></i>Add Action Button</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Results Card -->
+          <div class="card">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Execution Results</h2>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Step</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stat</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">10:21</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Init Sheet</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600"><i class="fas fa-check-circle"></i></td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">10:22</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Draft Write</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600"><i class="fas fa-check-circle"></i></td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">10:23</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Social Post</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600"><i class="fas fa-hourglass-half"></i></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Meta & Controls Card -->
+        <div class="lg:col-span-2 card">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Meta & Controls</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Assignees</label>
+              <div class="flex flex-wrap gap-2">
+                <span class="flex items-center text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                  <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>Nguyen A
+                </span>
+                <span class="flex items-center text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                  <span class="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>Tran B
+                </span>
+              </div>
+            </div>
+            <div>
+              <label for="meta-action-type" class="block text-sm font-medium text-gray-700">Action Type</label>
+              <select id="meta-action-type" class="select-field">
+                <option>Select...</option>
+                <option>Draft Writing</option>
+                <option>Social Post</option>
+              </select>
+            </div>
+            <div>
+              <label for="meta-action-state" class="block text-sm font-medium text-gray-700">Action State</label>
+              <div class="flex items-center mt-1">
+                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center">
+                  <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>Draft
+                </span>
+                <select class="select-field ml-2 flex-grow">
+                  <option>Draft</option>
+                  <option>Published</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="meta-target" class="block text-sm font-medium text-gray-700">Target</label>
+              <select id="meta-target" class="select-field">
+                <option>Lookup / People / Post</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-200 my-6"></div>
+
+          <div>
+            <h3 class="text-md font-semibold text-gray-800 mb-3">Automation (N8N)</h3>
+            <div class="space-y-2 text-sm text-gray-700">
+              <p><span class="font-medium">Workflow:</span> #WF-129 <a href="#" class="text-blue-600 hover:underline ml-1"><i class="fas fa-external-link-alt text-xs mr-1"></i>Open</a></p>
+              <p><span class="font-medium">Automation ID:</span> N8N-0F3</p>
+              <p class="flex items-center"><span class="font-medium">Connection:</span> <span class="ml-1 text-green-600"><i class="fas fa-check-circle mr-1"></i>Online</span></p>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-200 my-6"></div>
+
+          <div>
+            <h3 class="text-md font-semibold text-gray-800 mb-3">Notifications</h3>
+            <div class="flex space-x-4 text-sm text-gray-700">
+              <p><span class="font-medium">Realtime:</span> ON</p>
+              <p><span class="font-medium">Email:</span> OFF</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Overview Card (Kanban Board) -->
+      <div class="card mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold">Kanban Board</h2>
+          <div class="flex items-center gap-3">
+            <label class="toggle">
+              <input type="checkbox" id="kanban-toggle">
+              <span class="knob"></span>
+            </label>
+            <button class="btn btn-primary" id="add-board"><i class="fas fa-plus mr-2"></i> Add Board</button>
+          </div>
+        </div>
+
+        <div class="kanban-columns-wrapper" id="kanban">
+          <!-- Column: Todo -->
+          <div class="kanban-column" data-column="Todo">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-clipboard-list text-gray-600"></i>
+                <span class="font-semibold">Todo</span>
+                <span class="task-count-badge" data-count>0</span>
+              </div>
+              <i class="fas fa-ellipsis-h text-gray-400 cursor-pointer"></i>
+            </div>
+            <ul class="kanban-task-list" data-list id="todo-list">
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Login view form</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Enhancement</span>
+                </div>
+              </li>
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Implement Landing Page</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Enhancement</span>
+                </div>
+              </li>
+            </ul>
+            <button class="mt-2 text-gray-600 hover:text-gray-800 font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center gap-2" data-add-card>
+              <i class="fas fa-plus"></i> Add Card
+            </button>
+          </div>
+
+          <!-- Column: In Progress -->
+          <div class="kanban-column" data-column="In Progress">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-rocket text-blue-600"></i>
+                <span class="font-semibold">In Progress</span>
+                <span class="task-count-badge" data-count>0</span>
+              </div>
+              <i class="fas fa-ellipsis-h text-gray-400 cursor-pointer"></i>
+            </div>
+            <ul class="kanban-task-list" data-list id="progress-list">
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Landing Page hero block</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Needs Review</span>
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">Design</span>
+                </div>
+              </li>
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Landing Page footer</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Needs Review</span>
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">Design</span>
+                </div>
+              </li>
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Project setup documentation</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Docs</span>
+                </div>
+              </li>
+            </ul>
+            <button class="mt-2 text-gray-600 hover:text-gray-800 font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center gap-2" data-add-card>
+              <i class="fas fa-plus"></i> Add Card
+            </button>
+          </div>
+
+          <!-- Column: Done -->
+          <div class="kanban-column" data-column="Done">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-check-square text-green-600"></i>
+                <span class="font-semibold">Done</span>
+                <span class="task-count-badge" data-count>0</span>
+              </div>
+              <i class="fas fa-ellipsis-h text-gray-400 cursor-pointer"></i>
+            </div>
+            <ul class="kanban-task-list" data-list id="done-list">
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Registration view form</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Enhancement</span>
+                </div>
+              </li>
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Setup staging server</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">DevOps</span>
+                </div>
+              </li>
+            </ul>
+            <button class="mt-2 text-gray-600 hover:text-gray-800 font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center gap-2" data-add-card>
+              <i class="fas fa-plus"></i> Add Card
+            </button>
+          </div>
+
+          <!-- Column: Backlog -->
+          <div class="kanban-column" data-column="Backlog">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-folder text-gray-600"></i>
+                <span class="font-semibold">Backlog</span>
+                <span class="task-count-badge" data-count>0</span>
+              </div>
+              <i class="fas fa-ellipsis-h text-gray-400 cursor-pointer"></i>
+            </div>
+            <ul class="kanban-task-list" data-list id="backlog-list">
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Email verification gives 500</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Bug</span>
+                </div>
+              </li>
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Prepare runners for Continuous Integration</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">DevOps</span>
+                </div>
+              </li>
+              <li class="kanban-task-item" draggable="true">
+                <div class="text-sm font-medium text-gray-800 mb-1">Search Bar</div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Enhancement</span>
+                </div>
+              </li>
+            </ul>
+            <button class="mt-2 text-gray-600 hover:text-gray-800 font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center gap-2" data-add-card>
+              <i class="fas fa-plus"></i> Add Card
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Log tab content -->
+    <!-- LOG TAB CONTENT -->
+    <section id="tab-log" class="hidden">
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold">Log</h2>
+          <button id="refresh-log" class="btn btn-outline"><i class="fas fa-rotate-right mr-2"></i>Refresh</button>
+        </div>
+        <p class="mt-2 text-sm">
+          <span class="inline-flex h-2 w-2 bg-green-500 rounded-full mr-2"></span>
+          Last Update: <span id="log-last-update">Never</span>
+        </p>
+        <div class="overflow-x-auto mt-4">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left">Action Type</th>
+                <th class="px-4 py-2 text-left">Action State</th>
+                <th class="px-4 py-2 text-left">Log</th>
+                <th class="px-4 py-2 text-left">Updated Date</th>
+              </tr>
+            </thead>
+            <tbody id="log-tbody" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sticky Footer -->
+  <footer class="sticky-footer flex justify-end gap-3">
+    <button class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save</button>
+    <button class="btn btn-primary" id="save-run"><i class="fas fa-save mr-2"></i>Save & Run</button>
+    <button class="btn btn-secondary"><i class="fas fa-times mr-2"></i>Cancel</button>
+  </footer>
+
+  <!-- Debug Logs Bar -->
+  <div class="debug-logs-bar flex items-center gap-2">
+    <span>Debug Logs</span>
+    <button class="text-blue-400 hover:text-blue-200 focus:outline-none" id="debug-play" title="Play"><i class="fas fa-play"></i></button>
+  </div>
+
+  <!-- JS -->
+  <script>
+    // ===== Copy Topic ID =====
+    document.getElementById('copy-id-btn').addEventListener('click', function() {
+      const topicId = document.getElementById('topic-id').textContent.trim();
+      const btn = this;
+      (async () => {
+        try {
+          await navigator.clipboard.writeText(topicId);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+          setTimeout(() => btn.innerHTML = original, 1500);
+        } catch(e) {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = topicId; document.body.appendChild(ta);
+          ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+          setTimeout(() => btn.innerHTML = original, 1500);
+        }
+      })();
+    });
+
+    // ===== Tabs (Overview / Log) =====
+    const tabButtons = document.querySelectorAll('[data-tab]');
+    const tabOverview = document.getElementById('tab-overview');
+    const tabLog = document.getElementById('tab-log');
+    function setActive(tab) {
+      tabButtons.forEach(b => {
+        const isActive = b.dataset.tab === tab;
+        b.classList.toggle('btn-primary', isActive);
+        b.classList.toggle('btn-secondary', !isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      tabOverview.classList.toggle('hidden', tab !== 'overview');
+      tabLog.classList.toggle('hidden', tab !== 'log');
+    }
+    tabButtons.forEach(b => b.addEventListener('click', () => setActive(b.dataset.tab)));
+    setActive('overview');
+
+    // ===== Kanban: drag & drop + counts =====
+    const kanban = document.getElementById('kanban');
+    let dragItem = null;
+
+    function updateCounts() {
+      kanban.querySelectorAll('.kanban-column').forEach(col => {
+        const countEl = col.querySelector('[data-count]');
+        const list = col.querySelector('[data-list]');
+        if (countEl && list) countEl.textContent = list.querySelectorAll('.kanban-task-item').length;
+      });
+    }
+    updateCounts();
+
+    function makeCardDraggable(li) {
+      li.setAttribute('draggable', 'true');
+      li.addEventListener('dragstart', e => {
+        dragItem = li;
+        setTimeout(() => li.classList.add('opacity-50'), 0);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      li.addEventListener('dragend', () => {
+        li.classList.remove('opacity-50');
+        dragItem = null;
+        updateCounts();
+      });
+    }
+    // init existing cards
+    document.querySelectorAll('.kanban-task-item').forEach(makeCardDraggable);
+
+    kanban.querySelectorAll('[data-list]').forEach(list => {
+      list.addEventListener('dragover', e => {
+        e.preventDefault();
+        list.classList.add('drop-target');
+      });
+      list.addEventListener('dragleave', () => list.classList.remove('drop-target'));
+      list.addEventListener('drop', e => {
+        e.preventDefault();
+        list.classList.remove('drop-target');
+        if (dragItem) {
+          list.appendChild(dragItem);
+          updateCounts();
+        }
+      });
+    });
+
+    // ===== Add Card =====
+    kanban.querySelectorAll('[data-add-card]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const list = btn.closest('.kanban-column').querySelector('[data-list]');
+        const title = prompt('Card title:');
+        if (!title) return;
+        const li = document.createElement('li');
+        li.className = 'kanban-task-item';
+        li.innerHTML = `
+          <div class="text-sm font-medium text-gray-800 mb-1"></div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Enhancement</span>
+          </div>
+        `;
+        li.querySelector('div').textContent = title;
+        makeCardDraggable(li);
+        list.appendChild(li);
+        updateCounts();
+      });
+    });
+
+    // ===== Add Board (Column) =====
+    document.getElementById('add-board').addEventListener('click', () => {
+      const name = prompt('New board name:');
+      if (!name) return;
+      const col = document.createElement('div');
+      col.className = 'kanban-column';
+      col.setAttribute('data-column', name);
+      col.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-layer-group text-gray-600"></i>
+            <span class="font-semibold"></span>
+            <span class="task-count-badge" data-count>0</span>
+          </div>
+          <i class="fas fa-ellipsis-h text-gray-400 cursor-pointer"></i>
+        </div>
+        <ul class="kanban-task-list" data-list></ul>
+        <button class="mt-2 text-gray-600 hover:text-gray-800 font-medium text-sm py-2 px-3 rounded-md flex items-center justify-center gap-2" data-add-card>
+          <i class="fas fa-plus"></i> Add Card
+        </button>
+      `;
+      col.querySelector('span.font-semibold').textContent = name;
+      kanban.appendChild(col);
+
+      // wire events for new column
+      const list = col.querySelector('[data-list]');
+      list.addEventListener('dragover', e => { e.preventDefault(); list.classList.add('drop-target'); });
+      list.addEventListener('dragleave', () => list.classList.remove('drop-target'));
+      list.addEventListener('drop', e => { e.preventDefault(); list.classList.remove('drop-target'); if (dragItem) { list.appendChild(dragItem); updateCounts(); } });
+
+      const addBtn = col.querySelector('[data-add-card]');
+      addBtn.addEventListener('click', () => {
+        const title = prompt('Card title:');
+        if (!title) return;
+        const li = document.createElement('li');
+        li.className = 'kanban-task-item';
+        li.innerHTML = `
+          <div class="text-sm font-medium text-gray-800 mb-1"></div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Enhancement</span>
+          </div>
+        `;
+        li.querySelector('div').textContent = title;
+        makeCardDraggable(li);
+        list.appendChild(li);
+        updateCounts();
+      });
+
+      updateCounts();
+    });
+
+    // ===== Toggle (demo) =====
+    document.getElementById('kanban-toggle').addEventListener('change', function(){
+      console.log('Kanban toggle:', this.checked ? 'ON' : 'OFF');
+    });
+
+    // ===== Demo handlers =====
+    document.getElementById('run-workflow').addEventListener('click', () => alert('Workflow #WF-129 started!'));
+    document.getElementById('save-run').addEventListener('click', () => alert('Saved & running workflow...'));
+    document.getElementById('debug-play').addEventListener('click', () => alert('Debug logs streaming...'));
+
+    // ==== DATA (mock) ====
+    const KANBAN_ITEMS = [
+      { id:'k1', columnId:'todo-list', title:'Login view form', type:'ExecWriting', state:'Draft', updated:'2025-01-20 22:40:38',
+        tags:['Enhancement'], log:{
+          Title:'dance transformation', Position:'Top 4',
+          Topic:'Top 10 trào lưu thịnh hành nhất trên TikTok hiện nay',
+          Search_image_keyword:'dance transformation',
+          Logo:'https://review5sao.com/wp-content/uploads/2022/06/Review5sao-Logo.png',
+          Slogan:'Review5sao - Sự lựa chọn thông minh dành riêng cho bạn!',
+          Website:'www.review5sao.com',
+          Item_Title:'', TopicId:'https://toplist.vn/top-list/trao-luu-thinh-hanh-nhat-tren-tiktok-hien-nay-45556.htm'
+        }
+      },
+      { id:'k2', columnId:'progress-list', title:'Landing Page hero block', type:'ImageGenerateToggle', state:'GenImgProcessing', updated:'2025-01-23 19:57:45',
+        tags:['Needs Review','Design'], log:{ prompt:'a minimalist blue gradient hero image', size:'1200x628', status:'processing', upload:'pending' }
+      },
+      { id:'k3', columnId:'done-list', title:'Setup staging server', type:'ExecSocialMedia', state:'ExecSocialPost', updated:'2025-01-20 22:56:49',
+        tags:['DevOps'], log:{ platform:'facebook', postId:'123456', url:'https://fb.com/post/123456', scheduled:null }
+      },
+      { id:'k4', columnId:'backlog-list', title:'Email verification gives 500', type:'ExecWriting', state:'Bug', updated:'2025-01-18 10:12:00',
+        tags:['Bug'], log:{ error:'HTTP 500 on /verify', steps:['open link','submit form','see 500'] }
+      }
+    ];
+
+    const LOG_ROWS = [
+      { actionType:'Tạo ảnh bìa', code:'ImageGenerateToggle', stateText:'Hoàn thành', stateCode:'GenImgCompleted', stateColor:'green',
+        links:{ viewLog:true, viewProcessed:true, viewExec:false, viewWf:false }, updated:'23/01/2025 19:59:03' },
+      { actionType:'Tạo ảnh bìa', code:'ImageGenerateToggle', stateText:'Đang thực hiện', stateCode:'GenImgProcessing', stateColor:'yellow',
+        links:{ viewLog:true, viewProcessed:false, viewExec:true, viewWf:true }, updated:'23/01/2025 19:57:45' },
+      { actionType:'Social Media', code:'ExecutionTag_ExecSocialMedia', stateText:'Chuẩn bị lên lịch Social', stateCode:'ExecSocialScheduled', stateColor:'blue',
+        links:{ viewLog:true, viewProcessed:true, viewExec:false, viewWf:false }, updated:'20/01/2025 22:58:56' },
+      { actionType:'Social Media', code:'ExecutionTag_ExecSocialMedia', stateText:'Thực hiện Đăng Social', stateCode:'ExecSocialPost', stateColor:'green',
+        links:{ viewLog:true, viewProcessed:false, viewExec:false, viewWf:false }, updated:'20/01/2025 22:58:49' },
+      { actionType:'Audit', code:'ExecutionTag_ExecAudit', stateText:'Hoàn thành Social Audit', stateCode:'ExecutionTag_ExecAudit_SocialAuditCompleted', stateColor:'green',
+        links:{ viewLog:true, viewProcessed:false, viewExec:true, viewWf:true }, updated:'20/01/2025 22:56:49' },
+    ];
+
+    // ==== HELPERS ====
+    const $ = (s, r=document)=>r.querySelector(s);
+    const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+    const fmtJSON = (o)=>JSON.stringify(o, null, 2);
+    const badge = (color, text) => {
+      const map = {green:'badge-green', yellow:'badge-yellow', blue:'badge-blue', gray:'badge-gray'};
+      return `<span class="badge ${map[color]||map.gray}">${text}</span>`;
+    };
+
+    // ==== TAB SWITCH ====
+    (function initTabs(){
+      const tabs = $$('[data-tab]');
+      const o = $('#tab-overview'), l = $('#tab-log');
+      function set(tab){
+        tabs.forEach(b=>{
+          const active = b.dataset.tab===tab;
+          b.classList.toggle('btn-primary', active);
+          b.classList.toggle('btn-secondary', !active);
+          b.setAttribute('aria-selected', active);
+        });
+        o.classList.toggle('hidden', tab!=='overview');
+        l.classList.toggle('hidden', tab!=='log');
+      }
+      tabs.forEach(b=>b.addEventListener('click', ()=>set(b.dataset.tab)));
+      set('overview');
+    })();
+
+    // ==== KANBAN RENDER (gắn click để mở modal) ====
+    function tagColor(t){
+      const x=t.toLowerCase();
+      if (x.includes('bug')) return 'bg-red-100 text-red-800';
+      if (x.includes('review')) return 'bg-green-100 text-green-800';
+      if (x.includes('design')) return 'bg-pink-100 text-pink-800';
+      if (x.includes('devops')||x.includes('docs')) return 'bg-yellow-100 text-yellow-800';
+      return 'bg-purple-100 text-purple-800';
+    }
+
+    function renderKanban(){
+      // clear
+      ['todo-list','progress-list','done-list','backlog-list'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.innerHTML='';
+      });
+      // fill
+      KANBAN_ITEMS.forEach(item=>{
+        const li=document.createElement('li');
+        li.className='kanban-task-item';
+        li.dataset.id=item.id; li.dataset.type=item.type;
+        li.innerHTML=`
+          <div class="text-sm font-medium text-gray-800 mb-1">${item.title}</div>
+          <div class="flex flex-wrap gap-2">
+            ${(item.tags||[]).map(t=>`<span class="px-2 py-0.5 rounded-full text-xs font-medium ${tagColor(t)}">${t}</span>`).join('')}
+          </div>`;
+        li.addEventListener('click',()=>openDetail(item));
+        const list=document.getElementById(item.columnId);
+        if(list) list.appendChild(li);
+      });
+      // update counts
+      $$('.kanban-column').forEach(col=>{
+        const list = col.querySelector('[data-list]') || col.querySelector('ul');
+        const cnt = col.querySelector('[data-count]');
+        if(list && cnt) cnt.textContent = list.children.length;
+      });
+    }
+    renderKanban();
+
+    // ==== MODAL + RENDERER ====
+    const modal = $('#detail-backdrop');
+    const closeBtn = $('#detail-close');
+    const dTitle = $('#detail-title');
+    const dMeta = $('#detail-meta');
+    const dSummary = $('#dtab-summary');
+    const dRaw = $('#detail-json');
+    const dActions = $('#dtab-actions');
+    const dTabBtns = $$('[data-dtab]');
+    const dTabs = { summary: $('#dtab-summary'), raw: $('#dtab-raw'), actions: $('#dtab-actions') };
+
+    function setDTab(name){
+      dTabBtns.forEach(b=>{
+        const is=b.dataset.dtab===name;
+        b.classList.toggle('btn-primary', is);
+        b.classList.toggle('btn-secondary', !is);
+      });
+      Object.entries(dTabs).forEach(([k,el])=>el.classList.toggle('hidden', k!==name));
+    }
+    dTabBtns.forEach(b=>b.addEventListener('click',()=>setDTab(b.dataset.dtab)));
+    closeBtn.addEventListener('click',()=>modal.style.display='none');
+    modal.addEventListener('click',e=>{ if(e.target===modal) modal.style.display='none'; });
+
+    function renderSummaryByType(item){
+      switch(item.type){
+        case 'ExecWriting':
+          return `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><div class="text-sm text-gray-500">Topic ID:</div><div class="font-medium break-all">${item.log.TopicId||'-'}</div></div>
+              <div><div class="text-sm text-gray-500">Title:</div><div class="font-medium">${item.log.Title||item.title}</div></div>
+              <div class="md:col-span-2"><div class="text-sm text-gray-500">Slogan:</div><div class="font-medium">${item.log.Slogan||'-'}</div></div>
+            </div>`;
+        case 'ImageGenerateToggle':
+          return `
+            <div class="flex flex-col gap-3">
+              <div>${badge(item.state==='GenImgCompleted'?'green':'yellow', item.state)}</div>
+              <div><span class="text-sm text-gray-500">Prompt:</span> <span class="font-medium">${item.log.prompt||'-'}</span></div>
+              <div class="text-sm text-gray-500">Size: <span class="font-medium">${item.log.size||'-'}</span></div>
+              <div class="text-sm text-gray-500">Upload: <span class="font-medium">${item.log.upload||'-'}</span></div>
+            </div>`;
+        case 'ExecSocialMedia':
+          return `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><span class="text-sm text-gray-500">Platform:</span> <span class="font-medium">${item.log.platform||'-'}</span></div>
+              <div><span class="text-sm text-gray-500">Post ID:</span> <span class="font-medium">${item.log.postId||'-'}</span></div>
+              <div class="md:col-span-2"><span class="text-sm text-gray-500">URL:</span> <a class="text-blue-600 underline" href="${item.log.url||'#'}" target="_blank">${item.log.url||'-'}</a></div>
+            </div>`;
+        case 'ExecAudit':
+          return `
+            <div class="flex flex-col gap-2">
+              <div>Scope: <span class="font-medium">${(item.log.scope||[]).join(', ')||'-'}</span></div>
+              <div>Issues: <span class="font-medium">${item.log.issues||0}</span> — Severity: <span class="font-medium capitalize">${item.log.severity||'low'}</span></div>
+            </div>`;
+        default:
+          return `<div class="text-sm text-gray-600">Chưa có renderer cho <b>${item.type}</b>. Xem JSON ở tab "Raw".</div>`;
+      }
+    }
+
+    function renderActionsByType(item){
+      const btn = (icon, label) => `<a href="#" class="btn btn-outline inline-flex items-center gap-2"><i class="${icon}"></i>${label}</a>`;
+      const actions = [];
+      actions.push(btn('fa-solid fa-file-lines','View Log')); // luôn có
+      if (item.type==='ImageGenerateToggle') {
+        actions.push(`<span class="btn btn-secondary inline-flex items-center gap-2"><i class="fa-solid fa-database"></i>View Processed Data</span>`);
+        actions.push(btn('fa-solid fa-up-right-from-square','View Execution'));
+        actions.push(btn('fa-solid fa-diagram-project','View Workflow'));
+      } else if (item.type==='ExecSocialMedia') {
+        actions.push(`<span class="btn btn-secondary inline-flex items-center gap-2"><i class="fa-solid fa-database"></i>View Processed Data</span>`);
+      } else if (item.type==='ExecAudit') {
+        actions.push(btn('fa-solid fa-up-right-from-square','View Execution'));
+        actions.push(btn('fa-solid fa-diagram-project','View Workflow'));
+      }
+      return actions.join(' ');
+    }
+
+    function openDetail(item){
+      $('#detail-title').textContent = `Log Details — ${item.title}`;
+      $('#detail-meta').innerHTML = `
+        <span class="chip"><i class="fa-solid fa-tag"></i> ${item.type}</span>
+        <span class="chip"><i class="fa-regular fa-clock"></i> ${item.updated}</span>
+        <span class="chip"><i class="fa-solid fa-circle-info"></i> State: ${item.state}</span>`;
+      $('#dtab-summary').innerHTML = renderSummaryByType(item);
+      $('#detail-json').textContent = fmtJSON(item.log||{});
+      $('#dtab-actions').innerHTML = renderActionsByType(item);
+      setDTab('summary');
+      $('#detail-backdrop').style.display='flex';
+    }
+
+    // ==== LOG TABLE ====
+    function renderLogTable() {
+      const tbody = document.getElementById('log-tbody');
+      tbody.innerHTML = '';
+      LOG_ROWS.forEach(row=>{
+        const tr = document.createElement('tr');
+
+        const tdType = document.createElement('td');
+        tdType.className='px-4 py-2 whitespace-nowrap';
+        tdType.innerHTML = `<div class="font-medium">${row.actionType}</div><div class="text-xs text-gray-500">${row.code}</div>`;
+        tr.appendChild(tdType);
+
+        const tdState = document.createElement('td');
+        tdState.className='px-4 py-2 whitespace-nowrap';
+        tdState.innerHTML = `<div class="flex items-center gap-2">${badge(row.stateColor||'gray', row.stateText)}<span class="text-xs text-gray-500">${row.stateCode}</span></div>`;
+        tr.appendChild(tdState);
+
+        const tdLog = document.createElement('td');
+        tdLog.className='px-4 py-2 whitespace-nowrap';
+        const actions = [];
+        if (row.links.viewLog) actions.push(`<a href="#" class="text-blue-700 underline">View Log</a>`);
+        if (row.links.viewProcessed) actions.push(`<span class="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-black text-white text-xs"><i class="fa-solid fa-database"></i> View Processed Data</span>`);
+        if (row.links.viewExec) actions.push(`<span class="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded bg-sky-500 text-white text-xs"><i class="fa-solid fa-up-right-from-square"></i> View Execution</span>`);
+        if (row.links.viewWf) actions.push(`<span class="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded border text-xs"><i class="fa-solid fa-diagram-project"></i> View Workflow</span>`);
+        tdLog.innerHTML = actions.join('');
+        tr.appendChild(tdLog);
+
+        const tdDate = document.createElement('td');
+        tdDate.className='px-4 py-2 whitespace-nowrap text-gray-700';
+        tdDate.textContent = row.updated;
+        tr.appendChild(tdDate);
+
+        tbody.appendChild(tr);
+      });
+      document.getElementById('log-last-update').textContent = new Date().toLocaleString();
+    }
+    renderLogTable();
+    document.getElementById('refresh-log').addEventListener('click', renderLogTable);
+  </script>
+</body>
+<!-- Modal: Log Details -->
+<div id="detail-backdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header flex items-center justify-between">
+      <h3 id="detail-title" class="text-lg font-semibold">Log Details</h3>
+      <button id="detail-close" class="text-white/90 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-4">
+      <div id="detail-meta" class="flex flex-wrap items-center gap-2 text-sm mb-3"></div>
+      <div class="flex gap-2 mb-3" role="tablist">
+        <button class="btn btn-primary" data-dtab="summary">Summary</button>
+        <button class="btn btn-secondary" data-dtab="raw">Raw Log</button>
+        <button class="btn btn-secondary" data-dtab="actions">Actions</button>
+      </div>
+      <div id="dtab-summary"></div>
+      <div id="dtab-raw" class="hidden"><pre id="detail-json" class="code-block"></pre></div>
+      <div id="dtab-actions" class="hidden flex flex-wrap gap-2"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

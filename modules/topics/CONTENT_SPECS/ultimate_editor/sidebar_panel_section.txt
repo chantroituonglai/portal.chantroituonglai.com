@@ -1,0 +1,121 @@
+<!-- SECTION: sidebar_panel -->
+    <div class="col-md-3">
+        <div class="panel_s">
+            <div class="panel-body">
+                <!-- Sidebar tabs -->
+                <ul class="nav nav-tabs nav-tabs-horizontal mb-3" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#tab_drafts" aria-controls="tab_drafts" role="tab" data-toggle="tab">
+                            <i class="fa fa-file-text-o"></i> <?= _l('drafts') ?>
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tab_seo" aria-controls="tab_seo" role="tab" data-toggle="tab">
+                            <i class="fa fa-search"></i> <?= _l('seo') ?>
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tab_history" aria-controls="tab_history" role="tab" data-toggle="tab">
+                            <i class="fa fa-history"></i> <?= _l('history') ?>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab content -->
+                <div class="tab-content">
+                    <!-- Drafts tab -->
+                    <div role="tabpanel" class="tab-pane active" id="tab_drafts">
+                        <h4 class="no-margin"><?= _l('draft_versions') ?></h4>
+                        <hr class="hr-panel-separator" />
+                        
+                        <!-- Draft list -->
+                        <div id="drafts-list" class="drafts-container">
+                            <?php if (isset($drafts) && !empty($drafts)): ?>
+                                <?php foreach ($drafts as $draft): ?>
+                                    <div class="draft-item <?= isset($active_draft) && $active_draft->id == $draft['id'] ? 'active' : '' ?>" data-draft-id="<?= $draft['id'] ?>">
+                                        <div class="draft-header">
+                                            <h5 class="draft-title"><?= $draft['draft_title'] ?></h5>
+                                            <span class="badge badge-<?= $draft['status'] == 'final' ? 'success' : 'warning' ?>"><?= $draft['status'] ?></span>
+                                        </div>
+                                        <div class="draft-meta text-muted">
+                                            <small>
+                                                <span><?= _l('version') ?>: v<?= $draft['version'] ?></span>
+                                                <span class="ml-2"><?= _l('updated') ?>: <?= date('d/m/Y H:i', strtotime($draft['updated_at'])) ?></span>
+                                            </small>
+                                        </div>
+                                        <div class="draft-actions mt-2">
+                                            <button class="btn btn-xs btn-primary load-draft-btn" data-draft-id="<?= $draft['id'] ?>">
+                                                <i class="fa fa-edit"></i> <?= _l('edit') ?>
+                                            </button>
+                                            <button class="btn btn-xs btn-default duplicate-draft-btn" data-draft-id="<?= $draft['id'] ?>">
+                                                <i class="fa fa-copy"></i> <?= _l('duplicate') ?>
+                                            </button>
+                                            <button class="btn btn-xs btn-danger delete-draft-btn" data-draft-id="<?= $draft['id'] ?>">
+                                                <i class="fa fa-trash"></i> <?= _l('delete') ?>
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="alert alert-info">
+                                    <?= _l('no_drafts_found') ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <!-- SEO tab -->
+                    <div role="tabpanel" class="tab-pane" id="tab_seo">
+                        <h4 class="no-margin"><?= _l('seo_optimization') ?></h4>
+                        <hr class="hr-panel-separator" />
+                        
+                        <!-- SEO form -->
+                        <div class="seo-form">
+                            <div class="form-group">
+                                <label class="control-label"><?= _l('target_keyword') ?></label>
+                                <input type="text" id="seo-target-keyword" class="form-control" placeholder="<?= _l('enter_target_keyword') ?>">
+                            </div>
+                            
+                            <button id="run-seo-analysis-btn" class="btn btn-info btn-block">
+                                <i class="fa fa-refresh"></i> <?= _l('analyze_content') ?>
+                            </button>
+                            
+                            <!-- SEO analysis results -->
+                            <div id="seo-analysis-results" class="mt-4 d-none">
+                                <h5><?= _l('seo_analysis_results') ?></h5>
+                                
+                                <div class="seo-score-container text-center mb-3">
+                                    <div class="seo-score-circle">
+                                        <span id="seo-score">0</span>
+                                    </div>
+                                    <div class="seo-score-label"><?= _l('seo_score') ?></div>
+                                </div>
+                                
+                                <div class="seo-checks mt-3">
+                                    <!-- SEO check items will be added dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- History tab -->
+                    <div role="tabpanel" class="tab-pane" id="tab_history">
+                        <h4 class="no-margin"><?= _l('editing_history') ?></h4>
+                        <hr class="hr-panel-separator" />
+                        
+                        <div id="edit-history-container">
+                            <!-- Edit history will be loaded here -->
+                            <div class="text-center">
+                                <div class="mtop20">
+                                    <i class="fa fa-refresh fa-spin fa-2x"></i>
+                                </div>
+                                <div class="mtop20"><?= _l('loading_history') ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END SECTION: sidebar_panel --> 

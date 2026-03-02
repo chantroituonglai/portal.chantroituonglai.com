@@ -1,0 +1,260 @@
+<!-- SECTION: modals -->
+<!-- Create Draft Modal -->
+<div class="modal fade" id="new-draft-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><?= _l('create_new_draft') ?></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-draft-title" class="control-label"><?= _l('draft_title') ?> <span class="text-danger">*</span></label>
+                    <input type="text" id="new-draft-title" class="form-control" placeholder="<?= _l('enter_draft_title') ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="control-label"><?= _l('draft_options') ?></label>
+                    <div class="checkbox">
+                        <input type="checkbox" id="copy-current-content" checked>
+                        <label for="copy-current-content"><?= _l('copy_current_content') ?></label>
+                    </div>
+                    <div class="checkbox">
+                        <input type="checkbox" id="set-as-active-draft" checked>
+                        <label for="set-as-active-draft"><?= _l('set_as_active_draft') ?></label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?= _l('close') ?></button>
+                <button type="button" id="create-draft-confirm" class="btn btn-primary"><?= _l('create_draft') ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Publish Content Modal -->
+<div class="modal fade" id="publish-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><?= _l('publish_content') ?></h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i> <?= _l('publish_draft_warning') ?>
+                </div>
+                
+                <div class="form-group">
+                    <label for="publish-platform" class="control-label"><?= _l('select_platform') ?> <span class="text-danger">*</span></label>
+                    <select id="publish-platform" class="form-control selectpicker" data-live-search="true">
+                        <option value=""><?= _l('select_platform') ?></option>
+                        <?php if (isset($topic) && isset($topic->controller_id)): ?>
+                            <option value="<?= $topic->platform ?>"><?= ucfirst($topic->platform) ?></option>
+                        <?php else: ?>
+                            <option value="wordpress">WordPress</option>
+                            <option value="haravan">Haravan</option>
+                            <option value="shopify">Shopify</option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="control-label"><?= _l('publishing_options') ?></label>
+                    <div class="checkbox">
+                        <input type="checkbox" id="include-images" checked>
+                        <label for="include-images"><?= _l('include_images') ?></label>
+                    </div>
+                    <div class="checkbox">
+                        <input type="checkbox" id="update-url-structure">
+                        <label for="update-url-structure"><?= _l('update_url_structure') ?></label>
+                    </div>
+                </div>
+                
+                <div id="publish-progress" class="d-none">
+                    <h5><?= _l('publishing_progress') ?></h5>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="publish-status text-center mt-2">
+                        <span id="publish-status-text"><?= _l('preparing_to_publish') ?></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?= _l('close') ?></button>
+                <button type="button" id="publish-confirm" class="btn btn-danger"><?= _l('publish_now') ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Editor Settings Modal -->
+<div class="modal fade" id="settings-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><?= _l('editor_settings') ?></h4>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#editor-preferences" aria-controls="editor-preferences" role="tab" data-toggle="tab"><?= _l('preferences') ?></a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#editor-behavior" aria-controls="editor-behavior" role="tab" data-toggle="tab"><?= _l('behavior') ?></a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#editor-appearance" aria-controls="editor-appearance" role="tab" data-toggle="tab"><?= _l('appearance') ?></a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3">
+                    <div role="tabpanel" class="tab-pane active" id="editor-preferences">
+                        <div class="form-group">
+                            <label for="editor-font-size" class="control-label"><?= _l('font_size') ?></label>
+                            <select id="editor-font-size" class="form-control">
+                                <option value="12px">12px</option>
+                                <option value="14px" selected>14px</option>
+                                <option value="16px">16px</option>
+                                <option value="18px">18px</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editor-toolbar-mode" class="control-label"><?= _l('toolbar_mode') ?></label>
+                            <select id="editor-toolbar-mode" class="form-control">
+                                <option value="standard" selected><?= _l('standard') ?></option>
+                                <option value="compact"><?= _l('compact') ?></option>
+                                <option value="advanced"><?= _l('advanced') ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div role="tabpanel" class="tab-pane" id="editor-behavior">
+                        <div class="checkbox">
+                            <input type="checkbox" id="autosave-enabled" checked>
+                            <label for="autosave-enabled"><?= _l('enable_autosave') ?></label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="autosave-interval" class="control-label"><?= _l('autosave_interval') ?></label>
+                            <select id="autosave-interval" class="form-control">
+                                <option value="30">30 <?= _l('seconds') ?></option>
+                                <option value="60" selected>1 <?= _l('minute') ?></option>
+                                <option value="300">5 <?= _l('minutes') ?></option>
+                            </select>
+                        </div>
+                        
+                        <div class="checkbox">
+                            <input type="checkbox" id="word-count-enabled" checked>
+                            <label for="word-count-enabled"><?= _l('show_word_count') ?></label>
+                        </div>
+                    </div>
+                    
+                    <div role="tabpanel" class="tab-pane" id="editor-appearance">
+                        <div class="form-group">
+                            <label for="editor-theme" class="control-label"><?= _l('editor_theme') ?></label>
+                            <select id="editor-theme" class="form-control">
+                                <option value="default" selected><?= _l('default') ?></option>
+                                <option value="dark"><?= _l('dark') ?></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?= _l('close') ?></button>
+                <button type="button" id="save-settings" class="btn btn-primary"><?= _l('save_settings') ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Section Modal -->
+<div class="modal fade" id="add-section-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><?= _l('add_new_section') ?></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="section-title" class="control-label"><?= _l('section_title') ?> <span class="text-danger">*</span></label>
+                    <input type="text" id="section-title" class="form-control" placeholder="<?= _l('enter_section_title') ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label for="section-type" class="control-label"><?= _l('section_type') ?></label>
+                    <select id="section-type" class="form-control">
+                        <option value="text"><?= _l('text') ?></option>
+                        <option value="image"><?= _l('image') ?></option>
+                        <option value="gallery"><?= _l('gallery') ?></option>
+                        <option value="table"><?= _l('table') ?></option>
+                        <option value="quote"><?= _l('quote') ?></option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="section-content" class="control-label"><?= _l('section_content') ?></label>
+                    <textarea id="section-content" class="form-control" rows="4" placeholder="<?= _l('enter_section_content') ?>"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?= _l('close') ?></button>
+                <button type="button" id="add-section-confirm" class="btn btn-primary"><?= _l('add_section') ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SEO Analysis Modal -->
+<div class="modal fade" id="seo-analysis-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><?= _l('detailed_seo_analysis') ?></h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="seo-score-circle large">
+                            <span id="detailed-seo-score">0</span>
+                        </div>
+                        <h4 class="mt-2"><?= _l('overall_score') ?></h4>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h4><?= _l('keyword_analysis') ?></h4>
+                        <div id="keyword-analysis-results">
+                            <!-- Keyword analysis results will be shown here -->
+                        </div>
+                        
+                        <h4 class="mt-4"><?= _l('content_analysis') ?></h4>
+                        <div id="content-analysis-results">
+                            <!-- Content analysis results will be shown here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h4><?= _l('improvement_suggestions') ?></h4>
+                        <div id="seo-suggestions">
+                            <!-- SEO suggestions will be shown here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"><?= _l('close') ?></button>
+                <button type="button" id="apply-seo-suggestions" class="btn btn-success"><?= _l('apply_suggestions') ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END SECTION: modals --> 

@@ -1,0 +1,34 @@
+.ppi-input{ text-align:right; }
+
+/* Mini calculator */
+.ppi-mini-calc{position:fixed;z-index:9999;top:10%;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #e5e7eb;box-shadow:0 10px 25px rgba(0,0,0,.12);border-radius:10px;max-width:860px;width:95%;padding:16px}
+.ppi-mini-calc h4{margin:0 0 14px 0;font-size:20px;letter-spacing:.2px}
+.ppi-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:9998}
+.ppi-adjust-btn{margin-left:6px}
+.ppi-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"left right";gap:16px}
+.ppi-left{padding:6px;grid-area:left}
+.ppi-right{padding:6px;grid-area:right}
+.ppi-display-row{display:grid;grid-template-columns:1fr 56px;gap:10px;align-items:center;margin-bottom:8px}
+.ppi-clear-btn{height:56px;border-radius:8px;border:1px solid #e5e7eb;background:#e2e8f0;font-weight:600}
+.ppi-calc-display,.ppi-calc-display:focus{height:56px;font-size:24px;text-align:right;background:#0f172a !important;color:#ffffff !important;border:0;border-radius:8px;padding:8px 12px;font-weight:600;letter-spacing:1px;outline:none;box-shadow:none}
+.ppi-calc-display::placeholder{color:rgba(255,255,255,.55)}
+.ppi-pad{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,48px);grid-template-areas:"n7 n8 n9 div" "n4 n5 n6 eq" "mul n1 n2 eq" "n3 sub n0 eq" "n00 dot add sp";gap:6px}
+.ppi-pad button{border-radius:8px;border:1px solid #e5e7eb;background:#f8fafc;font-size:18px}
+.ppi-pad button.op{background:#e2e8f0}
+.ppi-pad button.eq{background:#fb923c;color:#fff;border:0;font-weight:600}
+.ppi-pad .sp{visibility:hidden}
+.ppi-mini-calc .ppi-row{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.ppi-mini-calc .ppi-row label{flex:0 0 160px;margin:0;font-weight:600}
+.ppi-mini-calc .ppi-row input{flex:1}
+.ppi-mini-calc .ppi-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.ppi-discount-warning{margin-top:6px;padding:8px 10px;border-radius:6px;background:#FEF2F2;color:#991B1B;border:1px solid #FCA5A5;font-size:12px}
+
+/* Mobile: stack inputs above calculator */
+@media (max-width: 768px){
+  .ppi-mini-calc{top:5%;width:96vw;max-width:96vw;max-height:90vh;overflow:auto}
+  .ppi-grid{grid-template-columns:1fr;grid-template-areas:"right" "left"}
+  .ppi-mini-calc .ppi-row{flex-direction:column;align-items:stretch}
+  .ppi-mini-calc .ppi-row label{flex:0 0 auto;margin-bottom:6px}
+}
+
+

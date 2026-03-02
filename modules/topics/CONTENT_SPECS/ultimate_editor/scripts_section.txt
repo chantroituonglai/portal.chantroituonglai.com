@@ -1,0 +1,696 @@
+<!-- SECTION: scripts -->
+<input type="hidden" id="topicid" value="<?= isset($topic) ? $topic->id : '' ?>">
+<input type="hidden" id="current-draft-id" value="<?= isset($active_draft) ? $active_draft->id : '' ?>">
+
+<script>
+$(function() {
+    // Initialize TinyMCE
+    tinymce.init({
+        selector: '.tinymce-editor',
+        height: 500,
+        menubar: true,
+        plugins: [
+            'advlist autolink lists link image charmap print preview anchor',
+            'searchreplace visualblocks code fullscreen',
+            'insertdatetime media table paste code help wordcount'
+        ],
+        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        setup: function(editor) {
+            // Initialize content stats tracking
+            editor.on('KeyUp', function(e) {
+                updateContentStats();
+            });
+            
+            editor.on('Change', function(e) {
+                updateContentStats();
+                startAutosaveTimer();
+            });
+            
+            // Initialize on load
+            editor.on('init', function(e) {
+                updateContentStats();
+            });
+        }
+    });
+    
+    // Content stats update function
+    function updateContentStats() {
+        const content = tinymce.activeEditor.getContent();
+        const plainText = $('<div>').html(content).text();
+        const wordCount = plainText.split(/\s+/).filter(word => word.length > 0).length;
+        const charCount = plainText.length;
+        
+        $('#word-count').text(wordCount);
+        $('#char-count').text(charCount);
+        
+        // Calculate readability score (simplified)
+        const sentences = plainText.split(/[.!?]+/).filter(sentence => sentence.length > 0);
+        if (sentences.length > 0) {
+            const avgWordsPerSentence = wordCount / sentences.length;
+            const readabilityScore = calculateReadabilityScore(plainText, avgWordsPerSentence);
+            $('#readability-score').text(readabilityScore + '/100');
+        }
+    }
+    
+    // Simple readability calculation
+    function calculateReadabilityScore(text, avgSentenceLength) {
+        // Simple algorithm based on average sentence length
+        // Optimal length is around 15-20 words per sentence
+        const lengthPenalty = Math.abs(avgSentenceLength - 17.5) * 2;
+        
+        // Base score of 100, penalties for longer sentences, bonuses for reasonable length
+        let score = 100 - lengthPenalty;
+        
+        // Clip to 0-100 range
+        return Math.min(100, Math.max(0, Math.round(score)));
+    }
+    
+    // Autosave functionality
+    let autosaveTimer = null;
+    const autosaveInterval = 60000; // 60 seconds default
+    
+    function startAutosaveTimer() {
+        // Clear existing timer if any
+        if (autosaveTimer) {
+            clearTimeout(autosaveTimer);
+        }
+        
+        // Show saving indicator
+        $('#saving-indicator').removeClass('d-none');
+        
+        // Set new timer
+        autosaveTimer = setTimeout(function() {
+            saveDraft(true);
+        }, autosaveInterval);
+    }
+    
+    function saveDraft(isAutoSave = false) {
+        const topicId = $('#topicid').val();
+        const draftId = $('#current-draft-id').val();
+        const draftTitle = $('#draft-title').val();
+        const draftContent = tinymce.activeEditor.getContent();
+        
+        if (!topicId || !draftTitle) {
+            return;
+        }
+        
+        // Prepare data
+        const data = {
+            topic_id: topicId,
+            draft_title: draftTitle,
+            draft_content: draftContent
+        };
+        
+        // Add draft ID if editing existing draft
+        if (draftId) {
+            data.draft_id = draftId;
+        }
+        
+        // AJAX call to save draft
+        $.ajax({
+            url: admin_url + 'ultimate_editor/save_draft',
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    $('#current-draft-id').val(response.draft_id);
+                    
+                    // Update UI
+                    $('#last-saved-time').text(getCurrentTime());
+                    
+                    if (!isAutoSave) {
+                        alert_float('success', '<?= _l('draft_saved_successfully') ?>');
+                    }
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_saving_draft') ?>');
+                }
+                
+                // Hide saving indicator
+                $('#saving-indicator').addClass('d-none');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving draft:', error);
+                alert_float('danger', '<?= _l('error_saving_draft') ?>');
+                
+                // Hide saving indicator
+                $('#saving-indicator').addClass('d-none');
+            }
+        });
+    }
+    
+    function getCurrentTime() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        return hours + ':' + minutes + ':' + seconds;
+    }
+    
+    // Event handlers
+    $('#save-draft-btn').on('click', function() {
+        saveDraft();
+    });
+    
+    $('#create-new-draft-btn').on('click', function() {
+        $('#new-draft-modal').modal('show');
+    });
+    
+    $('#create-draft-confirm').on('click', function() {
+        const topicId = $('#topicid').val();
+        const draftTitle = $('#new-draft-title').val();
+        
+        if (!topicId || !draftTitle) {
+            alert_float('warning', '<?= _l('required_fields_missing') ?>');
+            return;
+        }
+        
+        const data = {
+            topic_id: topicId,
+            draft_title: draftTitle,
+            set_as_active: $('#set-as-active-draft').is(':checked')
+        };
+        
+        // If copy content is checked, include current content
+        if ($('#copy-current-content').is(':checked')) {
+            data.draft_content = tinymce.activeEditor.getContent();
+        }
+        
+        // AJAX call to create new draft
+        $.ajax({
+            url: admin_url + 'ultimate_editor/create_draft',
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert_float('success', '<?= _l('draft_created_successfully') ?>');
+                    $('#new-draft-modal').modal('hide');
+                    
+                    // Reload page to show new draft
+                    location.reload();
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_creating_draft') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error creating draft:', error);
+                alert_float('danger', '<?= _l('error_creating_draft') ?>');
+            }
+        });
+    });
+    
+    // Convert to final
+    $('#convert-to-final-btn').on('click', function() {
+        const draftId = $('#current-draft-id').val();
+        
+        if (!draftId) {
+            alert_float('warning', '<?= _l('no_draft_selected') ?>');
+            return;
+        }
+        
+        // First save current content
+        saveDraft();
+        
+        // Then convert to final
+        $.ajax({
+            url: admin_url + 'ultimate_editor/convert_to_final',
+            type: 'POST',
+            data: {
+                draft_id: draftId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert_float('success', '<?= _l('draft_converted_to_final_successfully') ?>');
+                    
+                    // Update UI
+                    $('#draft-status').removeClass('badge-warning').addClass('badge-success').text('final');
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_converting_draft') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error converting draft:', error);
+                alert_float('danger', '<?= _l('error_converting_draft') ?>');
+            }
+        });
+    });
+    
+    // SEO Analysis
+    $('#analyze-seo-btn').on('click', function() {
+        const draftId = $('#current-draft-id').val();
+        const targetKeyword = $('#seo-target-keyword').val();
+        
+        if (!draftId) {
+            alert_float('warning', '<?= _l('no_draft_selected') ?>');
+            return;
+        }
+        
+        if (!targetKeyword) {
+            // Show SEO tab and focus on keyword input
+            $('a[href="#tab_seo"]').tab('show');
+            $('#seo-target-keyword').focus();
+            alert_float('warning', '<?= _l('please_enter_target_keyword') ?>');
+            return;
+        }
+        
+        // First save current content
+        saveDraft();
+        
+        // Then run SEO analysis
+        $.ajax({
+            url: admin_url + 'ultimate_editor/analyze_seo',
+            type: 'POST',
+            data: {
+                draft_id: draftId,
+                target_keyword: targetKeyword
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    displaySeoAnalysis(response.analysis);
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_analyzing_seo') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error analyzing SEO:', error);
+                alert_float('danger', '<?= _l('error_analyzing_seo') ?>');
+            }
+        });
+    });
+    
+    function displaySeoAnalysis(analysis) {
+        // Show SEO tab and results
+        $('a[href="#tab_seo"]').tab('show');
+        $('#seo-analysis-results').removeClass('d-none');
+        
+        // Update score
+        $('#seo-score').text(analysis.overall_score);
+        
+        // Clear existing checks
+        $('.seo-checks').empty();
+        
+        // Add check items
+        for (const key in analysis) {
+            if (key === 'overall_score') continue;
+            
+            const check = analysis[key];
+            const statusClass = check.status ? 'text-success' : 'text-danger';
+            const icon = check.status ? 'fa-check-circle' : 'fa-times-circle';
+            
+            const checkItem = `
+                <div class="seo-check-item">
+                    <p class="${statusClass}">
+                        <i class="fa ${icon} mr-2"></i>
+                        ${check.message}
+                        ${check.value ? `(${check.value})` : ''}
+                    </p>
+                </div>
+            `;
+            
+            $('.seo-checks').append(checkItem);
+        }
+        
+        // Show detailed analysis modal
+        $('#seo-analysis-modal').modal('show');
+        $('#detailed-seo-score').text(analysis.overall_score);
+    }
+    
+    // Publish content
+    $('#publish-content-btn').on('click', function() {
+        const draftId = $('#current-draft-id').val();
+        
+        if (!draftId) {
+            alert_float('warning', '<?= _l('no_draft_selected') ?>');
+            return;
+        }
+        
+        // Save content first
+        saveDraft();
+        
+        // Show publish modal
+        $('#publish-modal').modal('show');
+    });
+    
+    $('#publish-confirm').on('click', function() {
+        const draftId = $('#current-draft-id').val();
+        const platform = $('#publish-platform').val();
+        const controllerId = <?= isset($topic->controller_id) ? $topic->controller_id : 'null' ?>;
+        
+        if (!draftId || !platform || !controllerId) {
+            alert_float('warning', '<?= _l('required_fields_missing') ?>');
+            return;
+        }
+        
+        // Show progress
+        $('#publish-progress').removeClass('d-none');
+        $('#publish-confirm').prop('disabled', true);
+        
+        // AJAX call to start publish process
+        $.ajax({
+            url: admin_url + 'ultimate_editor/publish_draft',
+            type: 'POST',
+            data: {
+                draft_id: draftId,
+                platform: platform,
+                controller_id: controllerId,
+                include_images: $('#include-images').is(':checked'),
+                update_url_structure: $('#update-url-structure').is(':checked')
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    startPublishProgressCheck(response.session_id);
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_publishing_content') ?>');
+                    resetPublishUI();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error publishing content:', error);
+                alert_float('danger', '<?= _l('error_publishing_content') ?>');
+                resetPublishUI();
+            }
+        });
+    });
+    
+    function startPublishProgressCheck(sessionId) {
+        // Check progress every 2 seconds
+        const progressInterval = setInterval(function() {
+            $.ajax({
+                url: admin_url + 'ultimate_editor/check_publish_status',
+                type: 'GET',
+                data: {
+                    session_id: sessionId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // Update progress UI
+                    updatePublishProgress(response);
+                    
+                    // If complete or failed, stop checking
+                    if (response.status === 'completed' || response.status === 'failed') {
+                        clearInterval(progressInterval);
+                        finishPublishProcess(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error checking publish status:', error);
+                    clearInterval(progressInterval);
+                    resetPublishUI();
+                    alert_float('danger', '<?= _l('error_checking_publish_status') ?>');
+                }
+            });
+        }, 2000);
+    }
+    
+    function updatePublishProgress(data) {
+        // Calculate progress percentage
+        let progress = 0;
+        if (data.total_items > 0) {
+            progress = Math.round((data.items_processed / data.total_items) * 100);
+        }
+        
+        // Update progress bar
+        $('.progress-bar').css('width', progress + '%');
+        
+        // Update status text
+        $('#publish-status-text').text(data.status_message || '<?= _l('processing') ?>');
+    }
+    
+    function finishPublishProcess(data) {
+        if (data.status === 'completed') {
+            alert_float('success', '<?= _l('content_published_successfully') ?>');
+            
+            // If we have a URL, add a link to view the published content
+            if (data.published_url) {
+                $('#publish-status-text').html(`<?= _l('content_published_successfully') ?>. <a href="${data.published_url}" target="_blank"><?= _l('view_published_content') ?></a>`);
+            }
+        } else {
+            alert_float('danger', data.error_message || '<?= _l('error_publishing_content') ?>');
+        }
+        
+        // Re-enable publish button
+        $('#publish-confirm').prop('disabled', false);
+    }
+    
+    function resetPublishUI() {
+        // Hide progress
+        $('#publish-progress').addClass('d-none');
+        
+        // Reset progress bar
+        $('.progress-bar').css('width', '0%');
+        
+        // Reset status text
+        $('#publish-status-text').text('<?= _l('preparing_to_publish') ?>');
+        
+        // Re-enable publish button
+        $('#publish-confirm').prop('disabled', false);
+    }
+    
+    // Editor settings
+    $('#editor-settings-btn').on('click', function() {
+        $('#settings-modal').modal('show');
+    });
+    
+    $('#save-settings').on('click', function() {
+        const topicId = $('#topicid').val();
+        
+        if (!topicId) {
+            alert_float('warning', '<?= _l('topic_id_missing') ?>');
+            return;
+        }
+        
+        // Collect settings
+        const settings = {
+            font_size: $('#editor-font-size').val(),
+            toolbar_mode: $('#editor-toolbar-mode').val(),
+            autosave_enabled: $('#autosave-enabled').is(':checked'),
+            autosave_interval: $('#autosave-interval').val(),
+            word_count_enabled: $('#word-count-enabled').is(':checked'),
+            theme: $('#editor-theme').val()
+        };
+        
+        // AJAX call to save settings
+        $.ajax({
+            url: admin_url + 'ultimate_editor/save_editor_settings',
+            type: 'POST',
+            data: {
+                topic_id: topicId,
+                settings: settings
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert_float('success', '<?= _l('settings_saved_successfully') ?>');
+                    $('#settings-modal').modal('hide');
+                    
+                    // Apply settings
+                    applyEditorSettings(settings);
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_saving_settings') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving settings:', error);
+                alert_float('danger', '<?= _l('error_saving_settings') ?>');
+            }
+        });
+    });
+    
+    function applyEditorSettings(settings) {
+        // Apply font size
+        if (settings.font_size) {
+            tinymce.activeEditor.dom.addStyle(`.mce-content-body { font-size: ${settings.font_size}; }`);
+        }
+        
+        // Apply theme
+        if (settings.theme === 'dark') {
+            // Add dark theme CSS
+            $('body').addClass('editor-dark-theme');
+        } else {
+            $('body').removeClass('editor-dark-theme');
+        }
+        
+        // Apply autosave settings
+        if (settings.autosave_interval) {
+            autosaveInterval = parseInt(settings.autosave_interval) * 1000;
+        }
+    }
+    
+    // Apply initial settings if available
+    <?php if (isset($editor_settings)): ?>
+    applyEditorSettings(<?= json_encode($editor_settings) ?>);
+    <?php endif; ?>
+    
+    // Draft management
+    $(document).on('click', '.load-draft-btn', function() {
+        const draftId = $(this).data('draft-id');
+        
+        // AJAX call to get draft
+        $.ajax({
+            url: admin_url + 'ultimate_editor/get_draft/' + draftId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Update editor with draft content
+                    $('#draft-title').val(response.draft.draft_title);
+                    tinymce.activeEditor.setContent(response.draft.draft_content);
+                    
+                    // Update current draft ID
+                    $('#current-draft-id').val(response.draft.id);
+                    
+                    // Update UI
+                    $('#current-draft-name').text(response.draft.draft_title);
+                    $('#draft-version').text('v' + response.draft.version);
+                    $('#draft-status').removeClass('badge-success badge-warning')
+                        .addClass(response.draft.status === 'final' ? 'badge-success' : 'badge-warning')
+                        .text(response.draft.status);
+                    
+                    // Highlight active draft in list
+                    $('.draft-item').removeClass('active');
+                    $(`.draft-item[data-draft-id="${draftId}"]`).addClass('active');
+                    
+                    alert_float('success', '<?= _l('draft_loaded_successfully') ?>');
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_loading_draft') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading draft:', error);
+                alert_float('danger', '<?= _l('error_loading_draft') ?>');
+            }
+        });
+    });
+    
+    $(document).on('click', '.duplicate-draft-btn', function() {
+        const draftId = $(this).data('draft-id');
+        
+        // AJAX call to duplicate draft
+        $.ajax({
+            url: admin_url + 'ultimate_editor/duplicate_draft',
+            type: 'POST',
+            data: {
+                draft_id: draftId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert_float('success', '<?= _l('draft_duplicated_successfully') ?>');
+                    
+                    // Reload page to show new draft
+                    location.reload();
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_duplicating_draft') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error duplicating draft:', error);
+                alert_float('danger', '<?= _l('error_duplicating_draft') ?>');
+            }
+        });
+    });
+    
+    $(document).on('click', '.delete-draft-btn', function() {
+        const draftId = $(this).data('draft-id');
+        
+        // Confirm delete
+        if (!confirm('<?= _l('confirm_delete_draft') ?>')) {
+            return;
+        }
+        
+        // AJAX call to delete draft
+        $.ajax({
+            url: admin_url + 'ultimate_editor/delete_draft/' + draftId,
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    alert_float('success', '<?= _l('draft_deleted_successfully') ?>');
+                    
+                    // Remove draft from list
+                    $(`.draft-item[data-draft-id="${draftId}"]`).remove();
+                    
+                    // If this was the active draft, reload page
+                    if (draftId === $('#current-draft-id').val()) {
+                        location.reload();
+                    }
+                } else {
+                    alert_float('danger', response.message || '<?= _l('error_deleting_draft') ?>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting draft:', error);
+                alert_float('danger', '<?= _l('error_deleting_draft') ?>');
+            }
+        });
+    });
+    
+    // Section management
+    $('#add-section-btn').on('click', function() {
+        $('#add-section-modal').modal('show');
+    });
+    
+    $('#add-section-confirm').on('click', function() {
+        const sectionTitle = $('#section-title').val();
+        const sectionType = $('#section-type').val();
+        const sectionContent = $('#section-content').val();
+        
+        if (!sectionTitle) {
+            alert_float('warning', '<?= _l('section_title_required') ?>');
+            return;
+        }
+        
+        // Create section HTML
+        const sectionId = 'section-' + Date.now();
+        const sectionHtml = `
+            <div class="section-item" id="${sectionId}" data-type="${sectionType}">
+                <div class="section-header d-flex justify-content-between align-items-center">
+                    <h5>${sectionTitle}</h5>
+                    <div class="section-actions">
+                        <button class="btn btn-xs btn-default edit-section-btn" data-section-id="${sectionId}">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button class="btn btn-xs btn-danger delete-section-btn" data-section-id="${sectionId}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">${sectionContent}</div>
+            </div>
+        `;
+        
+        // Remove empty state if it exists
+        $('.section-empty-state').remove();
+        
+        // Add section to container
+        $('#sections-container').append(sectionHtml);
+        
+        // Clear modal fields
+        $('#section-title').val('');
+        $('#section-type').val('text');
+        $('#section-content').val('');
+        
+        // Close modal
+        $('#add-section-modal').modal('hide');
+    });
+    
+    // Make sections sortable (if jQuery UI is available)
+    if ($.fn.sortable) {
+        $('#sections-container').sortable({
+            handle: '.section-header',
+            update: function(event, ui) {
+                // Update section order in draft metadata
+            }
+        });
+    }
+    
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+<!-- END SECTION: scripts --> 

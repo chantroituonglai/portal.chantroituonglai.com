@@ -1,0 +1,56 @@
+{
+  "sections": [
+    {
+      "name": "header_section",
+      "description": "Header section containing class definition and constructor"
+    },
+    {
+      "name": "get_function",
+      "description": "Function to get draft by ID or topic_id"
+    },
+    {
+      "name": "get_drafts_function",
+      "description": "Function to get all drafts for a topic"
+    },
+    {
+      "name": "add_function",
+      "description": "Function to add a new draft"
+    },
+    {
+      "name": "update_function",
+      "description": "Function to update an existing draft"
+    },
+    {
+      "name": "delete_function",
+      "description": "Function to delete a draft"
+    },
+    {
+      "name": "change_status_function",
+      "description": "Function to change draft status"
+    },
+    {
+      "name": "duplicate_function",
+      "description": "Function to duplicate a draft"
+    },
+    {
+      "name": "get_active_draft_function",
+      "description": "Function to get active draft for a topic"
+    },
+    {
+      "name": "set_active_draft_function",
+      "description": "Function to set active draft for a topic"
+    },
+    {
+      "name": "update_metadata_function",
+      "description": "Function to update draft metadata"
+    },
+    {
+      "name": "update_sections_function",
+      "description": "Function to update draft sections"
+    },
+    {
+      "name": "helper_functions",
+      "description": "Helper functions for various tasks"
+    }
+  ]
+} 

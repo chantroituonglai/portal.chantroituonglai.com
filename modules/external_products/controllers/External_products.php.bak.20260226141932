@@ -1,0 +1,1064 @@
+<?php
+
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class External_products extends AdminController
+{
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('form_validation');
+        $this->load->model('external_products/external_products_model');
+        $this->load->model('products_model');
+        $this->load->helper('external_products/external_products');
+    }
+
+    public function index()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+        close_setup_menu();
+
+        $data['title'] = _l('external_products');
+        if (has_permission('external_products', '', 'view')) {
+            if ($this->input->is_ajax_request()) {
+                $this->app->get_table_data(module_views_path('external_products', 'admin/tables/external_products'));
+            }
+            $this->load->view('admin/external_products', $data);
+        } else {
+            access_denied('external_products');
+        }
+    }
+
+    public function mapping()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+        close_setup_menu();
+
+        $data['title'] = _l('external_products_mapping');
+        if (has_permission('external_products', '', 'view')) {
+            $data['products'] = $this->products_model->get_by_id_product();
+            $this->load->view('admin/mapping', $data);
+        } else {
+            access_denied('external_products');
+        }
+    }
+
+    public function add_mapping()
+    {
+        if (!has_permission('external_products', '', 'create')) {
+            access_denied('external_products Create');
+        }
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('sku', 'SKU', 'required');
+            $this->form_validation->set_rules('mapping_id', 'Mapping ID', 'required');
+            $this->form_validation->set_rules('mapping_type', 'Mapping Type', 'required');
+
+            if ($this->form_validation->run() == false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => validation_errors()
+                ]);
+            } else {
+                $data = $this->input->post();
+                
+                // Check if mapping already exists
+                $existing = $this->external_products_model->get_external_product_mapping_by_mapping_id($data['mapping_id'], $data['mapping_type']);
+                if ($existing) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => _l('mapping_already_exists')
+                    ]);
+                    return;
+                }
+
+                $insert_id = $this->external_products_model->add_external_product_mapping($data);
+                if ($insert_id) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => _l('external_product_added_successfully')
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Failed to add mapping'
+                    ]);
+                }
+            }
+        } else {
+            $data['title'] = _l('add_external_product');
+            $data['products'] = $this->products_model->get_by_id_product();
+            $this->load->view('admin/add_mapping', $data);
+        }
+    }
+
+    public function edit_mapping($id)
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        $mapping = $this->external_products_model->get_external_product_mapping($id);
+        if (!$mapping) {
+            show_404();
+        }
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('sku', 'SKU', 'required');
+            $this->form_validation->set_rules('mapping_id', 'Mapping ID', 'required');
+            $this->form_validation->set_rules('mapping_type', 'Mapping Type', 'required');
+
+            if ($this->form_validation->run() == false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => validation_errors()
+                ]);
+            } else {
+                $data = $this->input->post();
+                
+                // Check if mapping already exists (excluding current record)
+                $existing = $this->external_products_model->get_external_product_mapping_by_mapping_id($data['mapping_id'], $data['mapping_type']);
+                if ($existing && $existing->id != $id) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => _l('mapping_already_exists')
+                    ]);
+                    return;
+                }
+
+                $success = $this->external_products_model->update_external_product_mapping($data, $id);
+                if ($success) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => _l('external_product_updated_successfully')
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Failed to update mapping'
+                    ]);
+                }
+            }
+        } else {
+            $data['title'] = _l('edit_external_product');
+            $data['mapping'] = $mapping;
+            $data['products'] = $this->products_model->get_by_id_product();
+            $this->load->view('admin/edit_mapping', $data);
+        }
+    }
+
+    public function delete_mapping($id)
+    {
+        if (!has_permission('external_products', '', 'delete')) {
+            access_denied('external_products Delete');
+        }
+
+        $success = $this->external_products_model->delete_external_product_mapping($id);
+        if ($success) {
+            set_alert('success', _l('external_product_deleted_successfully'));
+        } else {
+            set_alert('danger', 'Failed to delete mapping');
+        }
+        redirect(admin_url('external_products/mapping'));
+    }
+
+    public function bulk_action()
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        $action = $this->input->post('action');
+        $ids = $this->input->post('ids');
+
+        if (empty($ids) || empty($action)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No items selected'
+            ]);
+            return;
+        }
+
+        switch ($action) {
+            case 'delete':
+                foreach ($ids as $id) {
+                    $this->external_products_model->delete_external_product_mapping($id);
+                }
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Selected items deleted successfully'
+                ]);
+                break;
+            default:
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid action'
+                ]);
+                break;
+        }
+    }
+
+    public function get_mapping_data()
+    {
+        if ($this->input->is_ajax_request()) {
+            $mappings = $this->external_products_model->get_external_product_mapping();
+            $data = [];
+            
+            foreach ($mappings as $mapping) {
+                $row = [];
+                $row[] = '<div class="checkbox"><input type="checkbox" value="' . $mapping['id'] . '"><label></label></div>';
+                $row[] = $mapping['id'];
+                $row[] = $mapping['sku'];
+                $row[] = $mapping['mapping_id'];
+                $row[] = '<span class="mapping-type-badge ' . $mapping['mapping_type'] . '">' . format_mapping_type($mapping['mapping_type']) . '</span>';
+                $row[] = '<div class="row-options">
+                    <a href="' . admin_url('external_products/edit_mapping/' . $mapping['id']) . '" class="text-success">
+                        <i class="fa fa-pencil-square-o"></i>
+                    </a>
+                    <a href="' . admin_url('external_products/delete_mapping/' . $mapping['id']) . '" class="text-danger _delete">
+                        <i class="fa fa-remove"></i>
+                    </a>
+                </div>';
+                $data[] = $row;
+            }
+            
+            echo json_encode(['data' => $data]);
+        }
+    }
+
+
+    public function statistics()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+
+        $data['title'] = _l('mapping_statistics');
+        
+        // Get statistics by mapping type
+        $this->db->select('mapping_type, COUNT(*) as count');
+        $this->db->from(db_prefix() . 'external_products_mapping');
+        $this->db->group_by('mapping_type');
+        $this->db->order_by('count', 'DESC');
+        $data['statistics'] = $this->db->get()->result_array();
+        
+        // Get total count
+        $data['total_mappings'] = count($this->external_products_model->get_external_product_mapping());
+        
+        $this->load->view('admin/statistics', $data);
+    }
+
+    public function duplicates()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+
+        $data['title'] = _l('duplicate_mappings');
+        
+        // Get duplicate statistics
+        $data['duplicate_stats'] = $this->external_products_model->get_duplicate_statistics();
+        
+        $this->load->view('admin/duplicates', $data);
+    }
+
+    public function duplicate_skus_table()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data(module_views_path('external_products', 'admin/tables/duplicate_skus'));
+    }
+
+    public function duplicate_mapping_ids_table()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data(module_views_path('external_products', 'admin/tables/duplicate_mapping_ids'));
+    }
+
+    public function sku_conflicts_table()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data(module_views_path('external_products', 'admin/tables/sku_conflicts'));
+    }
+
+    public function mapping_conflicts_table()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data(module_views_path('external_products', 'admin/tables/mapping_conflicts'));
+    }
+
+
+    public function resolve_duplicate_sku()
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        if ($this->input->post()) {
+            $sku = $this->input->post('sku');
+            $keep_id = $this->input->post('keep_id');
+            $delete_ids = $this->input->post('delete_ids');
+            
+            if (empty($delete_ids)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No records selected for deletion'
+                ]);
+                return;
+            }
+            
+            $result = $this->external_products_model->resolve_duplicate_sku($sku, $keep_id, $delete_ids);
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Duplicate SKU resolved successfully'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to resolve duplicate SKU'
+                ]);
+            }
+        }
+    }
+
+    public function resolve_duplicate_mapping_id()
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        if ($this->input->post()) {
+            $mapping_id = $this->input->post('mapping_id');
+            $mapping_type = $this->input->post('mapping_type');
+            $keep_id = $this->input->post('keep_id');
+            $delete_ids = $this->input->post('delete_ids');
+            
+            if (empty($delete_ids)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No records selected for deletion'
+                ]);
+                return;
+            }
+            
+            $result = $this->external_products_model->resolve_duplicate_mapping_id($mapping_id, $mapping_type, $keep_id, $delete_ids);
+            
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Duplicate mapping ID resolved successfully'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to resolve duplicate mapping ID'
+                ]);
+            }
+        }
+    }
+
+    public function get_duplicate_details()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            ajax_access_denied();
+        }
+
+        if (! $this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $type       = $this->input->get('type');
+        $identifier = $this->input->get('identifier');
+
+        switch ($type) {
+            case 'sku':
+                $this->db->where('sku', $identifier);
+                break;
+            case 'mapping_id':
+            case 'mapping_conflict':
+                $mapping_type = $this->input->get('mapping_type');
+                $this->db->where('mapping_id', $identifier);
+                $this->db->where('mapping_type', $mapping_type);
+                break;
+            case 'sku_conflict':
+                $mapping_type = $this->input->get('mapping_type');
+                $this->db->where('sku', $identifier);
+                $this->db->where('mapping_type', $mapping_type);
+                break;
+            default:
+                echo json_encode(['data' => []]);
+                return;
+        }
+
+        $records = $this->db->get(db_prefix() . 'external_products_mapping')->result_array();
+
+        $data = [];
+        foreach ($records as $record) {
+            $row   = [];
+            $row[] = '<div class="checkbox"><input type="checkbox" value="' . $record['id'] . '" class="duplicate-checkbox"><label></label></div>';
+            $row[] = $record['id'];
+            $row[] = $record['sku'];
+            $row[] = $record['mapping_id'];
+            $row[] = '<span class="mapping-type-badge ' . $record['mapping_type'] . '">' . format_mapping_type($record['mapping_type']) . '</span>';
+            $row[] = '<button class="btn btn-sm btn-success keep-record" data-id="' . $record['id'] . '">' . _l('keep_this') . '</button>';
+            $data[] = $row;
+        }
+
+        echo json_encode(['data' => $data]);
+    }
+
+    // Order Management Methods
+    public function orders()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+        close_setup_menu();
+
+        $data['title'] = _l('external_orders');
+        $data['external_systems'] = $this->external_products_model->get_external_systems();
+        if (has_permission('external_products', '', 'view')) {
+            if ($this->input->is_ajax_request()) {
+                $this->app->get_table_data(module_views_path('external_products', 'admin/tables/external_orders'));
+            }
+            $this->load->view('admin/orders', $data);
+        } else {
+            access_denied('external_products');
+        }
+    }
+
+    public function add_order()
+    {
+        if (!has_permission('external_products', '', 'create')) {
+            access_denied('external_products Create');
+        }
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('external_order_id', 'External Order ID', 'required');
+            $this->form_validation->set_rules('external_system', 'External System', 'required');
+            $this->form_validation->set_rules('customer_name', 'Customer Name', 'required');
+            $this->form_validation->set_rules('order_date', 'Order Date', 'required');
+
+            if ($this->form_validation->run() == false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => validation_errors()
+                ]);
+            } else {
+                $data = $this->input->post();
+                $data['created_by'] = get_staff_user_id();
+                $data['created_date'] = date('Y-m-d H:i:s');
+                
+                $insert_id = $this->external_products_model->add_external_order($data);
+                if ($insert_id) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => _l('external_order_added_successfully')
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Failed to add order'
+                    ]);
+                }
+            }
+        } else {
+            $data['title'] = _l('add_external_order');
+            $data['external_systems'] = $this->external_products_model->get_external_systems();
+            $this->load->view('admin/add_order', $data);
+        }
+    }
+
+    public function edit_order($id)
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        $order = $this->external_products_model->get_external_order($id);
+        if (!$order) {
+            show_404();
+        }
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('external_order_id', 'External Order ID', 'required');
+            $this->form_validation->set_rules('external_system', 'External System', 'required');
+            $this->form_validation->set_rules('customer_name', 'Customer Name', 'required');
+            $this->form_validation->set_rules('order_date', 'Order Date', 'required');
+
+            if ($this->form_validation->run() == false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => validation_errors()
+                ]);
+            } else {
+                $data = $this->input->post();
+                $data['updated_date'] = date('Y-m-d H:i:s');
+                
+                $success = $this->external_products_model->update_external_order($data, $id);
+                if ($success) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => _l('external_order_updated_successfully')
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Failed to update order'
+                    ]);
+                }
+            }
+        } else {
+            $data['title'] = _l('edit_external_order');
+            $data['order'] = $order;
+            $data['external_systems'] = $this->external_products_model->get_external_systems();
+            $this->load->view('admin/edit_order', $data);
+        }
+    }
+
+    public function delete_order($id)
+    {
+        if (!has_permission('external_products', '', 'delete')) {
+            access_denied('external_products Delete');
+        }
+
+        $success = $this->external_products_model->delete_external_order($id);
+        if ($success) {
+            set_alert('success', _l('external_order_deleted_successfully'));
+        } else {
+            set_alert('danger', 'Failed to delete order');
+        }
+        redirect(admin_url('external_products/orders'));
+    }
+
+    public function get_order_data()
+    {
+        if ($this->input->is_ajax_request()) {
+            $orders = $this->external_products_model->get_external_orders();
+            $data = [];
+            
+            foreach ($orders as $order) {
+                $order_data = json_decode($order['data'], true) ?? [];
+                $row = [];
+                $row[] = '<div class="checkbox"><input type="checkbox" value="' . $order['id'] . '"><label></label></div>';
+                $row[] = $order['id'];
+                $row[] = $order['uniquekey'];
+                $row[] = $order['target_id'];
+                $row[] = $order['title'] ?: 'N/A';
+                $row[] = $order_data['customer_email'] ?? 'N/A';
+                $row[] = '<span class="order-status-badge ' . ($order['status'] ? 'active' : 'inactive') . '">' . ($order['status'] ? 'Active' : 'Inactive') . '</span>';
+                $row[] = isset($order_data['total_amount']) ? format_money($order_data['total_amount'], $order_data['currency'] ?? 'USD') : 'N/A';
+                $row[] = _d($order['dateadded']);
+                $row[] = '<div class="row-options">
+                    <a href="' . admin_url('external_products/edit_order/' . $order['id']) . '" class="text-success">
+                        <i class="fa fa-pencil-square-o"></i>
+                    </a>
+                    <a href="' . admin_url('external_products/delete_order/' . $order['id']) . '" class="text-danger _delete">
+                        <i class="fa fa-remove"></i>
+                    </a>
+                </div>';
+                $data[] = $row;
+            }
+            
+            echo json_encode(['data' => $data]);
+        }
+    }
+
+    public function sync_orders()
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        $system = $this->input->post('system');
+        if (empty($system)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Please select a system to sync'
+            ]);
+            return;
+        }
+
+        // Get external system configuration
+        $external_system = $this->external_products_model->get_external_system_by_name($system);
+        if (!$external_system) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'External system not found'
+            ]);
+            return;
+        }
+
+        // Sync orders from external system
+        $result = $this->external_products_model->sync_orders_from_external_system($external_system);
+        
+        if ($result['success']) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Orders synced successfully. ' . $result['count'] . ' orders processed.'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to sync orders: ' . $result['message']
+            ]);
+        }
+    }
+
+    public function order_mapping()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+        close_setup_menu();
+
+        $data['title'] = _l('order_mapping');
+        if (has_permission('external_products', '', 'view')) {
+            if ($this->input->is_ajax_request()) {
+                $this->app->get_table_data(module_views_path('external_products', 'admin/tables/order_mapping'));
+            }
+            $this->load->view('admin/order_mapping', $data);
+        } else {
+            access_denied('external_products');
+        }
+    }
+
+    public function get_order_mapping_data()
+    {
+        if ($this->input->is_ajax_request()) {
+            $mappings = $this->external_products_model->get_order_mapping();
+            $data = [];
+            
+            foreach ($mappings as $mapping) {
+                $mapping_data = json_decode($mapping['data'], true) ?? [];
+                $row = [];
+                $row[] = '<div class="checkbox"><input type="checkbox" value="' . $mapping['id'] . '"><label></label></div>';
+                $row[] = $mapping['id'];
+                $row[] = $mapping['uniquekey'];
+                $row[] = $mapping['target_id'];
+                $row[] = $mapping_data['external_system'] ?? 'N/A';
+                $row[] = '<span class="mapping-status-badge ' . ($mapping['status'] ? 'active' : 'inactive') . '">' . ($mapping['status'] ? 'Active' : 'Inactive') . '</span>';
+                $row[] = _d($mapping['dateadded']);
+                $row[] = '<div class="row-options">
+                    <a href="' . admin_url('external_products/edit_order_mapping/' . $mapping['id']) . '" class="text-success">
+                        <i class="fa fa-pencil-square-o"></i>
+                    </a>
+                    <a href="' . admin_url('external_products/delete_order_mapping/' . $mapping['id']) . '" class="text-danger _delete">
+                        <i class="fa fa-remove"></i>
+                    </a>
+                </div>';
+                $data[] = $row;
+            }
+            
+            echo json_encode(['data' => $data]);
+        }
+    }
+
+    public function edit_order_mapping($id)
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        $mapping = $this->external_products_model->get_order_mapping($id);
+        if (!$mapping) {
+            show_404();
+        }
+
+        if ($this->input->post()) {
+            $this->form_validation->set_rules('external_order_id', 'External Order ID', 'required');
+            $this->form_validation->set_rules('internal_order_id', 'Internal Order ID', 'required');
+
+            if ($this->form_validation->run() == false) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => validation_errors()
+                ]);
+            } else {
+                $data = $this->input->post();
+
+                $success = $this->external_products_model->update_order_mapping($data, $id);
+                if ($success) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => _l('external_order_updated_successfully')
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Failed to update order mapping'
+                    ]);
+                }
+            }
+        } else {
+            $data['title'] = _l('edit_order_mapping');
+            $data['mapping'] = $mapping;
+            $this->load->view('admin/edit_order_mapping', $data);
+        }
+    }
+
+    public function delete_order_mapping($id)
+    {
+        if (!has_permission('external_products', '', 'delete')) {
+            access_denied('external_products Delete');
+        }
+
+        $success = $this->external_products_model->delete_order_mapping($id);
+        if ($success) {
+            set_alert('success', _l('external_order_deleted_successfully'));
+        } else {
+            set_alert('danger', 'Failed to delete order mapping');
+        }
+        redirect(admin_url('external_products/order_mapping'));
+    }
+
+    public function delete_order_mapping_bulk()
+    {
+        if (!has_permission('external_products', '', 'delete')) {
+            access_denied('external_products Delete');
+        }
+
+        $ids = $this->input->post('ids');
+        if (!is_array($ids) || empty($ids)) {
+            echo json_encode([
+                'success' => false,
+                'message' => _l('no_items_selected')
+            ]);
+            return;
+        }
+
+        $deleted = $this->external_products_model->delete_order_mappings($ids);
+
+        if ($deleted > 0) {
+            echo json_encode([
+                'success' => true,
+                'message' => _l('order_mapping_deleted_successfully') . ' (' . $deleted . ')'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => _l('order_mapping_deleted_successfully')
+            ]);
+        }
+    }
+
+    public function bulk_update_order_mapping()
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        $ids = $this->input->post('ids');
+        $action = trim($this->input->post('action'));
+        $status = trim($this->input->post('mapping_status'));
+
+        if (!is_array($ids) || empty($ids)) {
+            echo json_encode([
+                'success' => false,
+                'message' => _l('no_items_selected')
+            ]);
+            return;
+        }
+
+        if ($action === 'clear_data') {
+            $updated = $this->external_products_model->bulk_clear_order_mapping_data($ids);
+        } elseif ($action === 'set_mapping_status') {
+            if ($status === '') {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Missing mapping status'
+                ]);
+                return;
+            }
+            $updated = $this->external_products_model->bulk_update_order_mapping_status($ids, $status);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid action'
+            ]);
+            return;
+        }
+
+        echo json_encode([
+            'success' => $updated > 0,
+            'message' => $updated > 0 ? 'Updated ' . $updated . ' record(s)' : 'No records updated'
+        ]);
+    }
+
+    // Haravan API Management Methods
+    public function haravan_settings()
+    {
+        redirect(admin_url('external_products/external_system_settings?tab=haravan'));
+    }
+
+    public function external_system_settings()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+        close_setup_menu();
+
+        $activeTab = $this->input->get('tab');
+        if (empty($activeTab)) {
+            $activeTab = 'haravan';
+        }
+
+        if ($this->input->post()) {
+            $system   = $this->input->post('system');
+            $settings = (array) $this->input->post('settings');
+
+            $result     = false;
+            $messageKey = 'external_system_settings_update_failed';
+
+            switch ($system) {
+                case 'haravan':
+                    $result     = $this->external_products_model->update_haravan_api_settings($settings);
+                    $messageKey = 'haravan_settings_updated_successfully';
+                    break;
+                case 'woocommerce':
+                    $result     = $this->external_products_model->update_woocommerce_settings($settings);
+                    $messageKey = 'woocommerce_settings_updated_successfully';
+                    break;
+                case 'shopify':
+                    $result     = $this->external_products_model->update_shopify_settings($settings);
+                    $messageKey = 'shopify_settings_updated_successfully';
+                    break;
+                case 'magento':
+                    $result     = $this->external_products_model->update_magento_settings($settings);
+                    $messageKey = 'magento_settings_updated_successfully';
+                    break;
+            }
+
+            if ($result) {
+                set_alert('success', _l($messageKey));
+            } else {
+                set_alert('danger', _l('external_system_settings_update_failed'));
+            }
+
+            redirect(admin_url('external_products/external_system_settings?tab=' . $system));
+        }
+
+        $data['title']        = _l('external_systems_configuration');
+        $data['active_tab']   = $activeTab;
+        $data['available_skus'] = $this->external_products_model->get_available_haravan_sync_skus();
+        $data['haravan']      = [
+            'enabled'  => get_option('haravan_api_enabled'),
+            'token'    => get_option('haravan_api_token'),
+            'base_url' => get_option('haravan_api_base_url'),
+        ];
+        $data['woocommerce']  = [
+            'api_url' => get_option('woocommerce_api_url'),
+            'api_key' => get_option('woocommerce_api_key'),
+        ];
+        $data['shopify']      = [
+            'api_url'      => get_option('shopify_api_url'),
+            'access_token' => get_option('shopify_access_token'),
+        ];
+        $data['magento']      = [
+            'api_url'      => get_option('magento_api_url'),
+            'access_token' => get_option('magento_access_token'),
+        ];
+
+        $this->load->view('admin/external_system_settings', $data);
+    }
+
+    public function haravan_products()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+        close_setup_menu();
+
+        $data['title']          = _l('haravan_products');
+        $data['available_skus'] = $this->external_products_model->get_available_haravan_sync_skus();
+        $data['available_skus'] = $this->external_products_model->get_available_haravan_sync_skus();
+        if (has_permission('external_products', '', 'view')) {
+            if ($this->input->is_ajax_request()) {
+                $this->app->get_table_data(module_views_path('external_products', 'admin/tables/haravan_products'));
+            }
+            $this->load->view('admin/haravan_products', $data);
+        } else {
+            access_denied('external_products');
+        }
+    }
+
+    public function get_haravan_products_data()
+    {
+        if ($this->input->is_ajax_request()) {
+            $products = $this->external_products_model->get_haravan_products();
+            $data = [];
+            
+            foreach ($products as $product) {
+                $row = [];
+                $row[] = '<div class="checkbox"><input type="checkbox" value="' . $product['id'] . '"><label></label></div>';
+                $row[] = $product['id'];
+                $row[] = $product['external_product_id'];
+                $row[] = $product['external_product_name'];
+                $row[] = $product['external_product_sku'];
+                $row[] = format_money($product['external_product_price'], 'VND');
+                $row[] = $product['external_brand'];
+                $row[] = $product['external_category'];
+                $row[] = $product['external_stock_quantity'];
+                $row[] = _d($product['last_import_date']);
+                $row[] = '<div class="row-options">
+                    <a href="' . admin_url('external_products/sync_haravan_product/' . $product['external_product_sku']) . '" class="text-info" title="Sync from Haravan">
+                        <i class="fa fa-refresh"></i>
+                    </a>
+                    <a href="' . admin_url('external_products/delete_haravan_product/' . $product['id']) . '" class="text-danger _delete">
+                        <i class="fa fa-remove"></i>
+                    </a>
+                </div>';
+                $data[] = $row;
+            }
+            
+            echo json_encode(['data' => $data]);
+        }
+    }
+
+    public function sync_haravan_product($sku = null)
+    {
+        if (!has_permission('external_products', '', 'edit')) {
+            access_denied('external_products Edit');
+        }
+
+        if ($this->input->post()) {
+            $sku = $this->input->post('sku');
+        }
+
+        if (empty($sku)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'SKU is required'
+            ]);
+            return;
+        }
+
+        $result = $this->external_products_model->sync_haravan_product_by_sku($sku);
+        
+        if ($result['success']) {
+            echo json_encode([
+                'success' => true,
+                'message' => $result['message']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]);
+        }
+    }
+
+    public function delete_haravan_product($id)
+    {
+        if (!has_permission('external_products', '', 'delete')) {
+            access_denied('external_products Delete');
+        }
+
+        $success = $this->external_products_model->delete_external_product($id);
+        if ($success) {
+            set_alert('success', _l('haravan_product_deleted_successfully'));
+        } else {
+            set_alert('danger', 'Failed to delete Haravan product');
+        }
+        redirect(admin_url('external_products/haravan_products'));
+    }
+
+    public function test_haravan_connection()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products View');
+        }
+
+        $sku = $this->input->post('test_sku') ?: '006439';
+        $result = $this->external_products_model->fetch_haravan_product_by_sku($sku);
+        
+        if ($result['success']) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Connection successful! Found ' . count($result['data']['products']) . ' product(s)',
+                'data' => $result['data']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]);
+        }
+    }
+
+    // Settings Management Methods
+    public function settings()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products');
+        }
+
+        if ($this->input->post()) {
+            $settings = [
+                'external_products_enabled' => $this->input->post('external_products_enabled') ? 1 : 0,
+                'external_products_auto_sync' => $this->input->post('external_products_auto_sync') ? 1 : 0,
+                'external_products_sync_interval' => $this->input->post('external_products_sync_interval'),
+                'external_products_default_mapping_status' => $this->input->post('external_products_default_mapping_status'),
+                'woocommerce_api_url' => $this->input->post('woocommerce_api_url'),
+                'woocommerce_api_key' => $this->input->post('woocommerce_api_key'),
+                'shopify_api_url' => $this->input->post('shopify_api_url'),
+                'shopify_access_token' => $this->input->post('shopify_access_token'),
+                'haravan_api_enabled' => $this->input->post('haravan_api_enabled') ? 1 : 0,
+                'haravan_api_token' => $this->input->post('haravan_api_token'),
+                'haravan_api_base_url' => $this->input->post('haravan_api_base_url')
+            ];
+
+            foreach ($settings as $key => $value) {
+                update_option($key, $value);
+            }
+
+            log_activity('External Products Settings Updated [Staff id ' . get_staff_user_id() . ']');
+            set_alert('success', _l('settings_updated_successfully'));
+            redirect(admin_url('settings?tab=external_products'));
+        }
+
+        show_404();
+    }
+
+    public function haravan_api_settings()
+    {
+        if (!has_permission('external_products', '', 'view')) {
+            access_denied('external_products');
+        }
+
+        if ($this->input->post()) {
+            $settings = [
+                'haravan_api_enabled' => $this->input->post('haravan_api_enabled') ? 1 : 0,
+                'haravan_api_token' => $this->input->post('haravan_api_token'),
+                'haravan_api_base_url' => $this->input->post('haravan_api_base_url')
+            ];
+
+            foreach ($settings as $key => $value) {
+                update_option($key, $value);
+            }
+
+            log_activity('Haravan API Settings Updated [Staff id ' . get_staff_user_id() . ']');
+            set_alert('success', _l('haravan_settings_updated_successfully'));
+            redirect(admin_url('external_products/external_system_settings?tab=haravan'));
+        }
+
+        show_404();
+    }
+}

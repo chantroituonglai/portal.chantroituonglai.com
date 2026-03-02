@@ -1,0 +1,1805 @@
+// Ultimate Editor JavaScript
+$(document).ready(function() {
+    'use strict';
+
+    // Constants
+    const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+    const POLL_INTERVAL = 2000; // 2 seconds
+    const MAX_POLL_ATTEMPTS = 60; // 2 phút timeout (60 * 2 giây)
+    
+    // Get workflow config from view
+    const WORKFLOW_ID = workflowConfig.workflow_id;
+    const BUTTON_ID = workflowConfig.button_id;
+    const TARGET_TYPE = workflowConfig.target_type;
+    const TARGET_STATE = workflowConfig.target_state;
+    const ACTION_COMMAND = workflowConfig.action_command;
+    
+    let lastSaveTime = new Date();
+    let isDirty = false;
+    let editor = null;
+    let isLoadingContent = false;
+    let pollTimeoutCount = 0;
+
+    // Initialize editor when document is ready
+    function initializeEditor() {
+        console.log('Debug - DOM Elements:', {
+            topicidElement: $('#topicid').length,
+            draftContentElement: $('#draft-content').length,
+            currentDraftIdElement: $('#current-draft-id').length
+        });
+
+        const topicId = $('#topicid').val();
+        console.log('Debug - Topic ID value:', topicId);
+        
+        if (!topicId) {
+            console.error('Topic ID not found - Check if #topicid element exists and has a value');
+            // Try to get topic ID from URL as fallback
+            const urlParams = new URLSearchParams(window.location.search);
+            const topicIdFromUrl = urlParams.get('topic_id');
+            
+            if (topicIdFromUrl) {
+                console.log('Found topic ID from URL:', topicIdFromUrl);
+                // Dynamically create the hidden input if it doesn't exist
+                if ($('#topicid').length === 0) {
+                    $('body').append('<input type="hidden" id="topicid" value="' + topicIdFromUrl + '">');
+                } else {
+                    $('#topicid').val(topicIdFromUrl);
+                }
+                // Continue with initialization using the URL parameter
+                continueInitialization(topicIdFromUrl);
+            } else {
+                alert('Cannot initialize editor: Topic ID not found. Please try refreshing the page.');
+                return;
+            }
+        } else {
+            continueInitialization(topicId);
+        }
+    }
+    
+    function continueInitialization(topicId) {
+        console.log('Initializing Ultimate Editor for topic ID:', topicId);
+
+        // Initialize TinyMCE first so it's available
+        initializeTinyMCE();
+        
+        // Check if we have content from active draft
+        const hasContent = $('#draft-content').val().trim() !== '';
+        const activeDraftId = $('#current-draft-id').val();
+        
+        console.log('Draft status:', {
+            hasContent: hasContent, 
+            activeDraftId: activeDraftId,
+            contentLength: $('#draft-content').val().length
+        });
+        
+        if (!hasContent || !activeDraftId) {
+            console.log('No content or active draft found, loading from workflow...');
+            // Load initial content from workflow if no content exists
+            loadContentFromWorkflow(topicId);
+        } else {
+            console.log('Content already exists, skipping workflow load');
+            // Still update word count for existing content
+            setTimeout(updateWordCount, 1000);
+        }
+
+        // Setup event handlers
+        setupEventHandlers();
+
+        // Setup autosave
+        setupAutosave();
+    }
+
+    // Load content from workflow
+    function loadContentFromWorkflow(topicId) {
+        if (isLoadingContent) {
+            console.log('Already loading content, skipping duplicate request');
+            return;
+        }
+        
+        isLoadingContent = true;
+        const workflowData = {
+            workflow_id: WORKFLOW_ID,
+            topic_id: topicId,
+            target_type: TARGET_TYPE,
+            target_state: TARGET_STATE,
+            button_id: BUTTON_ID,
+            action_command: ACTION_COMMAND,
+            from_history: true
+        };
+
+        console.log('Executing workflow with data:', workflowData);
+
+        // Show loading indicator
+        showLoadingIndicator('Fetching content...');
+
+        // First try to get existing draft content
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/get_draft_content',
+            type: 'GET',
+            data: {
+                workflow_id: WORKFLOW_ID,
+                topic_id: topicId
+            },
+            success: function(response) {
+                console.log('Get draft content response:', response);
+                
+                if (response.success && response.data) {
+                    // If we have existing draft content, use it
+                    applyContentToEditor(response.data);
+                    hideLoadingIndicator();
+                    isLoadingContent = false;
+                } else {
+                    // If no existing draft, execute workflow to get content
+                    showLoadingIndicator('Executing workflow...');
+                    var requestData = {
+                        topic_id: topicId,
+                        workflow_id: WORKFLOW_ID,
+                        target_type: TARGET_TYPE,
+                        target_state: TARGET_STATE
+                    };
+                    
+                    $.ajax({
+                        url: admin_url + 'topics/ultimate_editor/execute_workflow',
+                        type: 'POST',
+                        data: requestData,
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                var data = response.data;
+                                // If the response indicates further polling is needed
+                                if (data.needs_polling) {
+                                    pollWorkflowResults(data.workflow_id, data.execution_id, topicId);
+                                }
+                                // Update the editor with the returned content
+                                applyContentToEditor(data.response);
+                            } else {
+                                alert(response.message);
+                            }
+                            hideLoadingIndicator();
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Workflow execution failed: ' + error);
+                            hideLoadingIndicator();
+                        }
+                    });
+                }
+            },
+            error: function() {
+                // On error, fallback to executing workflow
+                showLoadingIndicator('Executing workflow...');
+                var requestData = {
+                    topic_id: topicId,
+                    workflow_id: WORKFLOW_ID,
+                    target_type: TARGET_TYPE,
+                    target_state: TARGET_STATE
+                };
+                
+                $.ajax({
+                    url: admin_url + 'topics/ultimate_editor/execute_workflow',
+                    type: 'POST',
+                    data: requestData,
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            var data = response.data;
+                            // If the response indicates further polling is needed
+                            if (data.needs_polling) {
+                                pollWorkflowResults(data.workflow_id, data.execution_id, topicId);
+                            }
+                            // Update the editor with the returned content
+                            applyContentToEditor(data.response);
+                        } else {
+                            alert(response.message);
+                        }
+                        hideLoadingIndicator();
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Workflow execution failed: ' + error);
+                        hideLoadingIndicator();
+                    }
+                });
+            }
+        });
+    }
+
+    // Poll workflow results
+    function pollWorkflowResults(workflowId, executionId, topicId) {
+// Ultimate Editor JavaScript
+$(document).ready(function() {
+    'use strict';
+
+    // Constants
+    const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+    const POLL_INTERVAL = 2000; // 2 seconds
+    const MAX_POLL_ATTEMPTS = 60; // 2 phút timeout (60 * 2 giây)
+    
+    // Get workflow config from view
+    const WORKFLOW_ID = workflowConfig.workflow_id;
+    const BUTTON_ID = workflowConfig.button_id;
+    const TARGET_TYPE = workflowConfig.target_type;
+    const TARGET_STATE = workflowConfig.target_state;
+    const ACTION_COMMAND = workflowConfig.action_command;
+    
+    let lastSaveTime = new Date();
+    let isDirty = false;
+    let editor = null;
+    let isLoadingContent = false;
+    let pollTimeoutCount = 0;
+
+    // Initialize editor when document is ready
+    function initializeEditor() {
+        console.log('Debug - DOM Elements:', {
+            topicidElement: $('#topicid').length,
+            draftContentElement: $('#draft-content').length,
+            currentDraftIdElement: $('#current-draft-id').length
+        });
+
+        const topicId = $('#topicid').val();
+        console.log('Debug - Topic ID value:', topicId);
+        
+        if (!topicId) {
+            console.error('Topic ID not found - Check if #topicid element exists and has a value');
+            // Try to get topic ID from URL as fallback
+            const urlParams = new URLSearchParams(window.location.search);
+            const topicIdFromUrl = urlParams.get('topic_id');
+            
+            if (topicIdFromUrl) {
+                console.log('Found topic ID from URL:', topicIdFromUrl);
+                // Dynamically create the hidden input if it doesn't exist
+                if ($('#topicid').length === 0) {
+                    $('body').append('<input type="hidden" id="topicid" value="' + topicIdFromUrl + '">');
+                } else {
+                    $('#topicid').val(topicIdFromUrl);
+                }
+                // Continue with initialization using the URL parameter
+                continueInitialization(topicIdFromUrl);
+            } else {
+                alert('Cannot initialize editor: Topic ID not found. Please try refreshing the page.');
+                return;
+            }
+        } else {
+            continueInitialization(topicId);
+        }
+    }
+    
+    function continueInitialization(topicId) {
+        console.log('Initializing Ultimate Editor for topic ID:', topicId);
+
+        // Initialize TinyMCE first so it's available
+        initializeTinyMCE();
+        
+        // Check if we have content from active draft
+        const hasContent = $('#draft-content').val().trim() !== '';
+        const activeDraftId = $('#current-draft-id').val();
+        
+        console.log('Draft status:', {
+            hasContent: hasContent, 
+            activeDraftId: activeDraftId,
+            contentLength: $('#draft-content').val().length
+        });
+        
+        if (!hasContent || !activeDraftId) {
+            console.log('No content or active draft found, loading from workflow...');
+            // Load initial content from workflow if no content exists
+            loadContentFromWorkflow(topicId);
+        } else {
+            console.log('Content already exists, skipping workflow load');
+            // Still update word count for existing content
+            setTimeout(updateWordCount, 1000);
+        }
+
+        // Setup event handlers
+        setupEventHandlers();
+
+        // Setup autosave
+        setupAutosave();
+    }
+
+    // Load content from workflow
+    function loadContentFromWorkflow(topicId) {
+        if (isLoadingContent) {
+            console.log('Already loading content, skipping duplicate request');
+            return;
+        }
+        
+        isLoadingContent = true;
+        const workflowData = {
+            workflow_id: WORKFLOW_ID,
+            target_type: TARGET_TYPE,
+            target_state: TARGET_STATE,
+            action_command: ACTION_COMMAND,
+            audit_step: 1
+        };
+        
+        showLoadingIndicator('Initializing workflow...');
+        
+        // Execute workflow function first
+        executeWorkflow();
+        
+        function executeWorkflow() {
+            $.ajax({
+                url: admin_url + 'topics/ultimate_editor/execute_workflow',
+                type: 'POST',
+                data: {
+                    topic_id: topicId,
+                    workflow_id: workflowData.workflow_id,
+                    target_type: workflowData.target_type,
+                    target_state: workflowData.target_state,
+                    action_command: workflowData.action_command
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Workflow execution response:', response);
+                    
+                    if (response.success) {
+                        updateLoadingIndicator('Workflow started, waiting for results...');
+                        
+                        if (response.data.execution_id) {
+                            // Poll for results if we have an execution ID
+                            pollWorkflowResults(workflowData.workflow_id, response.data.execution_id, topicId);
+                        } else {
+                            hideLoadingIndicator();
+                            isLoadingContent = false;
+                            alert_float('danger', 'No execution ID returned from workflow');
+                        }
+                    } else {
+                        hideLoadingIndicator();
+                        isLoadingContent = false;
+                        alert_float('danger', response.message || 'Error executing workflow');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Workflow execution error:', error);
+                    hideLoadingIndicator();
+                    isLoadingContent = false;
+                    alert_float('danger', 'Error executing workflow: ' + error);
+                }
+            });
+        }
+    }
+
+    // Poll workflow results
+    function pollWorkflowResults(workflowId, executionId, topicId) {
+        pollTimeoutCount++;
+        
+        if (pollTimeoutCount > MAX_POLL_ATTEMPTS) {
+            hideLoadingIndicator();
+            isLoadingContent = false;
+            pollTimeoutCount = 0;
+            alert_float('danger', 'Timeout waiting for workflow results');
+            return;
+        }
+        
+        updateLoadingIndicator('Waiting for results... (' + pollTimeoutCount + '/' + MAX_POLL_ATTEMPTS + ')');
+        
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/check_workflow_status',
+            type: 'POST',
+            data: {
+                workflow_id: workflowId,
+                execution_id: executionId,
+                topic_id: topicId
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Poll workflow status response:', response);
+                
+                if (response.success) {
+                    // Check if the workflow is complete
+                    if (response.data.status === 'completed') {
+                        // Check if we have data
+                        if (response.data.workflow_response && 
+                            response.data.workflow_response.data && 
+                            response.data.workflow_response.data.response) {
+                            
+                            // Process Draft Writer workflow response
+                            if (response.data.workflow_response.data.response.data) {
+                                // This is a Draft Writer response
+                                const workflowResponse = response.data.workflow_response;
+                                updateLoadingIndicator('Applying content to editor...');
+                                setTimeout(function() {
+                                    applyDraftWriterContentToEditor(workflowResponse, topicId);
+                                    hideLoadingIndicator();
+                                    isLoadingContent = false;
+                                    pollTimeoutCount = 0;
+                                }, 500);
+                            } else {
+                                // Regular workflow response
+                                const workflowResponse = response.data.workflow_response;
+                                updateLoadingIndicator('Applying content to editor...');
+                                setTimeout(function() {
+                                    applyContentToEditor(workflowResponse);
+                                    hideLoadingIndicator();
+                                    isLoadingContent = false;
+                                    pollTimeoutCount = 0;
+                                }, 500);
+                            }
+                        } else {
+                            hideLoadingIndicator();
+                            isLoadingContent = false;
+                            pollTimeoutCount = 0;
+                            alert_float('danger', 'No data in workflow response');
+                        }
+                    } else if (response.data.status === 'failed') {
+                        hideLoadingIndicator();
+                        isLoadingContent = false;
+                        pollTimeoutCount = 0;
+                        alert_float('danger', 'Workflow execution failed: ' + (response.data.error_message || 'Unknown error'));
+                    } else {
+                        // Still running, poll again
+                        setTimeout(function() {
+                            pollWorkflowResults(workflowId, executionId, topicId);
+                        }, POLL_INTERVAL);
+                    }
+                } else {
+                    hideLoadingIndicator();
+                    isLoadingContent = false;
+                    pollTimeoutCount = 0;
+                    alert_float('danger', response.message || 'Error checking workflow status');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Poll workflow status error:', error);
+                hideLoadingIndicator();
+                isLoadingContent = false;
+                pollTimeoutCount = 0;
+                alert_float('danger', 'Error checking workflow status: ' + error);
+            }
+        });
+    }
+
+    // Process and apply Draft Writer workflow response to editor
+    function applyDraftWriterContentToEditor(workflowResponse, topicId) {
+        console.log('Applying Draft Writer content to editor:', workflowResponse);
+        
+        if (!workflowResponse || !workflowResponse.data || !workflowResponse.data.response || !workflowResponse.data.response.data) {
+            console.error('Invalid workflow response:', workflowResponse);
+            alert_float('danger', 'Invalid workflow response structure');
+            return;
+        }
+        
+        // Extract data from Draft Writer response
+        const responseData = workflowResponse.data.response.data[0];
+        
+        // Extract title, summary, and item content
+        const title = responseData.Title || '';
+        const summary = responseData.Summary || '';
+        
+        // Generate HTML content from item details
+        let htmlContent = '';
+        
+        // Add title as H1
+        if (title) {
+            htmlContent += '<h1>' + title + '</h1>';
+        }
+        
+        // Add summary as paragraph
+        if (summary) {
+            htmlContent += '<p>' + summary + '</p>';
+        }
+        
+        // Add item content
+        if (responseData.Item_Title && responseData.Item_Content) {
+            htmlContent += '<h2>' + responseData.Item_Title + '</h2>';
+            htmlContent += responseData.Item_Content;
+        }
+        
+        // Add footer if available
+        if (responseData.Topic_footer) {
+            htmlContent += '<div class="topic-footer">' + responseData.Topic_footer + '</div>';
+        }
+        
+        // Clean HTML content to prevent issues
+        htmlContent = cleanHtmlContent(htmlContent);
+        
+        // Set title
+        $('#draft-title').val(title);
+        
+        // Set description/summary
+        $('#draft-description').val(summary);
+        
+        // Update the editor with content
+        if (editor) {
+            editor.setContent(htmlContent);
+            
+            // Trigger change event for analysis updates
+            editor.fire('change');
+        } else {
+            // Fallback if editor not initialized
+            $('#draft-content').val(htmlContent);
+            alert_float('warning', 'Editor not initialized, content saved but not displayed');
+        }
+        
+        // Update the keywords field if available
+        if (responseData.TopicKeywords) {
+            $('#keywords').val(responseData.TopicKeywords);
+        }
+        
+        // Set dirty flag to trigger save
+        isDirty = true;
+        
+        // Update content analysis
+        updateWordCount();
+        
+        // Show success message
+        alert_float('success', 'Content loaded successfully from Draft Writer');
+        
+        // Save draft automatically
+        saveDraft(true);
+    }
+
+    // Apply content to editor from workflow response
+    function applyContentToEditor(content) {
+        console.log('Applying content to editor:', content);
+        
+        let htmlContent = '';
+        let mainTitle = '';
+        let mainSummary = '';
+        let topicKeywords = '';
+        
+        // Xử lý khi content là mảng (từ json_response_step1.md)
+        if (Array.isArray(content)) {
+            console.log('Processing array content with ' + content.length + ' items');
+            
+            // Lấy item đầu tiên để extract title và summary
+            const firstItem = content[0];
+            
+            // Xử lý title
+            if (firstItem.Title) {
+                mainTitle = decodeHtmlEntities(firstItem.Title);
+                $('#draft-title').val(mainTitle);
+                console.log('Set title:', mainTitle);
+            }
+            
+            // Xử lý summary/description
+            if (firstItem.Summary) {
+                mainSummary = decodeHtmlEntities(firstItem.Summary);
+                $('#draft-description').val(mainSummary);
+                console.log('Set description:', mainSummary);
+            }
+            
+            // Build HTML content
+            
+            // Thêm heading chính
+            if (firstItem.Topic) {
+                const decodedTopic = decodeHtmlEntities(firstItem.Topic);
+                htmlContent += `<h1>${decodedTopic}</h1>`;
+            } else if (mainTitle) {
+                htmlContent += `<h1>${mainTitle}</h1>`;
+            }
+            
+            // Thêm summary
+            if (mainSummary) {
+                htmlContent += `<p class="lead">${mainSummary}</p>`;
+            }
+            
+            // Xử lý từng item
+            content.forEach((item, index) => {
+                // Thêm separator giữa các item
+                if (index > 0) {
+                    htmlContent += '<hr class="item-separator">';
+                }
+                
+                // Thêm tiêu đề item nếu khác với tiêu đề chính
+                if (item.Item_Title && decodeHtmlEntities(item.Item_Title) !== mainTitle) {
+                    const decodedItemTitle = decodeHtmlEntities(item.Item_Title);
+                    htmlContent += `<h2>${decodedItemTitle}</h2>`;
+                }
+                
+                // Thêm nội dung item
+                if (item.Item_Content) {
+                    const cleanedContent = decodeHtmlEntities(item.Item_Content);
+                    htmlContent += `<div class="item-content">${cleanedContent}</div>`;
+                }
+                
+                // Thêm hình ảnh nếu có
+                if (item.item_Pictures_Full && item.item_Pictures_Full.length > 0) {
+                    htmlContent += '<div class="item-images">';
+                    
+                    // Parse item_Pictures_Full nếu là string
+                    let pictures = item.item_Pictures_Full;
+                    if (typeof pictures === 'string') {
+                        try {
+                            pictures = JSON.parse(pictures);
+                        } catch (e) {
+                            console.error('Error parsing item_Pictures_Full:', e);
+                        }
+                    }
+                    
+                    // Thêm mỗi hình ảnh
+                    if (Array.isArray(pictures)) {
+                        pictures.forEach(pic => {
+                            const imgSrc = typeof pic === 'string' ? pic : (pic.large_src || pic.src || '');
+                            if (imgSrc) {
+                                htmlContent += `<img src="${imgSrc}" alt="Image" class="img-responsive">`;
+                            }
+                        });
+                    } else if (typeof pictures === 'object' && pictures.large_src) {
+                        htmlContent += `<img src="${pictures.large_src}" alt="Image" class="img-responsive">`;
+                    }
+                    
+                    htmlContent += '</div>';
+                }
+            });
+            
+            // Thêm footer nếu có
+            if (firstItem.Topic_footer) {
+                const decodedFooter = decodeHtmlEntities(firstItem.Topic_footer);
+                htmlContent += `<hr><div class="footer">${decodedFooter}</div>`;
+            }
+            
+            // Lưu keywords
+            if (firstItem.TopicKeywords) {
+                topicKeywords = decodeHtmlEntities(firstItem.TopicKeywords);
+            }
+        } else if (typeof content === 'object') {
+            // Xử lý khi content là object
+            htmlContent = content.content || content.draft_content || '';
+            mainTitle = content.title || content.draft_title || '';
+            mainSummary = content.description || content.meta_description || '';
+            topicKeywords = content.keywords || content.tags || '';
+        } else {
+            // Xử lý khi content là string
+            htmlContent = content;
+        }
+        
+        // Cập nhật nội dung vào editor
+        if (typeof tinymce !== 'undefined' && tinymce.get('draft-content')) {
+            tinymce.get('draft-content').setContent(htmlContent);
+        } else {
+            $('#draft-content').val(htmlContent);
+        }
+        
+        // Cập nhật vào container riêng nếu có
+        $('#editor-content').html(htmlContent);
+        
+        // Cập nhật tiêu đề
+        if (mainTitle) {
+            $('#draft-title').val(mainTitle);
+        }
+        
+        // Cập nhật description
+        if (mainSummary && $('#draft-description').length) {
+            $('#draft-description').val(mainSummary);
+        }
+        
+        // Cập nhật keywords/tags
+        if (topicKeywords && $('#draft-tags').length) {
+            $('#draft-tags').val(topicKeywords);
+        }
+        
+        // Phân tích nội dung
+        analyzeContent(htmlContent, mainTitle, mainSummary, topicKeywords);
+        
+        // Cập nhật số từ
+        updateWordCount();
+        
+        alert_float('success', 'Content loaded successfully');
+    }
+
+    /**
+     * Phân tích nội dung để hiển thị thông tin SEO và từ khóa
+     */
+    function analyzeContent(content, title, description, keywords) {
+        // Đếm số từ
+        const wordCount = countWords(stripHtml(content));
+        
+        // Hiển thị phân tích đơn giản
+        const analysis = {
+            wordCount: wordCount,
+            readingTime: Math.ceil(wordCount / 200), // ~200 từ/phút
+            titleLength: title ? title.length : 0,
+            descriptionLength: description ? description.length : 0
+        };
+        
+        // Hiển thị phân tích
+        displayAnalysis(analysis);
+        
+        // Phân tích SEO nếu có từ khóa
+        if (keywords && $('#seo-analysis-container').length) {
+            analyzeSEO(content, title, description, keywords);
+        }
+    }
+
+    /**
+     * Hiển thị phân tích cơ bản
+     */
+    function displayAnalysis(analysis) {
+        // Hiển thị số từ và thời gian đọc
+        if ($('#word-count-container').length) {
+            $('#word-count').text(analysis.wordCount);
+            $('#reading-time').text(analysis.readingTime + ' min');
+        } else {
+            // Thêm container nếu chưa có
+            const analysisHtml = `
+                <div id="word-count-container" class="mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <span><i class="fa fa-file-text-o"></i> Word count: <strong id="word-count">${analysis.wordCount}</strong></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span><i class="fa fa-clock-o"></i> Reading time: <strong id="reading-time">${analysis.readingTime} min</strong></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#editor-content').after(analysisHtml);
+        }
+    }
+
+    /**
+     * Phân tích SEO dựa trên từ khóa chính
+     */
+    function analyzeSEO(content, title, description, keywords) {
+        // Tách từ khóa
+        const keywordList = keywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+        
+        // Phân tích SEO đơn giản
+        const seoAnalysis = {
+            score: 0,
+            suggestions: []
+        };
+        
+        // Kiểm tra độ dài tiêu đề
+        if (title.length < 10) {
+            seoAnalysis.suggestions.push({
+                type: 'error',
+                text: 'Title is too short (minimum 10 characters)'
+            });
+        } else if (title.length > 60) {
+            seoAnalysis.suggestions.push({
+                type: 'warning',
+                text: 'Title is too long (maximum 60 characters recommended)'
+            });
+        } else {
+            seoAnalysis.suggestions.push({
+                type: 'good',
+                text: 'Title length is good'
+            });
+            seoAnalysis.score += 20;
+        }
+        
+        // Kiểm tra độ dài mô tả
+        if (description.length < 50) {
+            seoAnalysis.suggestions.push({
+                type: 'error',
+                text: 'Description is too short (minimum 50 characters)'
+            });
+        } else if (description.length > 160) {
+            seoAnalysis.suggestions.push({
+                type: 'warning',
+                text: 'Description is too long (maximum 160 characters recommended)'
+            });
+        } else {
+            seoAnalysis.suggestions.push({
+                type: 'good',
+                text: 'Description length is good'
+            });
+            seoAnalysis.score += 20;
+        }
+        
+        // Kiểm tra từ khóa trong tiêu đề
+        if (keywordList.length > 0) {
+            const mainKeyword = keywordList[0];
+            if (title.toLowerCase().includes(mainKeyword.toLowerCase())) {
+                seoAnalysis.suggestions.push({
+                    type: 'good',
+                    text: 'Main keyword found in title'
+                });
+                seoAnalysis.score += 20;
+            } else {
+                seoAnalysis.suggestions.push({
+                    type: 'warning',
+                    text: 'Main keyword not found in title'
+                });
+            }
+        }
+        
+        // Kiểm tra từ khóa trong mô tả
+        if (keywordList.length > 0) {
+            const mainKeyword = keywordList[0];
+            if (description.toLowerCase().includes(mainKeyword.toLowerCase())) {
+                seoAnalysis.suggestions.push({
+                    type: 'good',
+                    text: 'Main keyword found in description'
+                });
+                seoAnalysis.score += 20;
+            } else {
+                seoAnalysis.suggestions.push({
+                    type: 'warning',
+                    text: 'Main keyword not found in description'
+                });
+            }
+        }
+        
+        // Kiểm tra từ khóa trong nội dung
+        if (keywordList.length > 0) {
+            const mainKeyword = keywordList[0];
+            const contentText = stripHtml(content).toLowerCase();
+            const keywordCount = (contentText.match(new RegExp(mainKeyword.toLowerCase(), 'g')) || []).length;
+            const keywordDensity = (keywordCount / countWords(contentText)) * 100;
+            
+            if (keywordCount === 0) {
+                seoAnalysis.suggestions.push({
+                    type: 'error',
+                    text: 'Main keyword not found in content'
+                });
+            } else if (keywordDensity < 0.5) {
+                seoAnalysis.suggestions.push({
+                    type: 'warning',
+                    text: `Keyword density is too low (${keywordDensity.toFixed(2)}%)`
+                });
+                seoAnalysis.score += 10;
+            } else if (keywordDensity > 3) {
+                seoAnalysis.suggestions.push({
+                    type: 'warning',
+                    text: `Keyword density is too high (${keywordDensity.toFixed(2)}%)`
+                });
+                seoAnalysis.score += 10;
+            } else {
+                seoAnalysis.suggestions.push({
+                    type: 'good',
+                    text: `Keyword density is good (${keywordDensity.toFixed(2)}%)`
+                });
+                seoAnalysis.score += 20;
+            }
+        }
+        
+        // Hiển thị kết quả phân tích SEO
+        displaySEOAnalysis(seoAnalysis);
+    }
+
+    /**
+     * Hiển thị phân tích SEO
+     */
+    function displaySEOAnalysis(analysis) {
+        if (!$('#seo-analysis-container').length) {
+            // Tạo container nếu chưa có
+            const seoContainer = `
+                <div id="seo-analysis-container" class="mt-4">
+                    <h4>SEO Analysis</h4>
+                    <div class="seo-score">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: ${analysis.score}%;" aria-valuenow="${analysis.score}" aria-valuemin="0" aria-valuemax="100">${analysis.score}%</div>
+                        </div>
+                    </div>
+                    <div id="seo-suggestions" class="mt-3">
+                    </div>
+                </div>
+            `;
+            $('#editor-content').after(seoContainer);
+        }
+        
+        // Cập nhật thanh tiến trình
+        $('#seo-analysis-container .progress-bar').css('width', analysis.score + '%').text(analysis.score + '%');
+        
+        // Set màu cho thanh tiến trình
+        let progressClass = 'bg-danger';
+        if (analysis.score >= 80) {
+            progressClass = 'bg-success';
+        } else if (analysis.score >= 50) {
+            progressClass = 'bg-warning';
+        }
+        $('#seo-analysis-container .progress-bar').removeClass('bg-success bg-warning bg-danger').addClass(progressClass);
+        
+        // Hiển thị suggestions
+        let suggestionsHtml = '';
+        analysis.suggestions.forEach(suggestion => {
+            let iconClass = 'text-danger fa-times-circle';
+            
+            if (suggestion.type === 'good') {
+                iconClass = 'text-success fa-check-circle';
+            } else if (suggestion.type === 'warning') {
+                iconClass = 'text-warning fa-exclamation-triangle';
+            }
+            
+            suggestionsHtml += `
+                <div class="seo-suggestion ${suggestion.type}">
+                    <i class="fa ${iconClass}"></i> ${suggestion.text}
+                </div>
+            `;
+        });
+        
+        $('#seo-suggestions').html(suggestionsHtml);
+    }
+
+    /**
+     * Đếm số từ trong text
+     */
+    function countWords(text) {
+        return text.split(/\s+/).filter(Boolean).length;
+    }
+
+    /**
+     * Loại bỏ HTML tags
+     */
+    function stripHtml(html) {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || '';
+    }
+
+    /**
+     * Giải mã HTML entities
+     */
+    function decodeHtmlEntities(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        return div.textContent || div.innerText || '';
+    }
+
+    // Initialize TinyMCE
+    function initializeTinyMCE() {
+        tinymce.init({
+            selector: '#draft-content',
+            height: 500,
+            // plugins: [
+            //     'advlist autolink lists link image charmap print preview anchor',
+            //     'searchreplace visualblocks code fullscreen',
+            //     'insertdatetime media table paste code help wordcount'
+            // ],
+            toolbar: 'undo redo | formatselect | bold italic backcolor | \
+                    alignleft aligncenter alignright alignjustify | \
+                    bullist numlist outdent indent | removeformat | help',
+            setup: function(ed) {
+                editor = ed;
+                ed.on('change', function() {
+                    isDirty = true;
+                    updateWordCount();
+                });
+                
+                // Reset content state after initialization
+                ed.on('init', function() {
+                    console.log('TinyMCE initialized');
+                    setTimeout(updateWordCount, 500);
+                });
+            }
+        });
+    }
+
+    // Setup event handlers
+    function setupEventHandlers() {
+        // Save draft button
+        $('#save-draft-btn').on('click', function() {
+            saveDraft();
+        });
+
+        // Create new draft button
+        $('#create-new-draft-btn').on('click', function() {
+            createNewDraft();
+        });
+        
+        // Convert to final button
+        $('#convert-to-final-btn').on('click', function() {
+            convertToFinal();
+        });
+        
+        // Analyze SEO button
+        $('#analyze-seo-btn').on('click', function() {
+            analyzeSEO();
+        });
+        
+        // Publish content button
+        $('#publish-content-btn').on('click', function() {
+            publishContent();
+        });
+        
+        // Load draft buttons
+        $(document).on('click', '.load-draft-btn', function() {
+            const draftId = $(this).data('draft-id');
+            if (draftId) {
+                loadDraft(draftId);
+            }
+        });
+        
+        // Delete draft buttons
+        $(document).on('click', '.delete-draft-btn', function() {
+            const draftId = $(this).data('draft-id');
+            if (draftId) {
+                deleteDraft(draftId);
+            }
+        });
+        
+        // Duplicate draft buttons
+        $(document).on('click', '.duplicate-draft-btn', function() {
+            const draftId = $(this).data('draft-id');
+            if (draftId) {
+                duplicateDraft(draftId);
+            }
+        });
+        
+        // Draft title input
+        $('#draft-title').on('change', function() {
+            isDirty = true;
+        });
+        
+        // Draft Writer Integration handlers
+        $('#btn-import-draft-writer').on('click', function(e) {
+            e.preventDefault();
+            importFromDraftWriter();
+        });
+        
+        $('#btn-analyze-keywords').on('click', function(e) {
+            e.preventDefault();
+            analyzeKeywords();
+        });
+        
+        // Keywords field change
+        $('#keywords').on('change', function() {
+            // Update draft when keywords change
+            isDirty = true;
+        });
+        
+        // Listen for storage events (for integration with Draft Writer)
+        window.addEventListener('storage', function(e) {
+            const topicId = $('#topicid').val();
+            if (e.key === 'draft_' + topicId) {
+                // Show notification that a draft has been updated in another tab
+                alert_float('info', 'Draft has been updated in another tab. Reload to see changes.');
+            }
+        });
+    }
+
+    // Setup autosave
+    function setupAutosave() {
+        setInterval(function() {
+            if (isDirty) {
+                saveDraft(true);
+            }
+        }, AUTOSAVE_INTERVAL);
+    }
+
+    // Save draft to server
+    function saveDraft(isAutosave = false) {
+        const draftTitle = $('#draft-title').val();
+        const content = editor ? editor.getContent() : $('#draft-content').val();
+        const draftId = $('#current-draft-id').val();
+        const topicId = $('#topicid').val();
+        const description = $('#draft-description').val();
+        const keywords = $('#keywords').val(); // Agregar palabras clave
+        
+        if (!draftTitle) {
+            if (!isAutosave) {
+                alert_float('warning', 'Please enter a title for your draft');
+            }
+            return false;
+        }
+        
+        if (!content) {
+            if (!isAutosave) {
+                alert_float('warning', 'Please enter some content for your draft');
+            }
+            return false;
+        }
+        
+        if (!draftId) {
+            // If no draft ID, create a new draft instead
+            createNewDraft();
+            return false;
+        }
+        
+        // Show saving indicator for manual saves
+        if (!isAutosave) {
+            $('#saving-indicator').removeClass('d-none');
+        }
+        
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/save_draft',
+            type: 'POST',
+            data: {
+                draft_id: draftId,
+                topic_id: topicId,
+                draft_title: draftTitle,
+                draft_content: content,
+                meta_description: description,
+                keywords: keywords // Incluir palabras clave
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log('Save draft response:', response);
+                
+                // Hide saving indicator
+                $('#saving-indicator').addClass('d-none');
+                
+                if (response.success) {
+                    // Update last saved time
+                    lastSaveTime = new Date();
+                    updateLastSavedTime();
+                    
+                    // Reset dirty flag
+                    isDirty = false;
+                    
+                    // Show success message for manual saves
+                    if (!isAutosave) {
+                        alert_float('success', response.message);
+                    }
+                    
+                    // Update draft info if provided
+                    if (response.data) {
+                        updateDraftInfo(response.data);
+                    }
+                } else {
+                    // Show error message
+                    if (!isAutosave) {
+                        alert_float('danger', response.message || 'Error saving draft');
+                    } else {
+                        console.error('Autosave error:', response.message);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                // Hide saving indicator
+                $('#saving-indicator').addClass('d-none');
+                
+                // Show error message
+                if (!isAutosave) {
+                    alert_float('danger', 'Error saving draft: ' + error);
+                } else {
+                    console.error('Autosave error:', error);
+                }
+            }
+        });
+        
+        return true;
+    }
+    
+    // Create new draft
+    function createNewDraft() {
+        if (!editor) return;
+        
+        const topicId = $('#topicid').val();
+        const title = prompt('Enter a title for the new draft:', 'New Draft ' + new Date().toLocaleDateString());
+        
+        if (!title) return;
+        
+        showLoadingIndicator('Creating new draft...');
+        
+        $.ajax({
+            url: admin_url + 'ultimate_editor/create_draft',
+            type: 'POST',
+            data: {
+                topic_id: topicId,
+                draft_title: title,
+                draft_content: editor.getContent(),
+                set_as_active: true
+            },
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success) {
+                    alert_float('success', response.message || 'New draft created successfully');
+                    
+                    // Update current draft ID
+                    $('#current-draft-id').val(response.draft_id);
+                    $('#current-draft-name').text(title);
+                    
+                    // Refresh drafts list
+                    loadDraftsList();
+                } else {
+                    alert_float('danger', response.message || 'Failed to create new draft');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error creating new draft: ' + error);
+            }
+        });
+    }
+    
+    // Load a specific draft
+    function loadDraft(draftId) {
+        showLoadingIndicator('Loading draft...');
+        
+        $.ajax({
+            url: admin_url + 'ultimate_editor/get_draft',
+            type: 'GET',
+            data: {
+                draft_id: draftId
+            },
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success && response.draft) {
+                    // Update editor content
+                    if (editor) {
+                        editor.setContent(response.draft.draft_content || '');
+                    }
+                    
+                    // Update draft title
+                    $('#draft-title').val(response.draft.draft_title || '');
+                    
+                    // Update current draft ID and UI
+                    $('#current-draft-id').val(response.draft.id);
+                    $('#current-draft-name').text(response.draft.draft_title || '');
+                    $('#draft-version').text('v' + (response.draft.version || '1'));
+                    $('#draft-status').text(response.draft.status || 'draft');
+                    
+                    // Update status badge class
+                    $('#draft-status').removeClass('badge-warning badge-success')
+                        .addClass(response.draft.status === 'final' ? 'badge-success' : 'badge-warning');
+                    
+                    // Set active draft in backend
+                    $.post(admin_url + 'ultimate_editor/set_active_draft', {
+                        topic_id: $('#topicid').val(),
+                        draft_id: draftId
+                    });
+                    
+                    // Update draft items in the list
+                    $('.draft-item').removeClass('active');
+                    $('.draft-item[data-draft-id="' + draftId + '"]').addClass('active');
+                    
+                    // Reset dirty flag
+                    isDirty = false;
+                    
+                    // Update word count
+                    updateWordCount();
+                    
+                    alert_float('success', 'Draft loaded successfully');
+                } else {
+                    alert_float('danger', response.message || 'Failed to load draft');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error loading draft: ' + error);
+            }
+        });
+    }
+    
+    // Delete a draft
+    function deleteDraft(draftId) {
+        if (!confirm('Are you sure you want to delete this draft? This action cannot be undone.')) {
+            return;
+        }
+        
+        showLoadingIndicator('Deleting draft...');
+        
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/delete_draft/' + draftId,
+            type: 'POST',
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success) {
+                    alert_float('success', response.message || 'Draft deleted successfully');
+                    
+                    // If the deleted draft is the current one, create a new draft
+                    if ($('#current-draft-id').val() == draftId) {
+                        $('#current-draft-id').val('');
+                        $('#current-draft-name').text('No draft selected');
+                        $('#draft-version').text('');
+                        $('#draft-status').text('');
+                    }
+                    
+                    // Refresh drafts list
+                    loadDraftsList();
+                } else {
+                    alert_float('danger', response.message || 'Failed to delete draft');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error deleting draft: ' + error);
+            }
+        });
+    }
+    
+    // Duplicate a draft
+    function duplicateDraft(draftId) {
+        showLoadingIndicator('Duplicating draft...');
+        
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/duplicate_draft',
+            type: 'POST',
+            data: {
+                draft_id: draftId
+            },
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success) {
+                    alert_float('success', response.message || 'Draft duplicated successfully');
+                    
+                    // Refresh drafts list
+                    loadDraftsList();
+                } else {
+                    alert_float('danger', response.message || 'Failed to duplicate draft');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error duplicating draft: ' + error);
+            }
+        });
+    }
+    
+    // Convert draft to final
+    function convertToFinal() {
+        const draftId = $('#current-draft-id').val();
+        
+        if (!draftId) {
+            alert_float('warning', 'No draft selected');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to finalize this draft? This will mark it as ready for publication.')) {
+            return;
+        }
+        
+        showLoadingIndicator('Finalizing draft...');
+        
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/convert_to_final',
+            type: 'POST',
+            data: {
+                draft_id: draftId
+            },
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success) {
+                    alert_float('success', response.message || 'Draft finalized successfully');
+                    
+                    // Update status UI
+                    $('#draft-status').removeClass('badge-warning').addClass('badge-success').text('final');
+                    
+                    // Refresh drafts list
+                    loadDraftsList();
+                } else {
+                    alert_float('danger', response.message || 'Failed to finalize draft');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error finalizing draft: ' + error);
+            }
+        });
+    }
+    
+    // Refresh drafts list
+    function loadDraftsList() {
+        const topicId = $('#topicid').val();
+        
+        $.ajax({
+            url: admin_url + 'topics/topics/ultimate_editor/get_drafts',
+            type: 'GET',
+            data: {
+                topic_id: topicId
+            },
+            success: function(response) {
+                if (response.success && response.drafts) {
+                    // Clear existing drafts
+                    $('.drafts-list').empty();
+                    
+                    if (response.drafts.length === 0) {
+                        $('.drafts-list').html(
+                            '<div class="alert alert-info text-center">' + 
+                            'No drafts found' + 
+                            '</div>'
+                        );
+                        return;
+                    }
+                    
+                    // Add drafts to the list
+                    $.each(response.drafts, function(i, draft) {
+                        const isActive = (draft.id == $('#current-draft-id').val() || draft.is_active);
+                        const draftHtml = `
+                            <div class="draft-item p-2 mb-2 ${isActive ? 'active' : ''}" data-draft-id="${draft.id}">
+                                <div class="draft-item-header d-flex justify-content-between">
+                                    <div class="draft-title font-weight-bold">${draft.draft_title}</div>
+                                    <div class="draft-badges">
+                                        <span class="badge badge-info">v${draft.version}</span>
+                                        <span class="badge badge-${draft.status === 'final' ? 'success' : 'warning'}">${draft.status}</span>
+                                    </div>
+                                </div>
+                                <div class="draft-item-body mt-1">
+                                    <div class="draft-metadata text-muted small">
+                                        <span><i class="fa fa-calendar"></i> ${draft.updated_at}</span>
+                                    </div>
+                                </div>
+                                <div class="draft-item-footer mt-2">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-primary load-draft-btn" data-draft-id="${draft.id}">
+                                            <i class="fa fa-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-default duplicate-draft-btn" data-draft-id="${draft.id}">
+                                            <i class="fa fa-copy"></i> Duplicate
+                                        </button>
+                                        <button class="btn btn-danger delete-draft-btn" data-draft-id="${draft.id}">
+                                            <i class="fa fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        $('.drafts-list').append(draftHtml);
+                    });
+                }
+            }
+        });
+    }
+    
+    // Analyze SEO
+    function analyzeSEO() {
+        const draftId = $('#current-draft-id').val();
+        const targetKeyword = $('#seo-target-keyword').val();
+        
+        if (!draftId) {
+            alert_float('warning', 'No draft selected');
+            return;
+        }
+        
+        if (!targetKeyword) {
+            alert_float('warning', 'Please enter a target keyword');
+            return;
+        }
+        
+        showLoadingIndicator('Analyzing SEO...');
+        
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/analyze_seo',
+            type: 'POST',
+            data: {
+                draft_id: draftId,
+                target_keyword: targetKeyword
+            },
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success && response.analysis) {
+                    displaySEOAnalysis(response.analysis);
+                } else {
+                    alert_float('danger', response.message || 'Failed to analyze SEO');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error analyzing SEO: ' + error);
+            }
+        });
+    }
+    
+    // Publish content
+    function publishContent() {
+        const draftId = $('#current-draft-id').val();
+        
+        if (!draftId) {
+            alert_float('warning', 'No draft selected');
+            return;
+        }
+        
+        // Show publish modal - this would be implemented as needed
+        alert_float('info', 'Publish functionality would be implemented here');
+    }
+
+    // Helper functions
+    function showLoadingIndicator(message = 'Loading...') {
+        // Remove any existing loading overlay
+        hideLoadingIndicator();
+        
+        // Add loading overlay to editor
+        $('.editor-main').append(`
+            <div class="editor-loading" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                background: rgba(255,255,255,0.8); z-index: 9999; display: flex; align-items: center; 
+                justify-content: center; flex-direction: column;">
+                <i class="fa fa-spinner fa-spin fa-3x"></i>
+                <p class="mt-3 loading-message">${message}</p>
+            </div>
+        `);
+    }
+
+    function updateLoadingIndicator(message) {
+        $('.editor-loading .loading-message').text(message);
+    }
+
+    function hideLoadingIndicator() {
+        $('.editor-loading').remove();
+    }
+
+    function updateWordCount() {
+        if (!editor) return;
+        
+        try {
+            const content = editor.getContent({format: 'text'});
+            const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+            const charCount = content.length;
+            
+            $('#word-count').text(wordCount);
+            $('#char-count').text(charCount);
+            
+            // Simple readability score
+            const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const sentenceCount = sentences.length;
+            
+            if (sentenceCount > 0 && wordCount > 0) {
+                // Very basic Flesch-Kincaid inspired score
+                const wordsPerSentence = wordCount / sentenceCount;
+                const readabilityScore = Math.max(0, Math.min(100, 100 - (wordsPerSentence - 10) * 5));
+                $('#readability-score').text(Math.round(readabilityScore) + '/100');
+            } else {
+                $('#readability-score').text('0/100');
+            }
+        } catch (e) {
+            console.error('Error updating word count:', e);
+        }
+    }
+
+    function updateLastSavedTime() {
+        $('#last-saved-time').text(lastSaveTime.toLocaleTimeString());
+    }
+
+    function updateDraftInfo(data) {
+        if (data.draft_id) {
+            $('#current-draft-id').val(data.draft_id);
+        }
+        
+        if (data.draft_title) {
+            $('#current-draft-name').text(data.draft_title);
+        } else if (data.title) {
+            $('#current-draft-name').text(data.title);
+        }
+        
+        // Update other draft info in the UI...
+        if (data.version) {
+            $('#draft-version').text('v' + data.version);
+        }
+        
+        if (data.status) {
+            $('#draft-status').text(data.status)
+                .removeClass('badge-warning badge-success')
+                .addClass(data.status === 'final' ? 'badge-success' : 'badge-warning');
+        }
+    }
+
+    function updateMetadata(data) {
+        // Update SEO metadata if available
+        if (data.meta_description) {
+            $('#seo-meta-description').val(data.meta_description);
+        }
+        
+        // Update keywords if available
+        if (data.keywords) {
+            $('#seo-target-keyword').val(data.keywords);
+        }
+    }
+
+    /**
+     * Importar contenido desde Draft Writer
+     * Esta función permite importar contenido generado en Draft Writer al Ultimate Editor
+     */
+    function importFromDraftWriter() {
+        const topicId = $('#topicid').val();
+        
+        if (!topicId) {
+            alert_float('warning', 'Topic ID not found. Cannot import content.');
+            return;
+        }
+        
+        // Intentamos recuperar datos desde localStorage primero
+        const localStorageKey = 'draft_' + topicId;
+        const savedDraft = localStorage.getItem(localStorageKey);
+        
+        // Si tenemos datos en localStorage
+        if (savedDraft) {
+            try {
+                const draftData = JSON.parse(savedDraft);
+                
+                // Mostrar confirmación antes de importar
+                if (confirm('Found saved draft in local storage. Do you want to import it?')) {
+                    // Enviar datos al servidor para crear un nuevo draft
+                    $.ajax({
+                        url: admin_url + 'topics/ultimate_editor/recover_from_local_storage',
+                        type: 'POST',
+                        data: {
+                            topic_id: topicId,
+                            local_storage_data: savedDraft
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                alert_float('success', response.message);
+                                // Redirect if URL provided
+                                if (response.redirect_url) {
+                                    window.location.href = response.redirect_url;
+                                }
+                            } else {
+                                alert_float('danger', response.message);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            alert_float('danger', 'Error importing draft: ' + error);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error parsing saved draft:', e);
+                alert_float('warning', 'Could not parse saved draft data.');
+            }
+        } else {
+            // Si no hay datos en localStorage, preguntar si quiere cargar desde flujo de trabajo
+            if (confirm('No saved draft found in local storage. Do you want to load from workflow?')) {
+                loadContentFromWorkflow(topicId);
+            }
+        }
+    }
+    
+    /**
+     * Importar desde workflow de Draft Writer
+     * Esta función importa datos directamente desde una respuesta de workflow
+     */
+    function importFromWorkflowData(workflowData) {
+        const topicId = $('#topicid').val();
+        
+        if (!topicId) {
+            alert_float('warning', 'Topic ID not found. Cannot import content.');
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        showLoadingIndicator('Importing content from Draft Writer...');
+        
+        // Enviar datos al servidor
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/import_from_draft_writer',
+            type: 'POST',
+            data: {
+                topic_id: topicId,
+                workflow_data: workflowData
+            },
+            dataType: 'json',
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success) {
+                    if (response.need_localstorage_data) {
+                        // El servidor necesita datos del localStorage
+                        importFromDraftWriter();
+                    } else {
+                        alert_float('success', response.message);
+                        // Redirect if URL provided
+                        if (response.redirect_url) {
+                            window.location.href = response.redirect_url;
+                        }
+                    }
+                } else {
+                    alert_float('danger', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error importing content: ' + error);
+            }
+        });
+    }
+    
+    /**
+     * Analizar palabras clave en el contenido
+     * Esta función analiza la densidad de palabras clave y otras métricas SEO
+     */
+    function analyzeKeywords() {
+        const content = editor ? editor.getContent() : $('#draft-content').val();
+        const mainKeywords = $('#keywords').val();
+        const draftId = $('#current-draft-id').val();
+        
+        if (!content) {
+            alert_float('warning', 'Please enter some content before analyzing keywords.');
+            return;
+        }
+        
+        if (!mainKeywords) {
+            alert_float('warning', 'Please enter keywords to analyze, separated by commas.');
+            return;
+        }
+        
+        // Mostrar indicador de carga
+        showLoadingIndicator('Analyzing keywords...');
+        
+        // Enviar datos al servidor para análisis
+        $.ajax({
+            url: admin_url + 'topics/ultimate_editor/analyze_keywords',
+            type: 'POST',
+            data: {
+                draft_id: draftId,
+                content: content,
+                main_keywords: mainKeywords
+            },
+            dataType: 'json',
+            success: function(response) {
+                hideLoadingIndicator();
+                
+                if (response.success) {
+                    displayKeywordAnalysis(response.analysis);
+                } else {
+                    alert_float('danger', response.message || 'Error analyzing keywords');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                alert_float('danger', 'Error analyzing keywords: ' + error);
+            }
+        });
+    }
+    
+    /**
+     * Mostrar análisis de palabras clave
+     * Esta función muestra los resultados del análisis de palabras clave en la interfaz
+     */
+    function displayKeywordAnalysis(analysis) {
+        // Limpiar contenedor de análisis
+        const $container = $('#keyword-analysis-container');
+        $container.empty();
+        
+        // Mostrar recuento total de palabras
+        $container.append(`<div class="total-words">Total words: ${analysis.total_words}</div>`);
+        
+        // Crear tabla para detalles de palabras clave
+        const $table = $(`
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Keyword</th>
+                        <th>Count</th>
+                        <th>Density</th>
+                        <th>Score</th>
+                        <th>Recommendations</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        `);
+        
+        // Agregar filas para cada palabra clave
+        const $tbody = $table.find('tbody');
+        
+        $.each(analysis.keywords, function(keyword, data) {
+            const recommendations = getKeywordRecommendationText(data.recommendations);
+            
+            $tbody.append(`
+                <tr>
+                    <td>${keyword}</td>
+                    <td>${data.count}</td>
+                    <td>${data.density}%</td>
+                    <td>${data.score}/100</td>
+                    <td>${recommendations}</td>
+                </tr>
+            `);
+        });
+        
+        // Agregar tabla al contenedor
+        $container.append($table);
+        
+        // Mostrar puntuación promedio
+        $container.append(`<div class="average-score">Average Score: ${analysis.average_score}/100</div>`);
+        
+        // Mostrar contenedor de análisis
+        $('#keyword-analysis').removeClass('hidden');
+    }
+    
+    /**
+     * Obtener texto de recomendación para palabras clave
+     * Convierte los códigos de recomendación en texto legible
+     */
+    function getKeywordRecommendationText(recommendations) {
+        if (!recommendations || !recommendations.length) {
+            return 'No recommendations';
+        }
+        
+        const recommendationTexts = {
+            'keyword_density_too_low': 'Increase keyword density (aim for 1-3%)',
+            'keyword_density_too_high': 'Reduce keyword density (aim for 1-3%)',
+            'add_keyword_to_title': 'Add keyword to your title',
+            'add_keyword_to_first_paragraph': 'Add keyword to first paragraph',
+            'add_keyword_to_headings': 'Add keyword to headings (H1, H2, H3)',
+            'add_keyword_to_beginning': 'Add keyword to beginning of content',
+            'improve_keyword_distribution': 'Distribute keyword more evenly'
+        };
+        
+        const result = recommendations.map(code => recommendationTexts[code] || code).join('<br>');
+        return result || 'No specific recommendations';
+    }
+    
+    // Initialize editor when document is ready
+    initializeEditor();
+}); 

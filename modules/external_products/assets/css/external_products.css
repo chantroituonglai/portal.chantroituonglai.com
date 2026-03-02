@@ -1,0 +1,225 @@
+/* External Products Management Module Styles */
+
+.external-products-table {
+    margin-top: 20px;
+}
+
+.external-products-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.external-products-table td {
+    vertical-align: middle;
+}
+
+.mapping-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.mapping-status.active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.mapping-status.inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.mapping-status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.sync-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.sync-status.synced {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.sync-status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.sync-status.failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.bulk-actions {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    display: none;
+}
+
+.bulk-actions.show {
+    display: block;
+}
+
+.external-product-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.external-product-form .form-group {
+    margin-bottom: 20px;
+}
+
+.external-product-form label {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.external-product-form .form-control {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 10px 12px;
+}
+
+.external-product-form .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-external-products {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.btn-external-products.btn-primary {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.btn-external-products.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-external-products.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.btn-external-products.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.external-product-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.external-product-card h5 {
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.external-product-card .product-info {
+    margin-bottom: 10px;
+}
+
+.external-product-card .product-info strong {
+    color: #495057;
+    margin-right: 10px;
+}
+
+.mapping-type-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.mapping-type-badge.woo {
+    background-color: #96588a;
+    color: white;
+}
+
+.mapping-type-badge.shopify {
+    background-color: #96bf48;
+    color: white;
+}
+
+.mapping-type-badge.magento {
+    background-color: #f26722;
+    color: white;
+}
+
+.mapping-type-badge.amazon {
+    background-color: #ff9900;
+    color: white;
+}
+
+.mapping-type-badge.ebay {
+    background-color: #0064d2;
+    color: white;
+}
+
+.mapping-type-badge.other {
+    background-color: #6c757d;
+    color: white;
+}
+
+.mapping-type-badge.fast_barco {
+    background-color: #007bff;
+    color: white;
+}
+
+.mapping-type-badge.aeon_sku {
+    background-color: #28a745;
+    color: white;
+}
+
+.mapping-type-badge.emart {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.mapping-type-badge.emart_sku {
+    background-color: #fd7e14;
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .external-product-form {
+        max-width: 100%;
+        padding: 0 15px;
+    }
+    
+    .external-products-table {
+        font-size: 14px;
+    }
+    
+    .btn-external-products {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}

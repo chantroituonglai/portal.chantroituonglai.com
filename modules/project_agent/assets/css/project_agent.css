@@ -1,0 +1,906 @@
+/* ==========================================================================
+   Project Agent – UI Styles (Perfex/Bootstrap friendly)
+   Scoped under .project-agent-ai-room to avoid leakage
+   ========================================================================== */
+   .project-agent-ai-room {
+    --pa-bg: #ffffff;
+    --pa-surface: #ffffff;
+    --pa-muted: #6b7280;
+    --pa-text: #111827;
+    --pa-border: #e5e7eb;
+    --pa-border-strong: #d1d5db;
+    --pa-primary: #0d6efd;     /* matches Bootstrap primary */
+    --pa-primary-600: #0b5ed7;
+    --pa-success: #16a34a;
+    --pa-warning: #f59e0b;
+    --pa-danger:  #ef4444;
+    --pa-chip: #f3f4f6;
+    --pa-chip-text: #374151;
+    --pa-soft: #f9fafb;
+  
+    --pa-radius: 8px;
+    --pa-radius-sm: 6px;
+    --pa-shadow: 0 1px 2px rgba(0,0,0,.04);
+    --pa-shadow-lg: 0 8px 24px rgba(0,0,0,.08);
+  
+    --pa-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  
+  /* Nền/viền quan trọng – ép trắng để không bị tối */
+  .project-agent-ai-room .card,
+  .project-agent-ai-room .card-header,
+  .project-agent-ai-room .alert,
+  .project-agent-ai-room .action-item,
+  .project-agent-ai-room .chat-messages,
+  .project-agent-ai-room .composer,
+  .project-agent-ai-room .modal-content {
+    background-color: #fff !important;
+    color: #111827 !important;
+    border-color: #e5e7eb !important;
+  }
+
+  /* Perfex panel_s harmonized to card look */
+  .project-agent-ai-room .panel_s {
+    background: #fff !important;
+    border: 1px solid var(--pa-border) !important;
+    border-radius: var(--pa-radius) !important;
+    box-shadow: var(--pa-shadow);
+  }
+  .project-agent-ai-room .panel_s > .panel-body {
+    padding: 12px !important;
+  }
+  
+  /* Bubble/chat & typing */
+  .project-agent-ai-room .bubble.ai,
+  .project-agent-ai-room .typing {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+  }
+  .project-agent-ai-room .bubble.user {
+    background: var(--pa-primary) !important;
+    color: #fff !important;
+  }
+  
+  /* Input & input-group trong composer/search */
+  .project-agent-ai-room .form-control,
+  .project-agent-ai-room .input-group-text,
+  .project-agent-ai-room .custom-select {
+    background: #ffffff !important;
+    color: #111827 !important;
+    border-color: #d1d5db !important;
+  }
+  
+  /* 3) CHỈ bật dark khi Perfex hoặc bạn chủ động đặt lớp dark */
+  body.dark .project-agent-ai-room,
+  body.app-dark .project-agent-ai-room,
+  [data-theme="dark"] .project-agent-ai-room,
+  .project-agent-ai-room.pa-dark {
+    --pa-bg: #0b1220;
+    --pa-surface: #0f172a;
+    --pa-soft: #0b1220;
+    --pa-text: #e5e7eb;
+    --pa-muted: #9aa4b2;
+    --pa-border: #1f2937;
+    --pa-border-strong: #334155;
+    --pa-primary: #60a5fa;
+    --pa-primary-600: #3b82f6;
+    --pa-chip: #111827;
+    --pa-chip-text: #cbd5e1;
+  }
+  
+  /* Khi thực sự ở dark theme */
+  body.dark .project-agent-ai-room .card,
+  body.app-dark .project-agent-ai-room .card,
+  [data-theme="dark"] .project-agent-ai-room .card,
+  .project-agent-ai-room.pa-dark .card,
+  body.dark .project-agent-ai-room .modal-content,
+  body.app-dark .project-agent-ai-room .modal-content,
+  [data-theme="dark"] .project-agent-ai-room .modal-content,
+  .project-agent-ai-room.pa-dark .modal-content {
+    background-color: var(--pa-surface) !important;
+    color: var(--pa-text) !important;
+    border-color: var(--pa-border) !important;
+  }
+  
+  body.dark .project-agent-ai-room .chat-messages,
+  body.app-dark .project-agent-ai-room .chat-messages,
+  [data-theme="dark"] .project-agent-ai-room .chat-messages,
+  .project-agent-ai-room.pa-dark .chat-messages { background: var(--pa-bg) !important; }
+  
+  body.dark .project-agent-ai-room .bubble.ai,
+  body.app-dark .project-agent-ai-room .bubble.ai,
+  [data-theme="dark"] .project-agent-ai-room .bubble.ai,
+  .project-agent-ai-room.pa-dark .bubble.ai { background:#111827 !important; color: var(--pa-text) !important; }
+  
+  body.dark .project-agent-ai-room .typing,
+  body.app-dark .project-agent-ai-room .typing,
+  [data-theme="dark"] .project-agent-ai-room .typing,
+  .project-agent-ai-room.pa-dark .typing { background:#111827 !important; }
+  
+  /* 4) Nhỏ: card header, composer, action-item hover (đồng bộ light) */
+  .project-agent-ai-room .card-header { background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0)) !important; }
+  .project-agent-ai-room .composer { background: #f9fafb !important; border-top: 1px solid #e5e7eb !important; }
+  .project-agent-ai-room .composer-status { display:flex; align-items:center; gap:8px; }
+  .project-agent-ai-room .composer-session-badge{ display:inline-block; padding:1px 6px; border-radius:10px; background:#f1f5f9; color:#475569; font-size:11px; border:1px solid #e2e8f0; }
+  .project-agent-ai-room .action-item:hover { background: #f3f4f6 !important; }
+  
+  /* Base resets inside scope */
+  .project-agent-ai-room .card {
+    border: 1px solid var(--pa-border);
+    border-radius: var(--pa-radius);
+    box-shadow: var(--pa-shadow);
+  }
+  .project-agent-ai-room .card-header {
+    background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0)) !important;
+    border-bottom: 1px solid var(--pa-border);
+    padding: .75rem 1rem;
+  }
+  .project-agent-ai-room .card-header h5 {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+  .project-agent-ai-room .card-body { padding: 12px; }
+  
+  /* Alerts */
+  .project-agent-ai-room .alert {
+    border-radius: var(--pa-radius);
+    border-color: var(--pa-border-strong);
+    box-shadow: var(--pa-shadow);
+  }
+  
+  /* Status indicator */
+  .project-agent-ai-room .ai-status-indicator .card-body {
+    background: var(--pa-soft);
+    border-radius: var(--pa-radius);
+  }
+  .project-agent-ai-room .ai-status-indicator i.fa {
+    vertical-align: middle;
+  }
+  
+  /* ----------------------------- Context Panel ----------------------------- */
+  .project-agent-ai-room .project-info h6 { margin-bottom: 2px; }
+  .project-agent-ai-room .project-info p { margin-bottom: 6px; }
+  .project-agent-ai-room .progress {
+    height: 8px;
+    background: var(--pa-chip);
+  }
+  .project-agent-ai-room .progress-bar { font-size: 10px; }
+  
+  /* Memory timeline */
+  .project-agent-ai-room .memory-timeline {
+    max-height: 310px;
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .project-agent-ai-room .memory-item {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--pa-border);
+  }
+  .project-agent-ai-room .memory-item:last-child { border-bottom: 0; }
+  
+  /* ------------------------------ Chat Column ------------------------------ */
+  .project-agent-ai-room .chat-card {
+    display: flex;
+    flex-direction: column;
+    height: 560px; /* good default in admin content area */
+  }
+  @media (max-height: 800px) {
+    .project-agent-ai-room .chat-card { height: 520px; }
+  }
+  .project-agent-ai-room .chat-messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 10px 10px;
+    background: var(--pa-bg);
+    border-bottom: 1px solid var(--pa-border);
+    scroll-behavior: smooth;
+  }
+  .project-agent-ai-room .welcome-message {
+    padding: 28px 12px 18px;
+  }
+  .project-agent-ai-room .welcome-message .quick-actions .btn {
+    margin-bottom: 6px;
+  }
+  
+  /* Message row */
+  .project-agent-ai-room .message {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 6px;
+  }
+  .project-agent-ai-room .message.user { justify-content: flex-end; }
+  .project-agent-ai-room .message.ai   { justify-content: flex-start; }
+  
+  /* Avatar */
+  .project-agent-ai-room .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--pa-chip);
+    color: var(--pa-chip-text);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 12px;
+    margin: 0 8px;
+    flex: 0 0 30px;
+    box-shadow: var(--pa-shadow);
+  }
+  
+  /* Bubble */
+  .project-agent-ai-room .bubble {
+    max-width: min(78vw, 620px);
+    padding: 8px 10px;
+    border-radius: 12px;
+    line-height: 1.35;
+    box-shadow: var(--pa-shadow);
+    word-break: break-word;
+    white-space: normal;
+  }
+  .project-agent-ai-room .bubble.user {
+    background: var(--pa-primary);
+    color: #fff;
+    border-top-right-radius: 6px;
+  }
+.project-agent-ai-room .bubble.ai {
+  background: #f3f4f6;
+  color: var(--pa-text);
+  border-top-left-radius: 6px;
+}
+.project-agent-ai-room .bubble.ai.mini{
+  background: #fff7ed; /* warm light orange */
+  border: 1px solid #fdba74; /* orange-300 */
+}
+.project-agent-ai-room .message.ai.mini .avatar{
+  background: #fff7ed; color:#9a3412; /* darker orange */
+}
+  
+  /* Message meta (time) */
+  .project-agent-ai-room .msg-meta {
+    font-size: 10px;
+    color: var(--pa-muted);
+    margin-top: 2px;
+  }
+
+  /* Compact rich text inside bubbles like ChatGPT */
+  .project-agent-ai-room .bubble p { margin: 4px 0; line-height: 1.45; }
+  .project-agent-ai-room .bubble p:first-child { margin-top: 0; }
+  .project-agent-ai-room .bubble p:last-child { margin-bottom: 0; }
+  .project-agent-ai-room .bubble ul,
+  .project-agent-ai-room .bubble ol { margin: 4px 0 4px 18px; padding: 0; }
+  .project-agent-ai-room .bubble li { margin: 2px 0; }
+  .project-agent-ai-room .bubble h1,
+  .project-agent-ai-room .bubble h2,
+  .project-agent-ai-room .bubble h3,
+  .project-agent-ai-room .bubble h4,
+  .project-agent-ai-room .bubble h5,
+  .project-agent-ai-room .bubble h6 { margin: 6px 0 4px; line-height: 1.25; font-weight: 600; }
+  .project-agent-ai-room .bubble h1 { font-size: 1.1rem; }
+  .project-agent-ai-room .bubble h2 { font-size: 1.05rem; }
+  .project-agent-ai-room .bubble h3 { font-size: 1.0rem; }
+  .project-agent-ai-room .bubble h4,
+  .project-agent-ai-room .bubble h5,
+  .project-agent-ai-room .bubble h6 { font-size: .95rem; }
+
+  /* Reduce vertical whitespace around welcome and composer */
+  .project-agent-ai-room .welcome-message { padding: 18px 10px 12px; }
+  .project-agent-ai-room .composer { padding: 8px; }
+  
+  /* Composer */
+  .project-agent-ai-room .composer {
+    background: var(--pa-soft);
+    padding: 10px;
+    border-bottom-left-radius: var(--pa-radius);
+    border-bottom-right-radius: var(--pa-radius);
+  }
+  .project-agent-ai-room .composer.composer-hidden{ display:none; }
+  .project-agent-ai-room .composer .input-group {
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    border: 1px solid var(--pa-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .project-agent-ai-room .composer .btn {
+    height: 38px;
+  }
+  .project-agent-ai-room .compose-input.form-control{
+    border: 0 !important;
+    box-shadow: none !important;
+    min-height: 38px;
+    padding: 8px 10px;
+    line-height: 1.35;
+  }
+  .project-agent-ai-room .composer .input-group-prepend .btn,
+  .project-agent-ai-room .composer .input-group-append .btn{
+    background: transparent;
+    border: 0;
+  }
+  .project-agent-ai-room .composer .btn-send{
+    width: 38px;
+    height: 38px;
+    border-radius: 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Typing dots */
+  .project-agent-ai-room .typing {
+    display: inline-block;
+    padding: 8px 10px;
+    background: #f3f4f6;
+    border-radius: 14px;
+  }
+  .project-agent-ai-room .typing .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #9ca3af;
+    display: inline-block;
+    margin: 0 2px;
+    animation: pa-blink 1.2s infinite;
+  }
+  .project-agent-ai-room .typing .dot:nth-child(2){ animation-delay: .15s; }
+  .project-agent-ai-room .typing .dot:nth-child(3){ animation-delay: .3s; }
+  @keyframes pa-blink { 0%,80%{opacity:.2} 40%{opacity:1} }
+  
+  /* ------------------------------ Action Panel ----------------------------- */
+  .project-agent-ai-room .action-search { margin-bottom: 10px; }
+  .project-agent-ai-room .action-list { max-height: 520px; overflow: auto; }
+  .project-agent-ai-room .action-item {
+    padding: 10px;
+    background: var(--pa-surface);
+    border: 1px solid var(--pa-border);
+    border-radius: var(--pa-radius-sm);
+    transition: transform .06s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .project-agent-ai-room .action-item:hover {
+    transform: translateY(-1px);
+    background: var(--pa-soft);
+    box-shadow: var(--pa-shadow);
+  }
+  
+  /* Risk badges harmonized with Bootstrap badges */
+  .project-agent-ai-room .badge-success   { background: rgba(16,185,129,.12); color: #047857; }
+  .project-agent-ai-room .badge-warning   { background: rgba(245,158,11,.12); color: #92400e; }
+  .project-agent-ai-room .badge-danger    { background: rgba(239,68,68,.12);  color: #991b1b; }
+ 
+  
+  /* ------------------------------ Modal / Params --------------------------- */
+  .project-agent-ai-room .modal-content {
+    border: 1px solid var(--pa-border);
+    border-radius: 10px;
+    box-shadow: var(--pa-shadow-lg);
+  }
+  .project-agent-ai-room .param-editor .param-row { margin-bottom: 8px; }
+  .project-agent-ai-room .param-editor .control-label {
+    font-size: 12px;
+    color: var(--pa-muted);
+    margin-bottom: 4px;
+  }
+  .project-agent-ai-room .param-editor .form-control {
+    height: 34px;
+    padding: 6px 8px;
+  }
+  
+  /* Console (in modal) */
+  .project-agent-ai-room .console {
+    background: #0f172a;
+    color: #cbd5e1;
+    font-family: var(--pa-mono);
+    font-size: 12px;
+    height: 170px;
+    padding: 10px;
+    border-radius: var(--pa-radius-sm);
+    overflow: auto;
+    border: 1px solid #1f2937;
+  }
+  .project-agent-ai-room .console .ok     { color: #22c55e; }
+  .project-agent-ai-room .console .warn   { color: #f59e0b; }
+  .project-agent-ai-room .console .error  { color: #ef4444; }
+  
+  /* Diff viewer (optional) */
+  .project-agent-ai-room .diff-viewer {
+    background: #0b1020;
+    color: #e2e8f0;
+    border-radius: var(--pa-radius-sm);
+    padding: 10px;
+    font-family: var(--pa-mono);
+    font-size: 12px;
+    border: 1px solid #1f2937;
+  }
+  .project-agent-ai-room .diff-viewer ins {
+    background: rgba(34,197,94,.18);
+    text-decoration: none;
+  }
+  .project-agent-ai-room .diff-viewer del {
+    background: rgba(239,68,68,.22);
+    text-decoration: line-through;
+  }
+  
+  /* ------------------------------ Utilities -------------------------------- */
+  .project-agent-ai-room .text-muted    { color: var(--pa-muted) !important; }
+  .project-agent-ai-room .small         { font-size: .875rem; }
+  .project-agent-ai-room .btn-primary   { background-color: var(--pa-primary); border-color: var(--pa-primary); }
+  .project-agent-ai-room .btn-primary:hover { background-color: var(--pa-primary-600); border-color: var(--pa-primary-600); }
+  
+  /* Slim, nice scrollbars */
+  .project-agent-ai-room .chat-messages,
+  .project-agent-ai-room .action-list,
+  .project-agent-ai-room .memory-timeline,
+  .project-agent-ai-room .console {
+    scrollbar-width: thin;
+    scrollbar-color: var(--pa-border-strong) transparent;
+  }
+  .project-agent-ai-room .chat-messages::-webkit-scrollbar,
+  .project-agent-ai-room .action-list::-webkit-scrollbar,
+  .project-agent-ai-room .memory-timeline::-webkit-scrollbar,
+  .project-agent-ai-room .console::-webkit-scrollbar { width: 8px; height: 8px; }
+  .project-agent-ai-room .chat-messages::-webkit-scrollbar-thumb,
+  .project-agent-ai-room .action-list::-webkit-scrollbar-thumb,
+  .project-agent-ai-room .memory-timeline::-webkit-scrollbar-thumb,
+  .project-agent-ai-room .console::-webkit-scrollbar-thumb {
+    background: var(--pa-border-strong);
+    border-radius: 99px;
+  }
+  
+  /* Spacing tweaks between cards in narrow screens */
+  @media (max-width: 991.98px) {
+    .project-agent-ai-room .col-md-3 + .col-md-6 { margin-top: 16px; }
+    .project-agent-ai-room .col-md-6 + .col-md-3 { margin-top: 16px; }
+  }
+  
+  /* Prevent long code/links from breaking layout inside bubbles */
+  .project-agent-ai-room .bubble pre,
+  .project-agent-ai-room .bubble code {
+    font-family: var(--pa-mono);
+    font-size: 12px;
+    background: rgba(0,0,0,.04);
+    padding: 3px 6px;
+    border-radius: 4px;
+  }
+ 
+  /* Welcome icon spacing */
+.project-agent-ai-room .welcome-message i.fa-robot {
+  opacity: .9;
+}
+
+/* Quick actions styling */
+.project-agent-ai-room .quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.project-agent-ai-room .quick-actions .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+  
+  /* Action modal: console header line */
+  .project-agent-ai-room #pa-console:before {
+    content: "Console • ";
+    color: var(--pa-muted);
+  }
+  
+  /* Minor improvement: clickable rows without blue outline ugliness */
+  .project-agent-ai-room .btn:focus,
+  .project-agent-ai-room .form-control:focus {
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+    outline: none;
+  }
+  
+  /* Hide default outline on mouse users (keeps keyboard focus styles) */
+  @media (hover:hover) {
+    .project-agent-ai-room .btn:focus { outline: none; }
+  }
+  
+  /* Badge size for risk level */
+.project-agent-ai-room .badge {
+    padding: .35em .45em;
+    font-weight: 600;
+    font-size: 11px;
+    border-radius: 6px;
+}
+
+/* ===== Action Tasks under responses ===== */
+.project-agent-ai-room .action-tasks-container{ margin-top:12px; border:1px solid #e3e6f0; border-radius:8px; background:#f8f9fc; }
+.project-agent-ai-room .action-tasks-header{ padding:12px 15px; border-bottom:1px solid #e3e6f0; display:flex; justify-content:space-between; align-items:center; background:#fff; border-radius:8px 8px 0 0; }
+.project-agent-ai-room .action-tasks-header h6{ margin:0; color:#5a5c69; font-weight:600; }
+.project-agent-ai-room .action-tasks-list{ padding:0; }
+.project-agent-ai-room .action-task-item{ border-bottom:1px solid #e3e6f0; transition: background-color .2s; }
+.project-agent-ai-room .action-task-item:last-child{ border-bottom:none; }
+.project-agent-ai-room .action-task-header{ padding:12px 15px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: background-color .2s; }
+.project-agent-ai-room .action-task-header:hover{ background:#f1f3f4; }
+.project-agent-ai-room .action-task-info{ flex:1; }
+.project-agent-ai-room .action-name{ font-weight:600; color:#2c3e50; display:block; }
+.project-agent-ai-room .action-id{ font-size:.85em; color:#6c757d; }
+.project-agent-ai-room .action-task-status{ display:flex; align-items:center; gap:10px; }
+.project-agent-ai-room .action-toggle-icon{ transition: transform .2s; color:#6c757d; }
+.project-agent-ai-room .action-task-item.expanded .action-toggle-icon{ transform: rotate(180deg); }
+.project-agent-ai-room .action-task-details{ padding:15px; background:#fff; border-top:1px solid #e3e6f0; }
+.project-agent-ai-room .action-parameters h6{ margin-bottom:10px; color:#5a5c69; font-size:.9em; }
+.project-agent-ai-room .parameters-json{ background:#f8f9fa; border:1px solid #e3e6f0; border-radius:4px; padding:10px; font-size:.85em; max-height:200px; overflow:auto; }
+.project-agent-ai-room .action-actions{ margin-top:12px; display:flex; gap:10px; }
+  
+  /* Action "Run" little button */
+  .project-agent-ai-room .action-item .btn.btn-xs {
+    padding: 3px 8px;
+    font-size: 11px;
+    line-height: 1.3;
+    border-radius: 4px;
+  }
+  
+  /* Make the 3-column container breathe a bit on dense pages */
+  .project-agent-ai-room .ai-room-container .row > [class^="col-"] > .card {
+    margin-bottom: 16px;
+  }
+  
+  /* Ensure selectable text looks good inside bubbles */
+  .project-agent-ai-room .bubble *::selection {
+    background: rgba(13,110,253,.22);
+  }
+
+/* ====== GRID LAYOUT =================================================== */
+.project-agent-ai-room .pa-grid{
+  display: grid !important;
+  grid-template-columns: 1fr 400px !important; /* Chat Module | Right Panel */
+  gap: 16px !important;
+  margin: 0 !important;
+  min-height: 500px !important;
+  width: 100% !important;
+}
+@media (max-width: 1199.98px){
+  .project-agent-ai-room .pa-grid{
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .project-agent-ai-room .context-panel,
+  .project-agent-ai-room .chat-panel,
+  .project-agent-ai-room .actions-panel {
+    margin-bottom: 16px;
+  }
+}
+
+/* Đóng khối card và đẩy full chiều cao khả dụng */
+.project-agent-ai-room .card{
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px;
+}
+.project-agent-ai-room .card-header{ padding:10px 12px; }
+.project-agent-ai-room .card-body{  
+  padding: 12px; 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Panel specific styles */
+.project-agent-ai-room .context-panel{
+  display: flex !important;
+  flex-direction: column;
+  height: 100%;
+}
+.project-agent-ai-room .chat-panel{
+  display: flex !important;
+  flex-direction: column;
+  height: 100%;
+}
+.project-agent-ai-room .actions-panel{
+  display: flex !important;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Compact top spacing */
+.project-agent-ai-room{ padding-top: 0; margin-top: 0; }
+.project-agent-ai-room > .alert{ margin-top: 4px; margin-bottom: 8px; padding: 6px 10px; }
+.project-agent-ai-room .pa-grid{ margin-top: 0; }
+
+/* ====== CONTEXT ========================================================= */
+.project-agent-ai-room #context-details{ max-height: 280px; overflow:auto; }
+.project-agent-ai-room .memory-timeline,
+.project-agent-ai-room #memory-timeline{
+  max-height: 320px; overflow:auto;
+}
+
+/* Memory timeline card layout */
+.project-agent-ai-room .memory-timeline-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  min-height: 200px;
+}
+.project-agent-ai-room .memory-timeline-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+/* ====== CHAT CARD ======================================================= */
+.project-agent-ai-room .chat-card{
+  display: flex;
+  flex-direction: column;
+  height: 100%;   /* fill grid cell */
+  min-height: 400px;
+}
+.project-agent-ai-room .chat-card .chat-messages{
+  flex: 1;
+  overflow: auto; 
+  padding: 14px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  min-height: 250px;
+}
+.project-agent-ai-room .composer{
+  padding:10px; background:#f9fafb; border-bottom-left-radius:10px; border-bottom-right-radius:10px;
+}
+/* Modern compose bar */
+.project-agent-ai-room .compose-bar{ display:flex; align-items:stretch; gap:8px; width:100%; }
+.project-agent-ai-room .compose-bar .input-group{ flex: 1 1 100%; width:100%; }
+.project-agent-ai-room .btn-icon{ width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; }
+.project-agent-ai-room .compose-input{ resize:none; max-height:120px; overflow:auto; }
+
+/* Bubbles gọn, không quá rộng */
+.project-agent-ai-room .bubble{ max-width: 640px; }
+.project-agent-ai-room .message{ display:flex; align-items:flex-end; margin-bottom:10px; }
+.project-agent-ai-room .message.user{ justify-content:flex-end; }
+.project-agent-ai-room .avatar{ width:28px;height:28px;border-radius:50%;background:#eef2f7;color:#374151;
+  display:flex;align-items:center;justify-content:center;font-size:12px;margin:0 8px; }
+
+/* ====== ACTIONS ========================================================= */
+.project-agent-ai-room .action-list{ 
+  flex: 1;
+  overflow: auto; 
+  padding-right: 4px;
+  min-height: 200px;
+  max-height: 400px;
+}
+.project-agent-ai-room .action-item{
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+.project-agent-ai-room .action-item:hover{
+  border-color: #0d6efd;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.1);
+}
+.project-agent-ai-room .action-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ====== MOBILE RESPONSIVE ================================================ */
+@media (max-width: 767.98px){
+  .project-agent-ai-room .pa-grid{ 
+    display: block; 
+    gap: 8px;
+  }
+  .project-agent-ai-room .context-panel,
+  .project-agent-ai-room .chat-panel,
+  .project-agent-ai-room .actions-panel {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* === ChatGPT-like omnibox (scoped) ===================================== */
+.project-agent-ai-room .pa-omni{ position:relative; max-width:820px; margin:6px auto 8px; }
+.project-agent-ai-room .pa-box{
+  display:flex; align-items:center; gap:10px;
+  padding:12px 14px; border-radius:28px;
+  border:1px solid #e9eaee; background:#fff;
+  box-shadow: 0 3px 14px rgba(0,0,0,.06);
+}
+.project-agent-ai-room .pa-input{
+  flex:1 1 auto; border:0; outline:none; font-size:16px; background:transparent;
+}
+.project-agent-ai-room .pa-mini,
+.project-agent-ai-room .pa-mic{
+  width:36px; height:36px; border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #eceff3; background:#fff;
+}
+.project-agent-ai-room .pa-mic{ background:#111; color:#fff; border-color:#111; }
+.project-agent-ai-room .pa-mini i, .project-agent-ai-room .pa-mic i{ font-size:14px; }
+
+.project-agent-ai-room .pa-box:focus-within{
+  box-shadow: 0 6px 24px rgba(0,0,0,.10);
+  border-color:#d9dce2;
+}
+
+/* Pills nhỏ dưới omnibox */
+.project-agent-ai-room .pa-cta-row{
+  display:flex; gap:8px; margin-top:10px; justify-content:center;
+}
+.project-agent-ai-room .pa-pill{
+  font-size:13px; padding:6px 12px; border-radius:18px;
+  border:1px solid #e9eaee; background:#fff;
+}
+.project-agent-ai-room .pa-pill i{ margin-right:6px; }
+
+/* Chips gợi ý (hàng 2) */
+.project-agent-ai-room .pa-suggest-row{
+  display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; justify-content:center;
+}
+.project-agent-ai-room .pa-chip{
+  border:1px solid #e9eaee; background:#fff; border-radius:18px;
+  padding:10px 14px; font-size:14px;
+}
+
+/* Tip xanh “NEW” */
+.project-agent-ai-room .pa-tip{
+  position:absolute; left:50%; transform:translateX(-50%);
+  top:-54px; background:#2b6fea; color:#fff; border-radius:12px;
+  padding:10px 14px; font-size:13px; box-shadow:0 8px 18px rgba(43,111,234,.35);
+  z-index: 2;
+}
+.project-agent-ai-room .pa-tip strong{ background:#fff; color:#2b6fea; border-radius:6px; padding:2px 6px; margin-right:6px; }
+.project-agent-ai-room .pa-tip a{ color:#cfe0ff; text-decoration:underline; }
+.project-agent-ai-room .pa-tip-close{
+  border:0; background:transparent; color:#e7efff; font-size:16px; margin-left:8px;
+}
+.project-agent-ai-room .pa-tip-caret{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:-8px; width:0; height:0; border-left:8px solid transparent;
+  border-right:8px solid transparent; border-top:8px solid #2b6fea;
+}
+
+/* Responsive */
+@media (max-width: 576px){
+  .project-agent-ai-room .pa-omni{ padding:0 8px; }
+  .project-agent-ai-room .pa-tip{ display:none; }
+  .project-agent-ai-room .pa-box{ padding:10px 12px; }
+}
+/* Tabs in right panel */
+.project-agent-ai-room .pa-tabs{ margin-bottom: 10px; }
+.project-agent-ai-room .pa-tabs>li>a{ padding: 6px 10px; }
+.project-agent-ai-room .pa-tab-content{ padding-top: 6px; }
+.project-agent-ai-room #pa-tab-memory .pa-memory-filters .input-group-text{ background: #fff; }
+.project-agent-ai-room #pa-tab-memory .input-group{ box-shadow: none; border: 1px solid var(--pa-border); border-radius: 8px; overflow: hidden; background:#fff; }
+.project-agent-ai-room #pa-tab-memory .input-group .form-control{ border:0; }
+
+/* Chain-Of-Memory selection UI */
+.project-agent-ai-room .memory-item.chain-selected{
+  background: #eef7ff;
+  border-left: 3px solid #0d6efd !important;
+  border-radius: 4px;
+}
+/* Action rows */
+
+.pa-suggest-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.pa-suggest-row .pa-chip {
+  border-radius: 16px;
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+.pa-suggest-row .pa-chip i { margin-right: 6px; }
+
+/* Welcome tip and context button layering */
+.welcome-message #paOpenContextBtn {
+  margin-top: 8px;
+  position: relative;
+  z-index: 2; /* ensure above tip */
+}
+.pa-omni { position: relative; }
+.pa-omni .pa-tip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -42px; /* float above omnibox */
+  background: rgba(37, 99, 235, 0.12); /* primary-600 with transparency */
+  color: #1e3a8a; /* primary-800 tone for text */
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  padding: 6px 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+  z-index: 3;
+  white-space: nowrap;
+}
+.pa-omni .pa-tip strong {
+  display: inline-block;
+  background: #2563eb; /* primary-600 */
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin-right: 8px;
+  font-weight: 600;
+  font-size: 11px;
+  vertical-align: middle;
+}
+.pa-omni .pa-tip a { color: #2563eb; text-decoration: underline; }
+.pa-omni .pa-tip .pa-tip-close { background: transparent; border: 0; margin-left: 8px; color: #1e3a8a; }
+.pa-omni .pa-tip-caret {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 100%;
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(37, 99, 235, 0.35);
+}
+
+/* Action Logs Modal Styles */
+#actionLogsModal .modal-dialog {
+  max-width: 95%;
+}
+
+#actionLogsModal .table-responsive {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+#actionLogsModal .label {
+  font-size: 11px;
+  padding: 3px 6px;
+}
+
+#actionLogsModal #actionLogsLoading {
+  padding: 20px;
+  color: #666;
+}
+
+#actionLogsModal #actionLogsError {
+  margin-bottom: 15px;
+}
+
+#actionLogsModal #actionLogsFilters {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+#actionLogsModal .btn-action-details {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+#actionDetailsModal .table-responsive {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#actionDetailsModal .panel {
+  margin-bottom: 15px;
+}
+
+#actionDetailsModal .panel-heading {
+  padding: 8px 15px;
+}
+
+#actionDetailsModal .panel-body {
+  padding: 15px;
+}
+
+#actionDetailsModal pre {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Status badges */
+.label-success { background-color: #28a745; }
+.label-danger { background-color: #dc3545; }
+.label-warning { background-color: #ffc107; color: #212529; }
+.label-info { background-color: #17a2b8; }
+.label-default { background-color: #6c757d; }

@@ -1,0 +1,122 @@
+/* Better Menubar: make sidebar and setup menu scroll independently of content */
+
+/* Base measurements */
+:root {
+  --bm-header-h: 57px;
+}
+
+/* Sidebar wrapper */
+/* Keep CSS minimal; JS controls position/sizing to avoid pushing #wrapper */
+#menu.sidebar {
+  min-height: 0 !important; /* prevent inflated min-height from core */
+  overflow: hidden auto !important; /* x hidden, y auto */
+}
+
+/* Reserve space at bottom when pinned toggle is present */
+#menu.sidebar.bm-has-pinned {
+  padding-bottom: 44px !important; /* toggle 36px + spacing */
+}
+
+/* Reduce excessive top margin from profile block to avoid visual push-down */
+#menu .sidebar-user-profile {
+  margin-top: 8px !important;
+}
+
+/* Pinned projects floating UI */
+.bm-pinned-toggle {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 10px;
+  background: #f8fafc;
+  color: #111827;
+  border-top: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  box-shadow: 0 -1px 2px rgba(0,0,0,.04);
+  cursor: pointer;
+  z-index: 10002;
+  user-select: none;
+}
+.bm-pinned-toggle .bm-label { font-weight: 600; font-size: 13px; }
+.bm-pinned-toggle .bm-count { font-size: 12px; color: #6b7280; margin-left: 6px; }
+
+.bm-pinned-panel {
+  position: fixed;
+  left: 0;
+  bottom: 36px; /* sits above toggle */
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-bottom: 0;
+  max-height: 45vh;
+  overflow: auto;
+  z-index: 10001;
+  box-shadow: 0 -6px 12px rgba(0,0,0,.06);
+  display: none;
+}
+.bm-pinned-panel.open { display: block; }
+.bm-pinned-panel ul { list-style: none; margin: 0; padding: 6px 0; }
+.bm-pinned-panel li { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; }
+.bm-pinned-panel li:last-child { border-bottom: 0; }
+.bm-pinned-panel a { color: #374151; font-weight: 600; text-decoration: none; display: block; }
+.bm-pinned-panel small { color: #6b7280; font-weight: 400; }
+
+/* Side menu UL */
+#menu.sidebar > ul#side-menu {
+  /* ensure the UL can grow and scroll within the aside */
+  max-height: unset;
+}
+
+/* Hide originals when floating pinned panel is active */
+#side-menu li.pinned_project.bm-hidden,
+#side-menu li.pinned-separator.bm-hidden { display: none !important; }
+
+/* Setup customizer panel */
+#setup-menu-wrapper {
+  min-height: 0 !important;
+  overflow: hidden auto !important;
+}
+
+/* Content wrapper should only consider viewport height */
+#wrapper {
+  min-height: calc(100vh - var(--bm-header-h)) !important;
+  height: auto !important;
+}
+
+/* Clear any inflated min-height on nested content if present */
+#wrapper .content {
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* Avoid main.js old min-height pushing content excessively on desktop */
+@media (min-width: 768px) {
+  body:not(.page-small) #wrapper {
+    height: auto !important;
+  }
+}
+
+/* Handle RTL edge cases for mobile */
+body.rtl #menu.sidebar {
+  left: 0;
+}
+
+/* Smooth scrolling aesthetics */
+#menu.sidebar,
+#setup-menu-wrapper {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+/* WebKit scrollbar tweak */
+#menu.sidebar::-webkit-scrollbar,
+#setup-menu-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+#menu.sidebar::-webkit-scrollbar-thumb,
+#setup-menu-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.25);
+  border-radius: 4px;
+}

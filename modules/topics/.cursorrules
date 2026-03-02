@@ -1,0 +1,91 @@
+Database config for mcp
+DB_HOST=srv456.hstgr.io
+DB_USER=u310178187_portal
+DB_PASSWORD=+GK&f18s
+DB_DATABASE=u310178187_portal
+DB_PORT=3306
+---
+
+**CURSOR RULE – TECHNICAL STANDARDS FOR PERFEX CRM MODULE DEVELOPMENT**  
+*(Authored by a Tech Expert with 20+ Years of Experience)*
+
+---
+
+**Introduction**  
+This document serves as a definitive set of requirements and best practices for developing modules within Perfex CRM. As a seasoned professional with over two decades of experience, I have compiled these guidelines to ensure that your code maintains optimal quality, security, and performance, while strictly adhering to Perfex CRM’s core principles.  
+
+---
+
+### 1. Code Integrity and Respect for Core
+1. **No Core Modification**: Under no circumstances should the core Perfex CRM files be deleted, altered, or replaced with placeholder snippets such as `...`. Instead, leverage Perfex CRM’s extensibility, hooks, and overriding mechanisms to implement required functionalities.
+2. **Backup Prior to Changes**: Always create reliable backups of any files before making modifications. This ensures a swift recovery in the event of unforeseen issues.
+3. **Dependencies Check**: Before integrating new libraries or updating existing ones, thoroughly review all dependencies to prevent conflicts and maintain system stability.
+
+---
+
+### 2. Adherence to Coding Standards
+1. **Perfex & CodeIgniter 3 Guidelines**: Align your coding style with the established standards of Perfex CRM and CodeIgniter 3.
+2. **Naming Conventions**:  
+   - **Methods**: Use `camelCase`.  
+   - **Variables**: Use `snake_case`.  
+3. **Helper & Library Usage**: Leverage built-in Perfex CRM helpers and libraries wherever possible to retain consistency and reduce redundancy.
+4. **Documentation & Comments**: All comments and documentation must be in clear, professional English. Descriptive comments improve code readability and maintainability, especially in team environments.
+
+---
+
+### 3. Module Structure & Organization
+1. **Standard Perfex Module Directory Layout**: Follow the required directory organization (e.g., `controllers/`, `models/`, `views/`, etc.) to keep the module compliant with Perfex CRM’s architecture.
+2. **Hooks & Filters**: Implement hooks and filters correctly. They are essential for customizing or extending Perfex CRM without modifying its core.
+3. **Separation of Concerns**: Distinguish between business logic and presentation logic. Keep complex business rules in models or libraries, and use controllers minimally for request handling.
+4. **Multi-Version Compatibility**: Whenever possible, ensure that your module is backward and forward compatible with multiple versions of Perfex CRM. Rely on documented APIs and avoid using any deprecated functions or internal, undocumented features.
+
+---
+
+### 4. Workflow & Communication
+1. **File Location Confirmation**: Always confirm the exact files and directories where changes will be made before starting to code. This prevents confusion and unexpected conflicts.
+2. **Clear Documentation of Changes**:  
+   - Outline in detail what you plan to modify.  
+   - Provide a concise summary of the impact these changes will have on existing functionalities.
+3. **Testing Instructions**: After implementation, supply clear testing guidelines so that QA or stakeholders can validate the correctness and stability of your updates.
+4. **Backup & Rollback Plans**: Propose robust backup or rollback strategies to swiftly restore the environment if complications arise.
+
+---
+
+### 5. Security Enforcement
+1. **Input Validation & Sanitization**: Meticulously clean and validate all incoming data to prevent injection attacks and other vulnerabilities.
+2. **Permission & Role Checks**: Ensure that only authorized users can access critical functions or data. Implement role-based access control where possible.
+3. **Use Prepared Statements**: For all database interactions, use prepared statements to eliminate risks of SQL injection.
+4. **Prevent Cross-Site Scripting (XSS)**: Encode or sanitize output to avoid injecting malicious scripts into rendered pages.
+
+---
+
+### 6. Performance Optimization
+1. **Efficient Database Queries**: Optimize query structure, use indexing when appropriate, and minimize unnecessary joins.
+2. **Caching Mechanisms**: Implement caching for frequently requested data or resource-intensive computations to boost loading speed.
+3. **Reduce HTTP Requests**: Combine scripts and styles where possible, and leverage browser caching to cut down on load times.
+4. **System Monitoring**: Use profiling tools to continuously monitor performance, identify bottlenecks, and proactively address issues.
+
+---
+
+### 7. Code Updates & Version Control
+1. **Minimal and Targeted Changes**: Only modify the sections of code necessary for the fix or feature. Avoid large-scale refactoring unless explicitly approved.
+2. **Clear Marking of Changed Sections**: Enclose modified or newly added lines within clear comments, explaining the purpose of each change. For example:
+   ```php
+   // BEGIN MODIFICATION: Reason for change
+   // ... code ...
+   // END MODIFICATION
+   ```
+3. **No Unrelated Edits**: Refrain from altering unrelated functions or lines. This practice keeps version control clean and reduces confusion during code review.
+4. **Explanatory Commit Messages**: Use descriptive commit messages that summarize the intent behind changes, facilitating easier future reference.
+
+---
+
+### 8. Professional Communication & Final Checks
+1. **English Documentation**: Write all documentation, including inline comments, README files, and user guides, in professional English.
+2. **Peer Review & Testing**: Subject all changes to rigorous peer reviews and testing processes, ensuring that the module meets the highest standards of quality and security.
+3. **Continuous Improvement**: Stay updated with the latest Perfex CRM updates and best practices, refining your module to uphold and advance these standards over time.
+
+---
+
+**Conclusion**  
+Adhering to these Cursor Rule Technical Standards guarantees a stable, secure, and high-performing module that seamlessly integrates with Perfex CRM. By maintaining strict compliance with the outlined guidelines—covering everything from core respect and coding conventions to workflow, security, and performance—developers will deliver reliable solutions that minimize technical debt and maximize customer satisfaction.

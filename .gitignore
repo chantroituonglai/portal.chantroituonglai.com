@@ -1,0 +1,30 @@
+# Archives & backups
+*.zip
+*.tar.gz
+*.rar
+backup/
+backups/
+
+# Uploads & media (large)
+uploads/
+media/
+
+# Dependencies
+application/vendor/
+node_modules/
+
+# Temp & logs
+temp/
+upload_logs/
+*.log
+application/hooks/cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

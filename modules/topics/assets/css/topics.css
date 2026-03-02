@@ -1,0 +1,369 @@
+/**
+ * Topics Module Common CSS
+ * This file contains shared styles for all views in the Topics module
+ * When adding new styles, please group them by component/feature and add comments
+ */
+
+/* Common Table Styles */
+.table-topics td,
+.table-action-types td,
+.table-action-states td {
+    vertical-align: middle !important;
+}
+
+/* Button & Icon Styles */
+.btn-icon {
+    padding: 2px 6px;
+    background: transparent;
+    border: none;
+    color: #777;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    color: #333;
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.btn-icon i {
+    font-size: 12px;
+}
+
+/* Label Styles */
+.label {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 3px;
+}
+
+/* Utility Classes */
+.tw-truncate {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Modal Styles */
+.modal .loading {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Topic States */
+.topic-state-card {
+    position: relative;
+    padding: 15px;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    margin-bottom: 20px;
+}
+
+/* Form Elements */
+.select2-container {
+    width: 100% !important;
+}
+
+/* Topic ID Container Styles */
+.topic-id-container {
+    width: 200px;
+    position: relative;
+}
+
+.topic-id-content {
+    display: inline-block;
+    position: relative;
+    padding-right: 10px; 
+}
+
+.topic-id-content > * {
+    display: inline;
+}
+
+.topic-id-text {
+    width: 100%;
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: #6B7280;
+    cursor: pointer;
+    user-select: all;
+}
+
+.topic-id-text:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.btn-copy {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    background: transparent;
+    border: none;
+    color: #6B7280;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.btn-copy:hover {
+    color: #374151;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-copy i {
+    font-size: 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tw-truncate {
+        max-width: 150px;
+    }
+    .topic-id-container {
+        width: 150px;
+    }
+}
+
+/* Filter Tags */
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    margin: 2px;
+}
+
+.filter-tag .label {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    background: #e3f2fd;
+    color: #0277bd;
+    border: 1px solid #90caf9;
+}
+
+.filter-tag .remove-filter {
+    margin-left: 5px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.filter-tag .remove-filter:hover {
+    opacity: 1;
+}
+
+/* Search Mode Toggle */
+.search-mode-toggle {
+    display: inline-flex;
+    align-items: center;
+}
+
+.search-mode-toggle .btn-group {
+    margin-left: 10px;
+}
+
+.search-mode-toggle .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Active Filters Panel */
+#active-filters {
+    transition: all 0.3s ease;
+}
+
+#active-filters .panel-body {
+    padding: 10px 15px;
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 10px;
+}
+
+a.show-processed-data {
+    display: block;
+    max-width: fit-content;
+    color: white;
+    background: black;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    margin-top: 8px;
+}
+
+/* Topic States Grid */
+.topic-states-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.topic-state-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.topic-state-card .inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.topic-state-card .small-box-footer {
+    margin-top: auto;
+}
+
+.topic-id-content {
+    max-width: 100%;
+}
+
+.simple-bootstrap-select {
+    min-width: 250px;
+}
+
+/* Ultimate Editor Styles */
+.editor-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.editor-loading .fa-spinner {
+    color: #03a9f4;
+    margin-bottom: 10px;
+}
+
+.editor-loading .loading-message {
+    font-size: 16px;
+    color: #333;
+    text-align: center;
+    font-weight: 500;
+}
+
+.editor-main {
+    position: relative;
+    min-height: 400px;
+}
+
+.draft-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.draft-item:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.draft-item.active {
+    border-color: #03a9f4;
+    background-color: #f0f9ff;
+}
+
+.bg-success-light {
+    background-color: #e8f5e9;
+    border-radius: 4px;
+}
+
+.bg-danger-light {
+    background-color: #ffebee;
+    border-radius: 4px;
+}
+
+#autosave-status {
+    font-size: 12px;
+}
+
+#saving-indicator {
+    color: #4caf50;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.seo-score .score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f5f5f5;
+    border: 3px solid #03a9f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+.editor-toolbar {
+    margin-bottom: 15px;
+}
+
+.editor-stats-item {
+    display: inline-block;
+    margin-right: 10px;
+    color: #757575;
+}
+
+.editor-status-bar {
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+}
+
+/* Style cho responsive design */
+@media (max-width: 768px) {
+    .toolbar-left-section,
+    .toolbar-right-section {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+    
+    .toolbar-left-section button,
+    .toolbar-right-section button {
+        margin-bottom: 5px;
+    }
+}

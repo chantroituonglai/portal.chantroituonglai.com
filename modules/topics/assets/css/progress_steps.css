@@ -1,0 +1,330 @@
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 30px 0;
+    position: relative;
+}
+
+.progress-line {
+    height: 4px;
+    background: #e9ecef;
+    /* z-index: 1; */
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.progress-line-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: #28a745;
+    transition: width 0.3s ease;
+}
+
+.log-modal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.log-modal .log-content {
+    overflow: hidden;
+}
+
+.log-modal .log-content pre {
+    margin: 0;
+    max-height: none;
+    overflow: visible;
+}
+
+.log-modal .log-content table {
+    margin-bottom: 0;
+}
+
+.log-modal .log-content td {
+    vertical-align: top;
+    word-break: break-word;
+}
+
+.log-modal .log-content td:last-child {
+    width: 60%;
+}
+
+.log-modal .log-content pre code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+} 
+.progress-steps-container {
+    /* width: 100%;
+    overflow-x: auto;
+    max-height: calc(100vh - 300px);  */
+    width: 100%;
+    max-height: max-content;
+}
+
+.progress-steps-grid {
+    display: grid;
+    gap: 15px;
+    margin-top: 20px;
+    min-width: min-content;
+}
+
+.progress-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px; /* Reduced from 250px */
+    padding: 8px;
+    flex: none; /* Prevent column from growing */
+}
+
+.progress-step {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+    height: 80px; /* Fixed height */
+    display: flex;
+    align-items: center;
+    flex: none; /* Remove flex grow */
+}
+
+.step-content {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    width: 100%;
+    height: auto; /* Remove 100% height */
+}
+
+.progress-step-icon {
+    width: 24px; /* Smaller icon */
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f1f1;
+    color: #fff;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.progress-step-details {
+    margin-left: 10px;
+    flex-grow: 1;
+    overflow: hidden;
+    text-align: left;
+    /* padding-left: 20px; */
+}
+
+.progress-step-label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progress-step-status {
+    font-size: 11px;
+    color: #666;
+}
+
+.progress-step-actions {
+    margin-top: 4px;
+}
+
+.progress-step-actions a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+.parent-step {
+    border-left: 3px solid #4a90e2;
+    height: 80px;
+    flex: none;
+    overflow: hidden;
+}
+
+.parent-step .step-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.parent-step .step-title {
+    flex: 2; /* Chiếm 2/3 chiều rộng */
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.parent-step .step-status {
+    flex: 1; /* Chiếm 1/3 chiều rộng */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    position: relative;
+}
+
+/* Tính toán màu text tự động dựa trên màu nền */
+.parent-step .status-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.parent-step .step-actions {
+    margin-top: 5px;
+}
+
+.parent-step .step-actions a {
+    color: inherit;
+    text-decoration: none;
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.parent-step .step-actions a:hover {
+    opacity: 1;
+}
+
+.step-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    gap: 5px;
+    width: 100%;
+}
+
+.step-type-name {
+    font-weight: 600;
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+.step-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.step-status, .step-actions {
+    flex-shrink: 0;
+}
+
+.child-step {
+    margin-left: 20px;
+    border-left: 3px solid #e2e8f0;
+    height: 80px;
+}
+
+.child-connector {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background: #e2e8f0;
+}
+
+.child-indicator {
+    color: #999;
+    margin-right: 4px;
+    font-size: 11px;
+}
+
+.progress-step.completed .progress-step-icon {
+    background: #28a745;
+}
+
+.progress-step.in-progress .progress-step-icon {
+    background: #007bff;
+}
+
+.child-steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Scrollbar styling */
+.progress-steps-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.progress-steps-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.progress-steps-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.progress-steps-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Step type name styling */
+.step-type-name {
+    font-weight: 600;
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+/* Status label styling */
+.status-label {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    display: inline-block;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Ensure status labels are consistent between parent and child steps */
+.child-step .progress-step-status, .child-step .progress-step-actions{
+    margin-left: 20px;  
+}
+.step-status .status-label,
+.progress-step-status .status-label {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    display: inline-block;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Default colors for different states */
+.status-label.pending {
+    background-color: #ffc107; /* Yellow for pending */
+}
+
+.status-label.in-progress {
+    background-color: #17a2b8; /* Blue for in progress */
+}
+
+.status-label.completed {
+    background-color: #28a745; /* Green for completed */
+}
+
+.status-label.failed {
+    background-color: #dc3545; /* Red for failed */
+}
+
+/* Hover effect for better visibility */
+.status-label:hover {
+    opacity: 0.9;
+}

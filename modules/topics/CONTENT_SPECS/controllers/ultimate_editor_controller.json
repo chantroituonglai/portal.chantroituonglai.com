@@ -1,0 +1,64 @@
+{
+  "sections": [
+    {
+      "name": "header_section",
+      "description": "Header section containing class definition and constructor"
+    },
+    {
+      "name": "index_function",
+      "description": "Index function to display the editor"
+    },
+    {
+      "name": "save_draft_function",
+      "description": "Function to save draft content via AJAX"
+    },
+    {
+      "name": "create_draft_function",
+      "description": "Function to create a new draft"
+    },
+    {
+      "name": "convert_to_final_function",
+      "description": "Function to convert a draft to final status"
+    },
+    {
+      "name": "analyze_seo_function",
+      "description": "Function to analyze SEO for current draft"
+    },
+    {
+      "name": "publish_draft_function",
+      "description": "Function to publish draft to target platform"
+    },
+    {
+      "name": "check_publish_status_function",
+      "description": "Function to check status of publishing process"
+    },
+    {
+      "name": "get_drafts_function",
+      "description": "Function to get drafts for a topic"
+    },
+    {
+      "name": "load_draft_function",
+      "description": "Function to load a specific draft"
+    },
+    {
+      "name": "delete_draft_function",
+      "description": "Function to delete a draft"
+    },
+    {
+      "name": "duplicate_draft_function",
+      "description": "Function to duplicate a draft"
+    },
+    {
+      "name": "save_settings_function",
+      "description": "Function to save editor settings"
+    },
+    {
+      "name": "add_section_function",
+      "description": "Function to add a content section"
+    },
+    {
+      "name": "helper_functions",
+      "description": "Helper functions for various tasks"
+    }
+  ]
+} 
