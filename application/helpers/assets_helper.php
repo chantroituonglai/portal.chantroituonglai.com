@@ -89,7 +89,14 @@ function _init_admin_assets()
 
     $CI->app_css->add('tailwind-css', base_url($CI->app_css->core_file('assets/builds', 'tailwind.css')) . '?v=' . $CI->app_css->core_version());
 
-    $CI->app_css->add('app-css', base_url($CI->app_css->core_file('assets/css', 'style.css')) . '?v=' . $CI->app_css->core_version(), 'admin', ['tailwind-css']);
+    $adminCssAsset = $CI->app_css->core_file('assets/css', 'style.css');
+    $adminCssVersion = $CI->app_css->core_version();
+    $adminCssPath = FCPATH . ltrim($adminCssAsset, '/');
+    if (is_file($adminCssPath)) {
+        $adminCssVersion .= '.' . filemtime($adminCssPath);
+    }
+
+    $CI->app_css->add('app-css', base_url($adminCssAsset) . '?v=' . $adminCssVersion, 'admin', ['tailwind-css']);
 
     if (file_exists(FCPATH . 'assets/css/custom.css')) {
         $CI->app_css->add('custom-css', base_url('assets/css/custom.css'), 'admin', ['app-css']);

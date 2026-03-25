@@ -51,3 +51,65 @@ function openclaw_gateway_init()
         add_option('openclaw_gateway_mask_sensitive', 1);
     }
 }
+
+hooks()->add_action('admin_init', 'openclaw_gateway_admin_menu');
+function openclaw_gateway_admin_menu()
+{
+    $CI = &get_instance();
+
+    $CI->app_menu->add_sidebar_menu_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_pipeline',
+        'name' => _l('openclaw_gateway'),
+        'icon' => 'fa fa-random',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin'),
+        'position' => 37,
+    ]);
+
+    $CI->app_menu->add_sidebar_children_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_logs',
+        'name' => 'Overview',
+        'icon' => 'fa fa-list',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin'),
+        'position' => 1,
+    ]);
+
+    $CI->app_menu->add_sidebar_children_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_bridge_settings',
+        'name' => 'Bridge Settings',
+        'icon' => 'fa fa-sliders',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin/bridge_settings'),
+        'position' => 2,
+    ]);
+
+    $CI->app_menu->add_sidebar_children_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_scopes',
+        'name' => 'Scopes',
+        'icon' => 'fa fa-sitemap',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin/scope_settings'),
+        'position' => 3,
+    ]);
+
+    $CI->app_menu->add_sidebar_children_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_pipeline_logs',
+        'name' => 'Pipeline Logs',
+        'icon' => 'fa fa-random',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin/pipeline_logs'),
+        'position' => 4,
+    ]);
+
+    $CI->app_menu->add_sidebar_children_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_bridge_queue',
+        'name' => 'Bridge Queue',
+        'icon' => 'fa fa-exchange',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin/bridge_queue'),
+        'position' => 5,
+    ]);
+
+    $CI->app_menu->add_sidebar_children_item('openclaw_gateway_pipeline', [
+        'slug' => 'openclaw_gateway_gateway_logs',
+        'name' => 'Gateway Logs',
+        'icon' => 'fa fa-terminal',
+        'href' => admin_url('openclaw_gateway/openclaw_gateway_admin/gateway_logs'),
+        'position' => 6,
+    ]);
+}

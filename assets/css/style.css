@@ -522,6 +522,8 @@ body.page-small #header {
   display: flex;
   align-items: center;
   margin: 0;
+  padding-left: 0;
+  list-style: none;
 }
 
 #header .header-quick-actions>li,
@@ -3401,11 +3403,11 @@ a._timer:focus {
   #header .header-utility-list {
     gap: 8px;
     margin-right: 0;
-    padding: 8px 10px;
-    border: 1px solid #dbe5f1;
-    border-radius: 20px;
-    background: rgba(247, 250, 255, 0.82);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   #header .navbar-nav>li>a {
@@ -3417,6 +3419,10 @@ a._timer:focus {
 
   #header .header-notifications .dropdown-toggle {
     margin: 0;
+  }
+
+  #header .mobile-menu {
+    display: none !important;
   }
 }
 
