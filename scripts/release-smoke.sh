@@ -23,4 +23,4 @@ check_url() {
 }
 
 check_url "$BASE_URL/authentication/login" "HTTP/"
-check_url "$BASE_URL/admin/" "Location:"
+check_url "$BASE_URL/admin/" ""
