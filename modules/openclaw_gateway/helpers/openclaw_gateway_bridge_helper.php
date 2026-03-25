@@ -731,6 +731,7 @@ function ocg_bridge_http_post($url, $payloadJson, $headers, $timeoutMs)
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payloadJson);
     curl_setopt($ch, CURLOPT_TIMEOUT_MS, $timeoutMs);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, min($timeoutMs, 5000));
+    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
     $body = curl_exec($ch);
     $errno = curl_errno($ch);
