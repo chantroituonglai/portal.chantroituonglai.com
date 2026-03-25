@@ -29,7 +29,14 @@ register_activation_hook(PROJECT_ROADMAP_MODULE_NAME, 'project_roadmap_module_ac
 
 function project_roadmap_load_js($dashboard_js) {
         $CI = &get_instance();
-        $dashboard_js .=  $CI->load->view('project_roadmap/project_roadmap_dashboard_js');
+        $viewuri = $_SERVER['REQUEST_URI'] ?? '';
+
+        if ($viewuri !== '/admin/' && $viewuri !== '/admin') {
+            return $dashboard_js;
+        }
+
+        $dashboard_js .= $CI->load->view('project_roadmap/project_roadmap_dashboard_js', [], true);
+        echo $dashboard_js;
         return $dashboard_js;
 }
 

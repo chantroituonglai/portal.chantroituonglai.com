@@ -9,14 +9,12 @@ function custom_pdf_add_head_components()
 hooks()->add_action('app_admin_footer', function () {
     // Check if the 'custom_pdf' module is active
     if (get_instance()->app_modules->is_active('custom_pdf')) {
-        // Generate the URL for the 'custom_pdf.js' script file
-        $script_url = module_dir_url('custom_pdf', 'assets/js/custom_pdf.js');
-
-        // Get the core version from the application's scripts
-        $core_version = get_instance()->app_scripts->core_version();
+        $script_path = module_dir_path(CUSTOM_PDF_MODULE, 'assets/js/custom_pdf.js');
+        $script_url  = module_dir_url(CUSTOM_PDF_MODULE, 'assets/js/custom_pdf.js');
+        $asset_ver   = file_exists($script_path) ? filemtime($script_path) : get_instance()->app_scripts->core_version();
 
         // Echo the script tag to include 'custom_pdf.js' with a version parameter
-        echo '<script src="'.$script_url.'?v='.$core_version.'"></script>';
+        echo '<script src="'.$script_url.'?v='.$asset_ver.'"></script>';
     }
 
     //\modules\custom_pdf\core\Apiinit::ease_of_mind(CUSTOM_PDF_MODULE);

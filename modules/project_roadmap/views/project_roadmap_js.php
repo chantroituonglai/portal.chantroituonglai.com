@@ -7,11 +7,13 @@
     "task_status": 'select[name="task_status_'+project_id+'"]',
  }
   $(function(){
-    var circle = $('.project-progress').circleProgress({fill: {
-      gradient: ['#84c529', '#84c529']
-    }}).on('circle-animation-progress', function(event, progress, stepValue) {
-      $(this).find('strong.project-percent').html(parseInt(100 * stepValue) + '<i>%</i>');
-    });
+    if ($.fn.circleProgress && $('.project-progress').length) {
+      $('.project-progress').circleProgress({fill: {
+        gradient: ['#84c529', '#84c529']
+      }}).on('circle-animation-progress', function(event, progress, stepValue) {
+        $(this).find('strong.project-percent').html(parseInt(100 * stepValue) + '<i>%</i>');
+      });
+    }
         project_roadmap_tasks(project_id);
   });
   $('select[name="milestones_'+project_id+'"],select[name="members_'+project_id+'"],select[name="task_status_'+project_id+'"]').on('change', function() {
@@ -44,16 +46,18 @@
 
 
     var rows = $('.table-milestones').find('tr');
-    $.each(rows, function() {
-        var td = $(this).find('td').eq(1);
-        var percent = $(td).find('input[name="percent"]').val();
-        $(td).find('.goal-progress').circleProgress({
-            value: percent,
-            size: 45,
-            animation: false,
-            fill: {
-                gradient: ["#28b8da", "#059DC1"]
-            }
-        })
-    })
+    if ($.fn.circleProgress && rows.length) {
+      $.each(rows, function() {
+          var td = $(this).find('td').eq(1);
+          var percent = $(td).find('input[name="percent"]').val();
+          $(td).find('.goal-progress').circleProgress({
+              value: percent,
+              size: 45,
+              animation: false,
+              fill: {
+                  gradient: ["#28b8da", "#059DC1"]
+              }
+          });
+      });
+    }
 </script>

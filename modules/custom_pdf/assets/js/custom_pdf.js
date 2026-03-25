@@ -26,12 +26,17 @@ $(function() {
             var color = e.color.toHex();
             var _class = 'custom_style_' + $(this).find('input').data('id');
             var val = $(this).find('input').val();
+            var additional = $(this).data('additional') || '';
+            var target = $(this).data('target') || '';
+            var cssProperty = $(this).data('css') || '';
             if (val == '') {
                 $('.' + _class).remove();
                 return false;
             }
+            if (target === '' || cssProperty === '') {
+                return false;
+            }
             var append_data = '';
-            var additional = $(this).data('additional');
             additional = additional.split('+');
             if (additional.length > 0 && additional[0] != '') {
                 $.each(additional, function (i, add) {
@@ -39,9 +44,8 @@ $(function() {
                     append_data += add[0] + '{' + add[1] + ':' + color + ' !important;}';
                 });
             }
-            append_data += $(this).data('target') + '{' + $(this).data('css') + ':' + color +
+            append_data += target + '{' + cssProperty + ':' + color +
                 ' !important;}';
-            console.log($(this).data('target'));
             if ($('head').find('.' + _class).length > 0) {
                 $('head').find('.' + _class).html(append_data);
             } else {
@@ -54,4 +58,3 @@ $(function() {
         });
     });
 });
-

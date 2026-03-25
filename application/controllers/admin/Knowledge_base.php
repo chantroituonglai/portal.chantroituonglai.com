@@ -176,7 +176,8 @@ class Knowledge_base extends AdminController
             if (isset($post_data['article_add_edit'])) {
                 unset($post_data['article_add_edit']);
             }
-            if (!$this->input->post('id')) {
+            $groupId = $this->input->post('id');
+            if ($groupId === null || $groupId === '') {
                 if (staff_cant('create', 'knowledge_base')) {
                     access_denied('knowledge_base');
                 }
