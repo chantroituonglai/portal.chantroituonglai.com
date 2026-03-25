@@ -1,0 +1,82 @@
+name: Build Portal Release Artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build
+        required: false
+        default: release/live
+  push:
+    branches:
+      - release/live
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install root frontend dependencies
+        run: npm ci
+
+      - name: Install Composer dependencies
+        run: |
+          composer_dirs=(
+            application
+            modules/einvoice
+            modules/openai
+            modules/surveys
+            modules/woocommerce
+          )
+
+          for dir in "${composer_dirs[@]}"; do
+            if [[ -f "$dir/composer.json" ]]; then
+              composer install \
+                --working-dir="$dir" \
+                --no-dev \
+                --prefer-dist \
+                --no-interaction \
+                --optimize-autoloader
+            fi
+          done
+
+      - name: Rebuild minified CSS
+        run: npx grunt cssmin
+
+      - name: Compute release id
+        id: release
+        run: echo "release_id=gha-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+
+      - name: Package release artifact
+        id: package
+        run: |
+          archive_path="$(OUTPUT_DIR="$PWD/release-artifacts" RELEASE_ID="${{ steps.release.outputs.release_id }}" bash scripts/package-release.sh)"
+          echo "archive_path=$archive_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.package.outputs.archive_path }}
+          if-no-files-found: error

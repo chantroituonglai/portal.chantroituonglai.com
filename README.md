@@ -44,6 +44,14 @@ A highly specialized Business Management Portal built on the **Perfex CRM (v2.3.
 3. Configure `application/config/app-config.php`.
 4. Run `grunt` to compile assets if modifying CSS/JS.
 
+## 🚢 Branching & Deploy
+
+- `main`: integration branch
+- `release/live`: production branch, auto deploys through GitHub Actions on every push
+- `feat/*`, `fix/*`, `chore/*`, `codex/*`: working branches
+
+Operational guide: `docs/branching-and-deploy.md`
+
 ---
 
 © 2026 Chantroituonglai. Optimized for high-performance CRM operations.

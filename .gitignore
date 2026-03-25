@@ -18,6 +18,8 @@ temp/
 upload_logs/
 *.log
 application/hooks/cache/
+release-artifacts/
+.worktrees/
 
 # OS
 .DS_Store
