@@ -533,7 +533,7 @@ body.page-small #header {
   padding-left: 0;
   list-style: none;
   float: none;
-  gap: 10px;
+  gap: 6px;
 }
 
 #header .header-quick-actions>li,
@@ -556,6 +556,7 @@ body.page-small #header {
   justify-content: center;
   width: 40px;
   height: 40px;
+  border-radius: 999px;
 }
 
 #header .header-quick-create span {
@@ -569,14 +570,15 @@ body.page-small #header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 38px;
   height: 40px;
-  padding: 0;
-  border-radius: 14px;
-  border: 1px solid #cfdceb;
-  background: #f7fafc;
+  padding: 0 8px;
+  border-radius: 12px;
+  border: 0;
+  background: transparent;
   color: #334155;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 #header .header-icon-link:hover,
@@ -584,9 +586,7 @@ body.page-small #header {
 #header .header-notifications .dropdown-toggle:hover,
 #header .header-notifications .dropdown-toggle:focus {
   color: #0f172a;
-  background: #ffffff;
-  border-color: #9fb8d6;
-  box-shadow: 0 12px 24px -20px rgb(15 23 42 / 0.45);
+  background: rgba(226, 232, 240, 0.72);
   transform: translateY(-1px);
 }
 
@@ -595,26 +595,33 @@ body.page-small #header {
   align-items: center;
   gap: 8px;
   height: 40px;
-  padding: 0 16px;
+  padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid #cfdceb;
-  background: #f7fafc;
+  border: 0;
+  background: transparent;
   color: #0f172a;
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  line-height: 1;
+  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 #header .header-settings-link:hover,
 #header .header-settings-link:focus {
   text-decoration: none;
-  background: #ffffff;
-  border-color: #9fb8d6;
-  box-shadow: 0 12px 24px -20px rgb(15 23 42 / 0.45);
+  background: rgba(226, 232, 240, 0.72);
   transform: translateY(-1px);
 }
 
 #header .header-settings-link i {
   color: #2563eb;
+  width: 16px;
+  text-align: center;
+}
+
+#header .header-settings-link span {
+  display: inline-flex;
+  align-items: center;
 }
 
 #header .header-notifications {
@@ -3492,19 +3499,19 @@ a._timer:focus {
   }
 
   .header-right-cluster {
-    gap: 8px;
+    gap: 6px;
   }
 
   #header .header-quick-actions,
   #header .header-utility-list {
-    gap: 8px;
+    gap: 4px;
   }
 
   #header .header-settings-link {
-    width: 40px;
+    width: 38px;
     padding: 0;
     justify-content: center;
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
   #header .header-settings-link span {
