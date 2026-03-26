@@ -55,7 +55,7 @@
                 return isset($action['permission']) && staff_cant('create', $action['permission']);
             }); ?>
 
-            <div class="header-right-cluster visible-md visible-lg">
+            <div class="header-right-cluster">
                 <?php if ($quickActions->isNotEmpty()) { ?>
                 <ul class="header-quick-actions">
                     <li class="icon tw-relative"
