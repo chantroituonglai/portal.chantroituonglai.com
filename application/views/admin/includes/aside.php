@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<aside id="menu" class="sidebar">
+<aside id="menu" class="sidebar portal-shell-sidebar">
     <?php $isSidebarDark = function_exists('is_admin_sidebar_background_light') ?
             is_admin_sidebar_background_light() :
             false; ?>
-    <div class="dropdown sidebar-user-profile tw-mt-[80px] tw-mx-1.5 ">
+    <div class="dropdown sidebar-user-profile portal-sidebar-profile tw-mt-[80px] tw-mx-1.5 ">
         <a href="#"
-            class="dropdown-toggle profile -tw-mt-1 tw-font-medium tw-border tw-border-solid tw-rounded-lg tw-bg-white tw-py-2 tw-px-2.5 tw-block tw-shadow-xs <?= $isSidebarDark ? 'tw-text-white tw-border-white/10 hover:tw-border-white/30 focus:tw-border-white/30 hover:tw-text-white focus:tw-text-white hover:tw-bg-neutral-900/10 focus:tw-bg-neutral-900/10' : 'tw-border-neutral-300 tw-text-neutral-700 hover:tw-text-neutral-800 focus:tw-text-neutral-800 hover:tw-bg-neutral-900/5 focus:tw-bg-neutral-900/5'; ?>"
+            class="dropdown-toggle profile portal-sidebar-profile-trigger -tw-mt-1 tw-font-medium tw-border tw-border-solid tw-rounded-lg tw-bg-white tw-py-2 tw-px-2.5 tw-block tw-shadow-xs <?= $isSidebarDark ? 'tw-text-white tw-border-white/10 hover:tw-border-white/30 focus:tw-border-white/30 hover:tw-text-white focus:tw-text-white hover:tw-bg-neutral-900/10 focus:tw-bg-neutral-900/10' : 'tw-border-neutral-300 tw-text-neutral-700 hover:tw-text-neutral-800 focus:tw-text-neutral-800 hover:tw-bg-neutral-900/5 focus:tw-bg-neutral-900/5'; ?>"
             data-toggle="dropdown" aria-expanded="false">
             <span class="tw-inline-flex tw-items-center tw-gap-x-3 tw-pt-0.5">
                 <?= staff_profile_image($current_user->staffid, ['img', 'img-responsive', 'staff-profile-image-small']); ?>
@@ -19,7 +19,7 @@
                 </span>
             </span>
         </a>
-        <ul class="dropdown-menu tw-w-full">
+        <ul class="dropdown-menu portal-sidebar-profile-menu tw-w-full">
             <li class="header-my-profile"><a
                     href="<?= admin_url('profile'); ?>"><?= _l('nav_my_profile'); ?></a>
             </li>
@@ -59,7 +59,7 @@
             </li>
         </ul>
     </div>
-    <ul class="nav metis-menu tw-mt-[15px]" id="side-menu">
+    <ul class="nav metis-menu portal-sidebar-nav tw-mt-[15px]" id="side-menu">
 
         <?php
  hooks()->do_action('before_render_aside_menu');
@@ -71,6 +71,7 @@
         <li class="menu-item-<?= e($item['slug']); ?>"
             <?= _attributes_to_string($item['li_attributes'] ?? []); ?>>
             <a href="<?= count($item['children']) > 0 ? '#' : $item['href']; ?>"
+                class="portal-sidebar-link"
                 aria-expanded="false"
                 <?= _attributes_to_string($item['href_attributes'] ?? []); ?>>
                 <i
@@ -97,6 +98,7 @@
                 <li class="sub-menu-item-<?= e($submenu['slug']); ?>"
                     <?= _attributes_to_string($submenu['li_attributes'] ?? []); ?>>
                     <a href="<?= e($submenu['href']); ?>"
+                        class="portal-sidebar-sublink"
                         <?= _attributes_to_string($submenu['href_attributes'] ?? []); ?>>
                         <?php if (! empty($submenu['icon'])) { ?>
                         <i
