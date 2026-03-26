@@ -215,6 +215,37 @@ function openclaw_gateway_on_after_proposal_updated($proposalId)
     ocg_bridge_emit_from_table('sales.proposal.updated', 'proposals', 'id', $proposalId, 'update');
 }
 
+// Customer document views (client portal)
+hooks()->add_action('invoice_html_viewed', 'openclaw_gateway_on_invoice_html_viewed');
+function openclaw_gateway_on_invoice_html_viewed($invoiceId)
+{
+    ocg_bridge_emit_from_table('sales.invoice.viewed', 'invoices', 'id', $invoiceId, 'view');
+}
+
+hooks()->add_action('estimate_html_viewed', 'openclaw_gateway_on_estimate_html_viewed');
+function openclaw_gateway_on_estimate_html_viewed($estimateId)
+{
+    ocg_bridge_emit_from_table('sales.estimate.viewed', 'estimates', 'id', $estimateId, 'view');
+}
+
+hooks()->add_action('proposal_html_viewed', 'openclaw_gateway_on_proposal_html_viewed');
+function openclaw_gateway_on_proposal_html_viewed($proposalId)
+{
+    ocg_bridge_emit_from_table('sales.proposal.viewed', 'proposals', 'id', $proposalId, 'view');
+}
+
+hooks()->add_action('contract_html_viewed', 'openclaw_gateway_on_contract_html_viewed');
+function openclaw_gateway_on_contract_html_viewed($contractId)
+{
+    ocg_bridge_emit_from_table('contract.viewed', 'contracts', 'id', $contractId, 'view');
+}
+
+hooks()->add_action('delivery_note_html_viewed', 'openclaw_gateway_on_delivery_note_html_viewed');
+function openclaw_gateway_on_delivery_note_html_viewed($deliveryNoteId)
+{
+    ocg_bridge_emit_from_table('delivery_note.viewed', 'delivery_notes', 'id', $deliveryNoteId, 'view');
+}
+
 hooks()->add_action('after_payment_added', 'openclaw_gateway_on_after_payment_added');
 function openclaw_gateway_on_after_payment_added($paymentId)
 {
