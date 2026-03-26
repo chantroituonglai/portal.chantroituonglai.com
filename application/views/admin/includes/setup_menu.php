@@ -2,15 +2,15 @@
 <div id="setup-menu-wrapper"
     class="sidebar animated<?= $this->session->has_userdata('setup-menu-open')
     && $this->session->userdata('setup-menu-open') == true ? ' display-block' : ''; ?>">
-    <ul class="nav metis-menu tw-mt-[57px]" id="setup-menu">
+    <ul class="nav metis-menu portal-sidebar-nav portal-setup-nav tw-mt-[57px]" id="setup-menu">
         <div
-            class="tw-flex tw-items-center tw-justify-between tw-space-x-2 rtl:tw-space-x-reverse tw-pl-4 tw-pr-2.5 tw-py-3">
+            class="portal-setup-heading tw-flex tw-items-center tw-justify-between tw-space-x-2 rtl:tw-space-x-reverse tw-pl-4 tw-pr-2.5 tw-py-3">
 
             <span class="text-left tw-font-semibold customizer-heading">
                 <?= _l('setting_bar_heading'); ?>
             </span>
             <a
-                class="close-customizer tw-text-neutral-500 hover:tw-text-neutral-700 focus:tw-text-neutral-700 hover:tw-bg-neutral-200 tw-p-0.5 hover:tw-rounded-md">
+                class="close-customizer portal-setup-close tw-text-neutral-500 hover:tw-text-neutral-700 focus:tw-text-neutral-700 hover:tw-bg-neutral-200 tw-p-0.5 hover:tw-rounded-md">
                 <i class="fa fa-close fa-fw"></i>
             </a>
         </div>
@@ -25,6 +25,7 @@ foreach ($setup_menu as $key => $item) {
         <li
             class="menu-item-<?= e($item['slug']); ?>">
             <a href="<?= count($item['children']) > 0 ? '#' : $item['href']; ?>"
+                class="portal-sidebar-link"
                 aria-expanded="false">
                 <i
                     class="<?= e($item['icon']); ?> menu-icon"></i>
@@ -50,6 +51,7 @@ foreach ($setup_menu as $key => $item) {
                 <li
                     class="sub-menu-item-<?= e($submenu['slug']); ?>">
                     <a
+                        class="portal-sidebar-sublink"
                         href="<?= e($submenu['href']); ?>">
                         <?php if (! empty($submenu['icon'])) { ?>
                         <i
