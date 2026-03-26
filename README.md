@@ -1,57 +1,157 @@
 # Portal Chantroituonglai
 
-A highly specialized Business Management Portal built on the **Perfex CRM (v2.3.2)** ecosystem. This project features advanced automation, AI integrations, and localized business modules tailored for the Vietnamese market and large-scale retail operations.
+Production repository for `portal.chantroituonglai.com`, built on **Perfex CRM 3.4.1**.
 
-## 🚀 Key Features
+This repo is the tracked application root (`public_html`) of the portal. It contains the live Perfex app, custom modules, deployment workflows, and the scripts used to package and release code to production.
 
-### 🤖 Artificial Intelligence Integration
+## Current State
 
-- **Dual AI Providers**: Seamlessly switch between **Google Gemini AI** and **OpenAI** for administrative tasks.
-- **Auto-Ticket Triage**: Automated classification, priority setting, and summary generation for support tickets using LLMs.
-- **Smart Replies**: Suggest context-aware responses and detect automated/promotional emails to reduce staff workload.
+- App type: `Perfex CRM` / `CodeIgniter 3`
+- Current app version: `3.4.1`
+- Production URL: [https://portal.chantroituonglai.com/](https://portal.chantroituonglai.com/)
+- Local beta URL: `http://beta.portal.chantroituonglai.com/`
+- Git default branch: `main`
+- Production release branch: `release/live`
 
-### 🔌 Automation & Crawlers
+Version reference:
+- [`application/config/migration.php`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/application/config/migration.php)
 
-- **MM Vietnam Integration**: Automated order crawling from `supplier.mmvietnam.com`.
-- **AEON B2B Integration**: Integrated data extraction and synchronization from AEON's supplier portal (`aeonvn.b2b.com.my`).
-- **External Data Mapping**: Advanced SKU/Barcode mapping layer for synchronizing external retail data with internal inventory.
+## Repository Layout
 
-### 💬 Social & Notifications (Zalo Ecosystem)
+This repository maps to the actual application root, not the parent XAMPP folder.
 
-- **Zalo OA**: Full Official Account integration for customer engagement.
-- **Zalo ZNS**: Automated Zalo Notification Service for order updates, OTPs, and system alerts.
-- **ChatPion Bridge**: Linking CRM tasks directly to marketing campaigns.
-- **Twilio Voice & SMS**: Fallback notification layer for global communications.
+- `application/`: core Perfex application code and configuration loaders
+- `assets/`: compiled CSS/JS and theme assets
+- `modules/`: custom and third-party Perfex modules
+- `scripts/`: release packaging, install, and smoke-check helpers
+- `.github/workflows/`: build and deploy automation
+- `docs/`: operational notes and branch/deploy documentation
+- `uploads/`, `media/`, `application/logs/`: runtime data, not part of normal production overwrite
 
-### 🏢 Core Business Modules
+## Notable Modules In Use
 
-- **HRM & Accounting**: Localized modules supporting Vietnamese accounting standards and human resource tracking.
-- **Warehouse Management**: Advanced inventory tracking, delivery notes, and multi-warehouse support.
-- **Affiliate & OKR**: Built-in modules for managing affiliate networks and tracking company-wide Objectives and Key Results.
-- **WooCommerce Sync**: Bi-directional synchronization with WordPress/WooCommerce storefronts.
+The portal currently includes a large module set. Some notable integrations and custom surfaces in active use:
 
-## 🛠 Tech Stack
+- `openclaw_gateway`
+- `chatpion_bridge`
+- `einvoice`
+- `delivery_notes`
+- `flutex_admin_api`
+- `vietnam_addresses`
+- `warehouse`
+- `woocommerce`
+- `mailbox`
+- `theme_style`
+- `custom_pdf`
+- `hrm`
+- `okr`
+- `affiliate_management`
+- `purchase`
+- `products`
 
-- **Framework**: PHP 8.1+ / CodeIgniter 3
-- **Database**: MySQL
-- **Assets Management**: Grunt (Autoprefixer, Uglify, PostCSS)
-- **APIs**: Restful API v2 with CORS protection
+For a broader view, inspect [`modules/`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/modules).
 
-## 📦 Installation
+## Local Development
 
-1. Ensure your environment meets the **PHP 8.1** requirement.
-2. Clone the repository.
-3. Configure `application/config/app-config.php`.
-4. Run `grunt` to compile assets if modifying CSS/JS.
+This project is usually operated from the parent workspace:
 
-## 🚢 Branching & Deploy
+- workspace root: `/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com`
+- app root tracked by Git: `/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html`
+
+Typical local setup on the current machine:
+
+1. Mirror code from live into the parent workspace.
+2. Serve the app as `beta.portal.chantroituonglai.com` through local Apache/XAMPP.
+3. Point local beta to the live database or an SSH tunnel to the live database.
+4. Keep `application/config/app-config.php` environment-specific and out of release overwrite.
+
+Related operational files:
+- [`docs/branching-and-deploy.md`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/docs/branching-and-deploy.md)
+- [`scripts/package-release.sh`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/scripts/package-release.sh)
+- [`scripts/install-release.sh`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/scripts/install-release.sh)
+- [`scripts/release-smoke.sh`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/scripts/release-smoke.sh)
+
+## Branching Model
 
 - `main`: integration branch
-- `release/live`: production branch, auto deploys through GitHub Actions on every push
-- `feat/*`, `fix/*`, `chore/*`, `codex/*`: working branches
+- `release/live`: production branch, auto-deployed by GitHub Actions on push
+- `feat/*`: feature branches
+- `fix/*`: bugfix branches
+- `chore/*`: maintenance, docs, CI, housekeeping
+- `codex/*`: short-lived agent branches
 
-Operational guide: `docs/branching-and-deploy.md`
+Recommended flow:
 
----
+1. Branch from `main`
+2. Implement and verify locally
+3. Merge back into `main`
+4. Promote selected changes from `main` into `release/live`
+5. Push `release/live` to trigger production deployment
 
-© 2026 Chantroituonglai. Optimized for high-performance CRM operations.
+## GitHub Actions Deploy
+
+The repo currently ships with two workflows:
+
+- [`build-release-artifact.yml`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/.github/workflows/build-release-artifact.yml)
+- [`deploy-live.yml`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/.github/workflows/deploy-live.yml)
+
+Deploy characteristics:
+
+- production is deployed from `release/live`, not directly from `main`
+- release artifact excludes environment-owned and runtime-owned paths
+- deploy uses `rsync` onto the live app root
+- smoke check runs against login/admin endpoints after deploy
+
+Paths intentionally preserved during deploy:
+
+- `application/config/app-config.php`
+- `uploads/`
+- `media/`
+- `application/logs/`
+- backups and host-owned runtime files
+
+Required GitHub secrets:
+
+- `PROD_SSH_HOST`
+- `PROD_SSH_USER`
+- `PROD_SSH_KEY`
+- `PROD_APP_ROOT`
+- `PROD_BASE_URL`
+
+## Asset Notes
+
+- This repo contains both [`assets/css/style.css`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/assets/css/style.css) and [`assets/css/style.min.css`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/assets/css/style.min.css).
+- In day-to-day hotfixes, keep these two files synchronized if you are patching header/UI styles directly.
+- `Gruntfile.js`, `package.json`, and `package-lock.json` are present, but most production hotfixes in this repo have been applied directly to compiled assets.
+
+## Important Operational Cautions
+
+- Do not commit real secrets.
+- Do not overwrite `application/config/app-config.php` during release packaging.
+- Be careful when local beta is pointed at the live database.
+- Do not use FTP mirror as the production deployment mechanism; production deploys through GitHub Actions on `release/live`.
+
+## Quick Verification
+
+Useful checks after touching production-facing code:
+
+```bash
+php -l application/config/migration.php
+php -l application/views/admin/includes/header.php
+```
+
+```bash
+./scripts/release-smoke.sh
+```
+
+```bash
+git branch --show-current
+git status --short
+```
+
+## References
+
+- [`docs/branching-and-deploy.md`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/docs/branching-and-deploy.md)
+- [`application/config/migration.php`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/application/config/migration.php)
+- [`modules/openclaw_gateway`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/modules/openclaw_gateway)
+- [`modules/chatpion_bridge`](/Applications/XAMPP/xamppfiles/htdocs/portal.chantroituonglai.com/public_html/modules/chatpion_bridge)
