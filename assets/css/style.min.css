@@ -513,7 +513,7 @@ body.page-small #header {
 
 .header-right-cluster {
   flex: 0 0 auto;
-  gap: 10px;
+  gap: 14px;
   margin-left: auto;
   min-width: 0;
   flex-wrap: nowrap;
@@ -533,11 +533,11 @@ body.page-small #header {
   padding-left: 0;
   list-style: none;
   float: none;
-  gap: 6px;
+  gap: 8px;
 }
 
 #header .header-quick-actions {
-  margin-right: 2px;
+  margin-right: 8px;
 }
 
 #header .header-quick-actions>li,
@@ -3515,12 +3515,12 @@ a._timer:focus {
   }
 
   .header-right-cluster {
-    gap: 8px;
+    gap: 10px;
   }
 
   #header .header-quick-actions,
   #header .header-utility-list {
-    gap: 4px;
+    gap: 6px;
   }
 
   #header .header-settings-link {
