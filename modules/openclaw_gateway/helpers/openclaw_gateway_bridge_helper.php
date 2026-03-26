@@ -132,6 +132,15 @@ function ocg_bridge_enabled()
     return ((int) get_option('openclaw_bridge_enabled')) === 1;
 }
 
+function ocg_bridge_async_enabled()
+{
+    $raw = get_option('openclaw_bridge_async');
+    if ($raw === '') {
+        return true;
+    }
+    return ((int) $raw) === 1;
+}
+
 function ocg_bridge_endpoint()
 {
     return trim((string) get_option('openclaw_bridge_endpoint'));
@@ -556,7 +565,31 @@ function ocg_bridge_emit_event($eventName, $moduleName, $entityId, $payload, $ac
         'payload' => $envelope,
     ]);
 
+    if (ocg_bridge_async_enabled()) {
+        return ['ok' => true, 'status' => 'queued_async', 'event_uid' => $eventUid];
+    }
+
     return ocg_bridge_send_row($row);
+}
+
+function ocg_bridge_send_pending()
+{
+    $CI = &get_instance();
+    $tbl = db_prefix() . 'openclaw_bridge_events';
+    if (!$CI->db->table_exists($tbl)) {
+        return;
+    }
+
+    $rows = $CI->db
+        ->where('status', 'pending')
+        ->order_by('id', 'ASC')
+        ->limit(30)
+        ->get($tbl)
+        ->result_array();
+
+    foreach ($rows as $row) {
+        ocg_bridge_send_row($row);
+    }
 }
 
 function ocg_bridge_send_row($row)

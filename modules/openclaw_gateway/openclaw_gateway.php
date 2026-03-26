@@ -76,6 +76,9 @@ function openclaw_gateway_init()
     if (get_option('openclaw_bridge_retry_delay_sec') === '') {
         add_option('openclaw_bridge_retry_delay_sec', 60);
     }
+    if (get_option('openclaw_bridge_async') === '') {
+        add_option('openclaw_bridge_async', 1);
+    }
     if (get_option('openclaw_bridge_agent') === '') {
         add_option('openclaw_bridge_agent', 'crm-agent');
     }
@@ -302,6 +305,9 @@ hooks()->add_action('after_cron_run', 'openclaw_gateway_after_cron_run', 10, 1);
 function openclaw_gateway_after_cron_run($manually)
 {
     ocg_bridge_emit_event('portal.cron.completed', 'cron', null, ['manually' => (bool) $manually], 'cycle');
+    if (function_exists('ocg_bridge_send_pending')) {
+        ocg_bridge_send_pending();
+    }
     ocg_bridge_retry_failed();
 }
 
