@@ -524,12 +524,20 @@ body.page-small #header {
   margin: 0;
   padding-left: 0;
   list-style: none;
+  float: none;
 }
 
 #header .header-quick-actions>li,
 #header .header-utility-list>li {
   display: flex;
   align-items: center;
+  float: none;
+}
+
+#header .header-quick-actions>li>a,
+#header .header-utility-list>li>a {
+  padding: 0;
+  line-height: normal;
 }
 
 #header .header-icon-link,
