@@ -525,6 +525,7 @@ body.page-small #header {
   padding-left: 0;
   list-style: none;
   float: none;
+  gap: 10px;
 }
 
 #header .header-quick-actions>li,
@@ -532,12 +533,26 @@ body.page-small #header {
   display: flex;
   align-items: center;
   float: none;
+  margin: 0;
 }
 
 #header .header-quick-actions>li>a,
 #header .header-utility-list>li>a {
   padding: 0;
   line-height: normal;
+}
+
+#header .header-quick-create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+#header .header-quick-create span {
+  width: 40px;
+  height: 40px;
 }
 
 #header .header-icon-link,
@@ -590,6 +605,23 @@ body.page-small #header {
 
 #header .header-settings-link i {
   color: #0f7acb;
+}
+
+#header .header-notifications {
+  position: relative;
+}
+
+#header .header-notifications .notifications-icon {
+  text-decoration: none;
+}
+
+#header .header-notification-inner {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
 #header .header-quick-create span {
@@ -3404,12 +3436,7 @@ a._timer:focus {
     margin-left: auto;
   }
 
-  #header .header-quick-actions {
-    margin-right: 2px;
-  }
-
   #header .header-utility-list {
-    gap: 8px;
     margin-right: 0;
     padding: 0;
     border: 0;

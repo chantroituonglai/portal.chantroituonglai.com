@@ -57,7 +57,7 @@
 
             <div class="header-right-cluster visible-md visible-lg">
                 <?php if ($quickActions->isNotEmpty()) { ?>
-                <ul class="nav navbar-nav header-quick-actions">
+                <ul class="header-quick-actions">
                     <li class="icon tw-relative"
                         title="<?= _l('quick_create'); ?>"
                         data-toggle="tooltip" data-placement="bottom">
@@ -109,7 +109,7 @@
                 </ul>
                 <?php } ?>
 
-                <ul class="nav navbar-nav navbar-right header-utility-list">
+                <ul class="header-utility-list">
                     <?php do_action_deprecated('after_render_top_search', [], '3.0.0', 'admin_navbar_start'); ?>
                     <?php hooks()->do_action('admin_navbar_start'); ?>
                     <?php if (staff_can('view', 'settings')) { ?>
