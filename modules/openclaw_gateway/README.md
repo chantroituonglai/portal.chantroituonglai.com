@@ -40,3 +40,17 @@ curl -X POST "https://portal.example.com/api/openclaw/v1/actions/invoke" \
 - `openclaw_gateway_read_only = 0`
 - write verbs honor idempotency key if provided
 - request/response are audit-logged with masked sensitive fields
+
+## Compatibility notes
+
+- Gateway action generation depends on `modules/api/helpers/api_helper.php`.
+- Core compatibility aliases restored in this workspace:
+  - `/api/expense_categories`
+  - `/api/payment_modes`
+  - `/api/taxes`
+  - `/api/thirdparty`
+  - `/api/zapier`
+- Custom-module discovery namespace:
+  - `/api/v1/m/{module}`
+  - `/api/v1/m/{module}/{resource}`
+  - `/api/v1/m/{module}/{resource}/{id}`

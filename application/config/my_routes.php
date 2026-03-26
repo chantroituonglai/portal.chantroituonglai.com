@@ -9,3 +9,8 @@ require_once(FCPATH.'modules/affiliate_management/config/my_routes.php');
 require_once(FCPATH.'modules/topics/config/my_routes.php');
 //dont remove/change below line
 //topics:end:my_routes.php
+//openclaw-gateway:start:my_routes.php
+//dont remove/change above line
+require_once(FCPATH.'modules/openclaw_gateway/config/my_routes.php');
+//dont remove/change below line
+//openclaw-gateway:end:my_routes.php
