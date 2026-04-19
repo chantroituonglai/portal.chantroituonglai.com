@@ -682,6 +682,10 @@ class Invoices extends AdminController
         $invoice        = hooks()->apply_filters('before_admin_view_invoice_pdf', $invoice);
         $invoice_number = format_invoice_number($invoice->id);
 
+        if ($this->input->get('output_type') === 'I' && !$this->input->get('print')) {
+            return $this->html_invoice($invoice, $invoice_number);
+        }
+
         try {
             $pdf = invoice_pdf($invoice);
         } catch (Exception $e) {
@@ -704,6 +708,21 @@ class Invoices extends AdminController
         }
 
         $pdf->Output(mb_strtoupper(slug_it($invoice_number)) . '.pdf', $type);
+    }
+
+    protected function html_invoice($invoice, $invoice_number)
+    {
+        $this->load->model('payment_modes_model');
+
+        $payment_modes = $this->payment_modes_model->get('', [], true);
+
+        $this->load->view('admin/invoices/invoice_print_html', [
+            'invoice'        => $invoice,
+            'invoice_number' => $invoice_number,
+            'payment_modes'  => $payment_modes,
+        ]);
+
+        return null;
     }
 
     public function mark_as_sent($id)
