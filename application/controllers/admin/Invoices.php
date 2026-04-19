@@ -692,12 +692,6 @@ class Invoices extends AdminController
             ]);
         }
 
-        if (!$this->input->get('output_type')) {
-            return $this->html_invoice($invoice, $invoice_number, [
-                'force_download' => true,
-            ]);
-        }
-
         try {
             $pdf = invoice_pdf($invoice);
         } catch (Exception $e) {
@@ -728,19 +722,11 @@ class Invoices extends AdminController
 
         $payment_modes = $this->payment_modes_model->get('', [], true);
 
-        if (!empty($options['force_download'])) {
-            $this->output->set_header(
-                'Content-Disposition: attachment; filename="' . mb_strtoupper(slug_it($invoice_number)) . '.html"'
-            );
-            $this->output->set_content_type('text/html', 'utf-8');
-        }
-
         $this->load->view('admin/invoices/invoice_print_html', [
             'invoice'        => $invoice,
             'invoice_number' => $invoice_number,
             'payment_modes'  => $payment_modes,
             'auto_print'     => !empty($options['auto_print']),
-            'force_download' => !empty($options['force_download']),
         ]);
 
         return null;
