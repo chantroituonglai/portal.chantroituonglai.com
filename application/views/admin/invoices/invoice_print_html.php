@@ -565,5 +565,12 @@ $cleanPaymentDescription = static function ($description) {
             </div>
         </div>
     </div>
+    <?php if (!empty($auto_print)) { ?>
+    <script>
+        window.addEventListener('load', function () {
+            window.print();
+        });
+    </script>
+    <?php } ?>
 </body>
 </html>
