@@ -41,7 +41,7 @@ class Authentication extends App_Controller
 
         $this->form_validation->set_rules('password', _l('admin_auth_login_password'), 'required');
         $this->form_validation->set_rules('email', _l('admin_auth_login_email'), 'trim|required|valid_email');
-        if (show_recaptcha()) {
+        if (show_admin_login_recaptcha()) {
             $this->form_validation->set_rules('g-recaptcha-response', 'Captcha', 'callback_recaptcha');
         }
         if ($this->input->post()) {
