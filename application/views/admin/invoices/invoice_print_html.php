@@ -31,6 +31,15 @@ foreach ($payment_modes as $mode) {
 $paymentModePrimary = $offlinePaymentModes[0] ?? null;
 $qrCodeDataUri = '';
 $clientDisplayName = trim((string) get_company_name($invoice->clientid, true));
+$signatureImageFile = (string) get_option('signature_image');
+$signatureImagePath = get_upload_path_by_type('company') . $signatureImageFile;
+$signatureImageUrl = '';
+
+if (get_option('show_pdf_signature_invoice') == 1
+    && $signatureImageFile !== ''
+    && is_file($signatureImagePath)) {
+    $signatureImageUrl = base_url('uploads/company/' . $signatureImageFile);
+}
 
 if ($clientDisplayName === '') {
     $clientDisplayName = trim(($invoice->client->firstname ?? '') . ' ' . ($invoice->client->lastname ?? ''));
@@ -335,6 +344,14 @@ $cleanPaymentDescription = static function ($description) {
             margin-left: auto;
             margin-bottom: 8px;
         }
+        .signature-image {
+            max-width: 160px;
+            max-height: 68px;
+            display: block;
+            margin-left: auto;
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
         .signature strong {
             display: block;
             font-size: 13px;
@@ -386,6 +403,9 @@ $cleanPaymentDescription = static function ($description) {
                 width: 100%;
             }
             .signature-line {
+                margin-left: 0;
+            }
+            .signature-image {
                 margin-left: 0;
             }
         }
@@ -535,7 +555,11 @@ $cleanPaymentDescription = static function ($description) {
                 <div><?= !empty($invoice->clientnote) ? process_text_content_for_display($invoice->clientnote) : e(_l('terms_and_conditions')); ?></div>
             </div>
             <div class="signature">
-                <div class="signature-line"></div>
+                <?php if ($signatureImageUrl !== '') { ?>
+                    <img class="signature-image" src="<?= e($signatureImageUrl); ?>" alt="<?= e(_l('signature_image')); ?>">
+                <?php } else { ?>
+                    <div class="signature-line"></div>
+                <?php } ?>
                 <strong>Chữ ký được ủy quyền</strong>
                 <span><?= e(get_option('companyname')); ?></span>
             </div>
