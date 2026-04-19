@@ -49,7 +49,7 @@
         }
     }
     </style>
-    <?php if (show_recaptcha()) { ?>
+    <?php if (show_admin_login_recaptcha()) { ?>
     <script src='https://www.google.com/recaptcha/api.js'></script>
     <?php } ?>
     <?php if (file_exists(FCPATH . 'assets/css/custom.css')) { ?>

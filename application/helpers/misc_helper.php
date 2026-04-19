@@ -25,6 +25,19 @@ function show_recaptcha()
 }
 
 /**
+ * Check whether recaptcha should be shown on admin login.
+ *
+ * This is intentionally separated from general reCAPTCHA usage so
+ * customer-facing forms can keep their existing protection.
+ *
+ * @return boolean
+ */
+function show_admin_login_recaptcha()
+{
+    return (bool) hooks()->apply_filters('show_admin_login_recaptcha', false);
+}
+
+/**
  * Return locale for media usafe plugin
  * @return string
  */
