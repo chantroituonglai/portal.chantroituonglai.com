@@ -93,8 +93,12 @@ hooks()->add_action('admin_init', function () use ($CI) {
  * Register admin footer hook
  */
 hooks()->add_action('app_admin_footer', function () {
-    global $deliveryNoteRenderView;
-    $deliveryNoteRenderView('admin/scripts/common.php');
+    echo '<link rel="stylesheet" type="text/css" href="'
+        . module_dir_url(DELIVERY_NOTE_MODULE_NAME, 'assets/css/admin.css')
+        . '" />';
+    echo '<script src="'
+        . module_dir_url(DELIVERY_NOTE_MODULE_NAME, 'assets/js/admin.js')
+        . '"></script>';
 });
 
 /**
