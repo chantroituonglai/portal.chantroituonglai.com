@@ -81,7 +81,7 @@ hooks()->add_action('admin_init', function () use ($CI) {
 hooks()->add_action('app_admin_footer', function () {
     //load common admin asset
     $CI = &get_instance();
-    $CI->load->view(DELIVERY_NOTE_MODULE_NAME . '/admin/scripts/common');
+    $CI->load->file(module_views_path(DELIVERY_NOTE_MODULE_NAME, 'admin/scripts/common.php'));
 });
 
 /**
@@ -94,7 +94,7 @@ hooks()->add_action('after_finance_settings_last_tab', function () {
 </li>';
 });
 hooks()->add_action('after_finance_settings_tabs_content', function () {
-    get_instance()->load->view(DELIVERY_NOTE_MODULE_NAME . '/admin/' . DELIVERY_NOTE_MODULE_NAME . '/settings');
+    get_instance()->load->file(module_views_path(DELIVERY_NOTE_MODULE_NAME, 'admin/' . DELIVERY_NOTE_MODULE_NAME . '/settings.php'));
 });
 
 
@@ -122,8 +122,11 @@ hooks()->add_filter('tasks_table_row_data', 'delivery_note_tasks_table_row_data'
 
 /** Helpers to convert from estimate */
 hooks()->add_action('after_admin_estimate_preview_template_tab_content_last_item', function ($estimate) {
-    $CI = &get_instance();
-    $CI->load->view(DELIVERY_NOTE_MODULE_NAME . '/admin/scripts/convert_from_estimate', ['estimate' => $estimate]);
+    $viewPath = module_views_path(DELIVERY_NOTE_MODULE_NAME, 'admin/scripts/convert_from_estimate.php');
+    ob_start();
+    extract(['estimate' => $estimate]);
+    include $viewPath;
+    echo ob_get_clean();
 });
 
 /**
@@ -131,14 +134,20 @@ hooks()->add_action('after_admin_estimate_preview_template_tab_content_last_item
  */
 // Hooks to add menu item to convert purchase order to delivery note. 
 hooks()->add_action('after_admin_purchase_order_preview_template_tab_content_last_item', function ($purchase_order) {
-    $CI = &get_instance();
-    $CI->load->view(DELIVERY_NOTE_MODULE_NAME . '/admin/scripts/convert_from_purchase_order', ['purchase_order' => $purchase_order]);
+    $viewPath = module_views_path(DELIVERY_NOTE_MODULE_NAME, 'admin/scripts/convert_from_purchase_order.php');
+    ob_start();
+    extract(['purchase_order' => $purchase_order]);
+    include $viewPath;
+    echo ob_get_clean();
 });
 
 /** Helpers to convert from invoice */
 hooks()->add_action('after_admin_invoice_preview_template_tab_content_last_item', function ($invoice) {
-    $CI = &get_instance();
-    $CI->load->view(DELIVERY_NOTE_MODULE_NAME . '/admin/scripts/convert_from_invoice', ['invoice' => $invoice]);
+    $viewPath = module_views_path(DELIVERY_NOTE_MODULE_NAME, 'admin/scripts/convert_from_invoice.php');
+    ob_start();
+    extract(['invoice' => $invoice]);
+    include $viewPath;
+    echo ob_get_clean();
 });
 
 
@@ -191,7 +200,12 @@ hooks()->add_action('admin_init', function ()  use ($CI) {
 hooks()->add_action('after_email_templates', function () use ($CI) {
     $type = 'delivery_note';
     $CI->load->model('emails_model');
-    $CI->load->view('delivery_notes/admin/email_templates', ['templates' => $CI->emails_model->get(['type' => $type, 'language' => 'english']), 'email_type' => $type]);
+    $templates = $CI->emails_model->get(['type' => $type, 'language' => 'english']);
+    $viewPath = module_views_path(DELIVERY_NOTE_MODULE_NAME, 'admin/email_templates.php');
+    ob_start();
+    extract(['templates' => $templates, 'email_type' => $type]);
+    include $viewPath;
+    echo ob_get_clean();
 });
 
 // Add delivery note to customer portal
