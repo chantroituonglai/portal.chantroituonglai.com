@@ -370,16 +370,42 @@ $cleanPaymentDescription = static function ($description) {
             margin-top: 0;
         }
         @media print {
-            @page { size: A4; margin: 0; }
+            @page { size: A4; margin: 8mm; }
             body {
                 background: #fff;
                 padding: 0;
             }
             .invoice-shell {
-                max-width: 210mm;
-                min-height: 297mm;
+                width: auto;
+                max-width: none;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
                 box-shadow: none;
                 border-radius: 0;
+            }
+            .invoice-top,
+            .summary-bar,
+            .totals-section {
+                flex-direction: row !important;
+            }
+            .entity-grid,
+            .invoice-footer {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .invoice-heading,
+            .summary-dates,
+            .signature {
+                text-align: right !important;
+            }
+            .payment-panel { width: 58% !important; }
+            .totals-card { width: 36% !important; }
+            .items-table,
+            .totals-section,
+            .invoice-footer,
+            .summary-bar {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
         @media (max-width: 900px) {
