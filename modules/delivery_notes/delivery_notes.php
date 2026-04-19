@@ -327,6 +327,6 @@ hooks()->add_filter('custom_sales_can_show_column', function ($data) {
 
 // Dashboard widget
 hooks()->add_action('after_dashboard_top_container', function () {
-    $CI = &get_instance();
-    $CI->load->view(DELIVERY_NOTE_MODULE_NAME . '/admin/scripts/dashboard_widget');
+    global $deliveryNoteRenderView;
+    $deliveryNoteRenderView('admin/scripts/dashboard_widget.php');
 });
