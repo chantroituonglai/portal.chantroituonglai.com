@@ -15,19 +15,22 @@ defined('DELIVERY_NOTE_MODULE_NAME') or define('DELIVERY_NOTE_MODULE_NAME', 'del
 
 $CI = &get_instance();
 
-$deliveryNoteRenderView = static function ($relativePath, array $data = []) {
-    $viewPath = module_views_path(DELIVERY_NOTE_MODULE_NAME, ltrim($relativePath, '/'));
+if (!function_exists('delivery_note_render_view')) {
+    function delivery_note_render_view($relativePath, array $data = [])
+    {
+        $viewPath = module_views_path(DELIVERY_NOTE_MODULE_NAME, ltrim($relativePath, '/'));
 
-    if (!file_exists($viewPath)) {
-        log_message('error', 'Delivery notes view not found: ' . $viewPath);
-        return;
+        if (!file_exists($viewPath)) {
+            log_message('error', 'Delivery notes view not found: ' . $viewPath);
+            return;
+        }
+
+        ob_start();
+        extract($data);
+        include $viewPath;
+        echo ob_get_clean();
     }
-
-    ob_start();
-    extract($data);
-    include $viewPath;
-    echo ob_get_clean();
-};
+}
 
 /**
  * Load the helpers
@@ -111,8 +114,7 @@ hooks()->add_action('after_finance_settings_last_tab', function () {
 </li>';
 });
 hooks()->add_action('after_finance_settings_tabs_content', function () {
-    global $deliveryNoteRenderView;
-    $deliveryNoteRenderView('admin/' . DELIVERY_NOTE_MODULE_NAME . '/settings.php');
+    delivery_note_render_view('admin/' . DELIVERY_NOTE_MODULE_NAME . '/settings.php');
 });
 
 
@@ -140,8 +142,7 @@ hooks()->add_filter('tasks_table_row_data', 'delivery_note_tasks_table_row_data'
 
 /** Helpers to convert from estimate */
 hooks()->add_action('after_admin_estimate_preview_template_tab_content_last_item', function ($estimate) {
-    global $deliveryNoteRenderView;
-    $deliveryNoteRenderView('admin/scripts/convert_from_estimate.php', ['estimate' => $estimate]);
+    delivery_note_render_view('admin/scripts/convert_from_estimate.php', ['estimate' => $estimate]);
 });
 
 /**
@@ -149,14 +150,12 @@ hooks()->add_action('after_admin_estimate_preview_template_tab_content_last_item
  */
 // Hooks to add menu item to convert purchase order to delivery note. 
 hooks()->add_action('after_admin_purchase_order_preview_template_tab_content_last_item', function ($purchase_order) {
-    global $deliveryNoteRenderView;
-    $deliveryNoteRenderView('admin/scripts/convert_from_purchase_order.php', ['purchase_order' => $purchase_order]);
+    delivery_note_render_view('admin/scripts/convert_from_purchase_order.php', ['purchase_order' => $purchase_order]);
 });
 
 /** Helpers to convert from invoice */
 hooks()->add_action('after_admin_invoice_preview_template_tab_content_last_item', function ($invoice) {
-    global $deliveryNoteRenderView;
-    $deliveryNoteRenderView('admin/scripts/convert_from_invoice.php', ['invoice' => $invoice]);
+    delivery_note_render_view('admin/scripts/convert_from_invoice.php', ['invoice' => $invoice]);
 });
 
 
@@ -207,11 +206,10 @@ hooks()->add_action('admin_init', function ()  use ($CI) {
 
 // Display email list on email template list
 hooks()->add_action('after_email_templates', function () use ($CI) {
-    global $deliveryNoteRenderView;
     $type = 'delivery_note';
     $CI->load->model('emails_model');
     $templates = $CI->emails_model->get(['type' => $type, 'language' => 'english']);
-    $deliveryNoteRenderView('admin/email_templates.php', ['templates' => $templates, 'email_type' => $type]);
+    delivery_note_render_view('admin/email_templates.php', ['templates' => $templates, 'email_type' => $type]);
 });
 
 // Add delivery note to customer portal
@@ -327,6 +325,5 @@ hooks()->add_filter('custom_sales_can_show_column', function ($data) {
 
 // Dashboard widget
 hooks()->add_action('after_dashboard_top_container', function () {
-    global $deliveryNoteRenderView;
-    $deliveryNoteRenderView('admin/scripts/dashboard_widget.php');
+    delivery_note_render_view('admin/scripts/dashboard_widget.php');
 });
