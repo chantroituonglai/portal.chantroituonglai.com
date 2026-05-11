@@ -82,4 +82,5 @@ define('SESS_SAVE_PATH', 'sessions');
  * Enables CSRF Protection
  */
 define('APP_CSRF_PROTECTION', false);
-define('APP_LOG_THRESHOLD', 1);
+define('APP_LOG_THRESHOLD', 4);
+define('APP_MEMORY_LIMIT', '-1');

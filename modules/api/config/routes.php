@@ -3,9 +3,6 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $route['api/delete/(:any)/(:num)'] = '$1/data/$2';
-$route['api/v1/m/(:any)/(:any)/(:num)'] = 'module_api/resource/$1/$2/$3';
-$route['api/v1/m/(:any)/(:any)'] = 'module_api/resource/$1/$2';
-$route['api/v1/m/(:any)'] = 'module_api/index/$1';
 $route['api/(:any)/search/(:any)'] = '$1/data_search/$2';
 $route['api/(:any)/search']        = '$1/data_search';
 $route['api/login/auth']           = 'login/login_api';

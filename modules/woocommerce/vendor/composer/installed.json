@@ -52,6 +52,6 @@
             "install-path": "../automattic/woocommerce"
         }
     ],
-    "dev": true,
+    "dev": false,
     "dev-package-names": []
 }

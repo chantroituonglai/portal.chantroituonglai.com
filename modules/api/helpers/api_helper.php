@@ -158,8 +158,8 @@ function get_available_api_permissions($data = [])
             'name'         => _l('taxes'),
             'capabilities' => $forthPermissionsArray,
         ],
-        'payment_modes' => [
-            'name'         => _l('payment_modes'),
+        'payment_methods' => [
+            'name'         => _l('payment_methods'),
             'capabilities' => $forthPermissionsArray,
         ],
         'payments' => [
@@ -182,58 +182,9 @@ function get_available_api_permissions($data = [])
             'name'         => _l('timesheets'),
             'capabilities' => $firstPermissionsArray,
         ],
-        'thirdparty' => [
-            'name'         => 'Thirdparty',
-            'capabilities' => $firstPermissionsArray,
-        ],
-        'zapier' => [
-            'name'         => 'Zapier',
-            'capabilities' => $forthPermissionsArray,
-        ],
     ];
 
-    if (function_exists('get_module_api_permissions')) {
-        $apiPermissions = get_module_api_permissions($apiPermissions);
-    }
-
     return hooks()->apply_filters('api_permissions', $apiPermissions, $data);
-}
-
-function get_module_api_permissions($apiPermissions = [])
-{
-    $root = APPPATH . '../modules';
-    if (!is_dir($root)) {
-        return $apiPermissions;
-    }
-
-    $moduleDirs = scandir($root);
-    if (!is_array($moduleDirs)) {
-        return $apiPermissions;
-    }
-
-    foreach ($moduleDirs as $module) {
-        if ($module === '.' || $module === '..') {
-            continue;
-        }
-
-        $manifestPath = $root . '/' . $module . '/api/Manifest.php';
-        if (!is_file($manifestPath)) {
-            continue;
-        }
-
-        $manifest = include $manifestPath;
-        if (!is_array($manifest) || empty($manifest['permissions']) || !is_array($manifest['permissions'])) {
-            continue;
-        }
-
-        foreach ($manifest['permissions'] as $feature => $permission) {
-            if (!isset($apiPermissions[$feature])) {
-                $apiPermissions[$feature] = $permission;
-            }
-        }
-    }
-
-    return $apiPermissions;
 }
 
 function api_can($api_id, $feature = '', $capability = '')

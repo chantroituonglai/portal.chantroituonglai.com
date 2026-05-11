@@ -1,13 +1,13 @@
 <?php return array(
     'root' => array(
         'name' => 'perfexcrm/openai',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => 'a0e1f089546cb6a3c8973880689c5560e4ef9b5e',
+        'pretty_version' => 'dev-release/live',
+        'version' => 'dev-release/live',
+        'reference' => '0b91b0a80db40e7e25efa0c2e3fcc10f1c1f1ed2',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'dev' => true,
+        'dev' => false,
     ),
     'versions' => array(
         'nyholm/psr7' => array(
@@ -29,9 +29,9 @@
             'dev_requirement' => false,
         ),
         'perfexcrm/openai' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => 'a0e1f089546cb6a3c8973880689c5560e4ef9b5e',
+            'pretty_version' => 'dev-release/live',
+            'version' => 'dev-release/live',
+            'reference' => '0b91b0a80db40e7e25efa0c2e3fcc10f1c1f1ed2',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
