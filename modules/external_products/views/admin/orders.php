@@ -80,7 +80,7 @@
 (function ($) {
     'use strict';
 
-    initDataTable('.table-external-orders', '<?php echo admin_url('external_products/orders'); ?>', [], [], undefined, [0, 'desc']);
+    initDataTable('.table-external-orders', '<?php echo admin_url('external_products/orders'); ?>', [4, 6, 8], [4, 6, 8], undefined, [0, 'desc']);
 
     window.syncOrders = function syncOrders() {
         $('#syncOrdersModal').modal('show');

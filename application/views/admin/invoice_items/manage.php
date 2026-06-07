@@ -54,7 +54,7 @@
 
                 <?php if (staff_can('create', 'items')) { ?>
                 <div class="_buttons tw-mb-2 tw-flex tw-items-center tw-gap-1">
-                    <a href="#" class="btn btn-primary pull-left" data-toggle="modal" data-target="#sales_item_modal">
+                    <a href="<?= admin_url('item_sku_manager/items/create'); ?>" class="btn btn-primary pull-left">
                         <i class="fa-regular fa-plus tw-mr-1"></i>
                         <?= _l('new_invoice_item'); ?>
                     </a>
@@ -102,7 +102,6 @@ render_datatable($table_data, 'invoice-items'); ?>
         </div>
     </div>
 </div>
-<?php $this->load->view('admin/invoice_items/item'); ?>
 <div class="modal fade" id="groups" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -193,43 +192,6 @@ render_datatable($table_data, 'invoice-items'); ?>
         var notSortableAndSearchableItemColumns = [];
         <?php if (staff_can('delete', 'items')) { ?>
         notSortableAndSearchableItemColumns.push(0);
-        <?php } ?>
-
-
-        <?php if ($this->input->get('id')) { ?>
-        var id =
-            "<?= $this->input->get('id') ?>";
-        if (typeof(id) !== 'undefined') {
-            var $itemModal = $('#sales_item_modal');
-            $('input[name="itemid"]').val(id);
-            requestGetJSON('invoice_items/get_item_by_id/' + id).done(function(response) {
-                $itemModal.find('input[name="description"]').val(response.description);
-                $itemModal.find('textarea[name="long_description"]').val(response.long_description
-                    .replace(
-                        /(<|<)br\s*\/*(>|>)/g, " "));
-                $itemModal.find('input[name="rate"]').val(response.rate);
-                $itemModal.find('input[name="unit"]').val(response.unit);
-                $('select[name="tax"]').selectpicker('val', response.taxid).change();
-                $('select[name="tax2"]').selectpicker('val', response.taxid_2).change();
-                $itemModal.find('#group_id').selectpicker('val', response.group_id);
-                $.each(response, function(column, value) {
-                    if (column.indexOf('rate_currency_') > -1) {
-                        $itemModal.find('input[name="' + column + '"]').val(value);
-                    }
-                });
-
-                $('#custom_fields_items').html(response.custom_fields_html);
-
-                init_selectpicker();
-                init_color_pickers();
-                init_datepicker();
-
-                $itemModal.find('.add-title').addClass('hide');
-                $itemModal.find('.edit-title').removeClass('hide');
-                validate_item_form();
-            });
-            $itemModal.modal('show');
-        }
         <?php } ?>
 
         initDataTable('.table-invoice-items', admin_url + 'invoice_items/table',

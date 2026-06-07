@@ -100,7 +100,12 @@ $(function () {
         var $submitBtn = $('#sync-external-sku-submit');
         $submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> <?php echo _l('processing'); ?>');
 
-        $.post('<?php echo admin_url('external_products/sync_haravan_product'); ?>', { sku: sku }, function (response) {
+        var data = { sku: sku };
+        if (typeof csrfData !== 'undefined') {
+            data[csrfData.token_name] = csrfData.hash;
+        }
+
+        $.post('<?php echo admin_url('external_products/sync_haravan_product'); ?>', data, function (response) {
             if (response && response.success) {
                 alert_float('success', response.message);
                 $('.table-haravan-products').DataTable().ajax.reload();

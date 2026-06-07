@@ -60,11 +60,11 @@ foreach ($rResult as $aRow) {
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['id'] . '"><label></label></div>';
 
     $descriptionOutput = '';
-    $descriptionOutput = '<a href="#" data-toggle="modal" data-target="#sales_item_modal" data-id="' . $aRow['id'] . '" class="tw-font-medium">' . e($aRow['description']) . '</a>';
+    $descriptionOutput = '<a href="' . admin_url('item_sku_manager/items/' . $aRow['id']) . '" class="tw-font-medium">' . e($aRow['description']) . '</a>';
     $descriptionOutput .= '<div class="row-options">';
 
     if (staff_can('edit', 'items')) {
-        $descriptionOutput .= '<a href="#" data-toggle="modal" data-target="#sales_item_modal" data-id="' . $aRow['id'] . '">' . _l('edit') . '</a>';
+        $descriptionOutput .= '<a href="' . admin_url('item_sku_manager/items/' . $aRow['id']) . '">' . _l('edit') . '</a>';
     }
 
     if (staff_can('delete', 'items')) {

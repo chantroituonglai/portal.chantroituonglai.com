@@ -114,6 +114,13 @@ class Credit_notes extends AdminController
                 if (staff_cant('edit', 'credit_notes')) {
                     access_denied('credit_notes');
                 }
+                $credit_note = $this->credit_notes_model->get($id);
+                if ($credit_note
+                    && (int) $credit_note->status === Credit_notes_model::STATUS_DRAFT
+                    && (!isset($credit_note_data['status']) || (int) $credit_note_data['status'] === Credit_notes_model::STATUS_DRAFT)
+                ) {
+                    $credit_note_data['status'] = Credit_notes_model::STATUS_OPEN;
+                }
                 $success = $this->credit_notes_model->update($credit_note_data, $id);
                 if ($success) {
                     set_alert('success', _l('updated_successfully', _l('credit_note')));
@@ -122,6 +129,15 @@ class Credit_notes extends AdminController
             }
         }
         if ($id == '') {
+            if (staff_cant('create', 'credit_notes')) {
+                access_denied('credit_notes');
+            }
+
+            $id = $this->credit_notes_model->create_empty_draft($this->input->get());
+            if ($id) {
+                redirect(admin_url('credit_notes/credit_note/' . $id));
+            }
+
             $title = _l('add_new', _l('credit_note'));
         } else {
             $credit_note = $this->credit_notes_model->get($id);
@@ -163,9 +179,43 @@ class Credit_notes extends AdminController
         $this->load->view('admin/credit_notes/credit_note', $data);
     }
 
+    public function autosave_draft($id)
+    {
+        if ((!$this->input->is_ajax_request() && !$this->input->post('autosave_draft')) || staff_cant('edit', 'credit_notes')) {
+            ajax_access_denied();
+        }
+
+        $credit_note = $this->credit_notes_model->get($id);
+        if (!$credit_note
+            || (staff_cant('view', 'credit_notes') && $credit_note->addedfrom != get_staff_user_id())
+            || (int) $credit_note->status !== Credit_notes_model::STATUS_DRAFT
+        ) {
+            echo json_encode(['success' => false, 'message' => _l('access_denied')]);
+            die;
+        }
+
+        $data = $this->input->post();
+        unset($data['autosave_draft'], $data['save_and_send']);
+        $data['status'] = Credit_notes_model::STATUS_DRAFT;
+
+        $this->credit_notes_model->update($data, $id);
+
+        echo json_encode([
+            'success'  => true,
+            'id'       => (int) $id,
+            'saved_at' => date('H:i'),
+        ]);
+        die;
+    }
+
     public function apply_credits_to_invoices($credit_note_id)
     {
         $creditApplied = false;
+        $creditNote = $this->credit_notes_model->get($credit_note_id);
+        if (!$creditNote || (int) $creditNote->status !== Credit_notes_model::STATUS_OPEN) {
+            redirect(admin_url('credit_notes/list_credit_notes/' . $credit_note_id));
+        }
+
         if ($this->input->post()) {
             foreach ($this->input->post('amount') as $invoice_id => $amount) {
                 if ($this->credit_notes_model->apply_credits($credit_note_id, ['amount' => $amount, 'invoice_id' => $invoice_id])) {
@@ -195,6 +245,12 @@ class Credit_notes extends AdminController
     public function refund($id, $refund_id = null)
     {
         if (staff_can('edit',  'credit_notes')) {
+            $data['credit_note'] = $this->credit_notes_model->get($id);
+            if (!$data['credit_note'] || (int) $data['credit_note']->status !== Credit_notes_model::STATUS_OPEN) {
+                echo _l('access_denied');
+                die;
+            }
+
             $this->load->model('payment_modes_model');
             if (!$refund_id) {
                 $data['payment_modes'] = $this->payment_modes_model->get('', [
@@ -211,8 +267,6 @@ class Credit_notes extends AdminController
                     $i++;
                 }
             }
-
-            $data['credit_note'] = $this->credit_notes_model->get($id);
             $this->load->view('admin/credit_notes/refund', $data);
         }
     }
@@ -220,6 +274,11 @@ class Credit_notes extends AdminController
     public function create_refund($credit_note_id)
     {
         if (staff_can('edit',  'credit_notes')) {
+            $creditNote = $this->credit_notes_model->get($credit_note_id);
+            if (!$creditNote || (int) $creditNote->status !== Credit_notes_model::STATUS_OPEN) {
+                redirect(admin_url('credit_notes/list_credit_notes/' . $credit_note_id));
+            }
+
             $data                = $this->input->post();
             $data['refunded_on'] = to_sql_date($data['refunded_on']);
             $data['staff_id']    = get_staff_user_id();
@@ -289,8 +348,8 @@ class Credit_notes extends AdminController
 
     public function mark_open($id)
     {
-        if (total_rows(db_prefix() . 'creditnotes', ['status' => 3, 'id' => $id]) > 0 && staff_can('edit',  'credit_notes')) {
-            $this->credit_notes_model->mark($id, 1);
+        if (total_rows(db_prefix() . 'creditnotes', ['status' => Credit_notes_model::STATUS_VOID, 'id' => $id]) > 0 && staff_can('edit',  'credit_notes')) {
+            $this->credit_notes_model->mark($id, Credit_notes_model::STATUS_OPEN);
         }
 
         redirect(admin_url('credit_notes/list_credit_notes/' . $id));
@@ -309,8 +368,14 @@ class Credit_notes extends AdminController
     public function mark_void($id)
     {
         $credit_note = $this->credit_notes_model->get($id);
-        if ($credit_note->status != 2 && $credit_note->status != 3 && !$credit_note->credits_used && staff_can('edit',  'credit_notes')) {
-            $this->credit_notes_model->mark($id, 3);
+        if ($credit_note
+            && (int) $credit_note->status !== Credit_notes_model::STATUS_CLOSED
+            && (int) $credit_note->status !== Credit_notes_model::STATUS_VOID
+            && (int) $credit_note->status !== Credit_notes_model::STATUS_DRAFT
+            && !$credit_note->credits_used
+            && staff_can('edit',  'credit_notes')
+        ) {
+            $this->credit_notes_model->mark($id, Credit_notes_model::STATUS_VOID);
         }
         redirect(admin_url('credit_notes/list_credit_notes/' . $id));
     }
@@ -321,6 +386,11 @@ class Credit_notes extends AdminController
         if (staff_cant('view', 'credit_notes') && staff_cant('view_own', 'credit_notes')) {
             access_denied('credit_notes');
         }
+        $creditNote = $this->credit_notes_model->get($id);
+        if (!$creditNote || (int) $creditNote->status !== Credit_notes_model::STATUS_OPEN) {
+            redirect(admin_url('credit_notes/list_credit_notes/' . $id));
+        }
+
         $success = $this->credit_notes_model->send_credit_note_to_client($id, $this->input->post('attach_pdf'), $this->input->post('cc'));
         // In case client use another language
         load_admin_language();
@@ -361,7 +431,7 @@ class Credit_notes extends AdminController
 
         $credit_note = $this->credit_notes_model->get($id);
 
-        if ($credit_note->credits_used || $credit_note->status == 2) {
+        if ($credit_note->credits_used || $credit_note->status == Credit_notes_model::STATUS_CLOSED) {
             $success = false;
         } else {
             $success = $this->credit_notes_model->delete($id);

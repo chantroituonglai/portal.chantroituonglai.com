@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 $table_data = array(
-  _l('invoice_dt_table_heading_number'),
+  '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="invoices"><label></label></div> ' . _l('invoice_dt_table_heading_number'),
   _l('invoice_dt_table_heading_amount'),
   _l('invoice_total_tax'),
   array(

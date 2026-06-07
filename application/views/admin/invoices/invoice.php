@@ -3,7 +3,14 @@
 <div id="wrapper">
     <div class="content">
         <div class="row">
-            <?= form_open($this->uri->uri_string(), ['id' => 'invoice-form', 'class' => '_transaction_form invoice-form']); ?>
+            <?php
+            $invoiceFormAttrs = ['id' => 'invoice-form', 'class' => '_transaction_form invoice-form'];
+            if (isset($invoice) && (int) $invoice->status === Invoices_model::STATUS_DRAFT) {
+                $invoiceFormAttrs['data-autosave-enabled'] = '1';
+                $invoiceFormAttrs['data-autosave-url']     = admin_url('invoices/autosave_draft/' . $invoice->id);
+            }
+            ?>
+            <?= form_open($this->uri->uri_string(), $invoiceFormAttrs); ?>
             <?php if (isset($invoice)) {
                 echo form_hidden('isedit');
             } ?>
@@ -14,6 +21,7 @@
                     </span>
                     <?= isset($invoice) ? format_invoice_status($invoice->status) : ''; ?>
                 </h4>
+                <span class="sales-draft-autosave-status text-muted mleft5"></span>
                 <?php $this->load->view('admin/invoices/invoice_template'); ?>
             </div>
             <?= form_close(); ?>
@@ -22,6 +30,7 @@
     </div>
 </div>
 <?php init_tail(); ?>
+<script src="<?= base_url('assets/js/sales_draft_autosave.js'); ?>"></script>
 <script>
     $(function() {
         validate_invoice_form();

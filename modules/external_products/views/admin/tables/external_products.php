@@ -4,9 +4,11 @@ $CI = &get_instance();
 
 $aColumns = [
     'id',
+    'id',
     'sku',
     'mapping_id',
     'mapping_type',
+    'id',
 ];
 
 $sIndexColumn = 'id';
@@ -26,7 +28,8 @@ $rResult = $result['rResult'];
 
 foreach ($rResult as $aRow) {
     $row   = [];
-    $row[] = $aRow['id'];
+    $row[] = '<div class="checkbox"><input type="checkbox" value="' . (int) $aRow['id'] . '"><label></label></div>';
+    $row[] = (int) $aRow['id'];
     $row[] = '<a href="' . admin_url('external_products/edit_mapping/' . $aRow['id']) . '">' . html_escape($aRow['sku']) . '</a>';
     $row[] = html_escape($aRow['mapping_id']);
     $row[] = '<span class="mapping-type-badge ' . html_escape($aRow['mapping_type']) . '">' . format_mapping_type($aRow['mapping_type']) . '</span>';

@@ -13,6 +13,7 @@ Author URI: https://codecanyon.net/user/fhc
 
 // System name
 define('PRETTY_PRICE_INPUT_MODULE', 'pretty_price_input');
+require_once __DIR__ . '/helpers/ppi_line_discount_helper.php';
 
 $CI = &get_instance();
 
@@ -65,14 +66,11 @@ function pretty_price_input_admin_footer()
 function ppi_upsert_line_discount($itemId, $relType, $data)
 {
     $CI = &get_instance();
-    $percent = isset($data['percent']) ? (float) $data['percent'] : 0.0;
-    $amount  = isset($data['amount']) ? (float) $data['amount'] : 0.0;
-    $type    = isset($data['type']) ? $data['type'] : 'percent';
-    $mode    = isset($data['tax_mode']) ? $data['tax_mode'] : 'before_tax';
-    if ($percent < 0) { $percent = 0; } if ($percent > 100) { $percent = 100; }
-    if ($amount < 0) { $amount = 0; }
-    if ($type !== 'percent' && $type !== 'amount') { $type = 'percent'; }
-    if ($mode !== 'before_tax' && $mode !== 'after_tax') { $mode = 'before_tax'; }
+    $discount = ppi_normalize_line_discount($data);
+    $percent  = $discount['percent'];
+    $amount   = $discount['amount'];
+    $type     = $discount['type'];
+    $mode     = $discount['tax_mode'];
     $now = date('Y-m-d H:i:s');
 
     $row = $CI->db->where('itemid', $itemId)->get(db_prefix() . 'ppi_line_discounts')->row();
@@ -99,11 +97,117 @@ function ppi_upsert_line_discount($itemId, $relType, $data)
     }
 }
 
+function ppi_delete_line_discount($itemId)
+{
+    $CI = &get_instance();
+    $CI->db->where('itemid', (int) $itemId)->delete(db_prefix() . 'ppi_line_discounts');
+}
+
 function ppi_delete_discounts_by_item_ids($itemIds)
 {
     if (empty($itemIds)) { return; }
     $CI = &get_instance();
     $CI->db->where_in('itemid', $itemIds)->delete(db_prefix() . 'ppi_line_discounts');
+}
+
+function ppi_sales_table_for_type($relType)
+{
+    $map = [
+        'estimate' => db_prefix() . 'estimates',
+        'invoice'  => db_prefix() . 'invoices',
+        'proposal' => db_prefix() . 'proposals',
+    ];
+
+    return isset($map[$relType]) ? $map[$relType] : null;
+}
+
+function ppi_recalculate_sale_totals_with_line_discounts($relType, $relId)
+{
+    $table = ppi_sales_table_for_type($relType);
+    if (! $table) {
+        return;
+    }
+
+    $CI = &get_instance();
+    $sale = $CI->db->select('discount_percent, discount_type, discount_total, adjustment')
+        ->where('id', $relId)
+        ->get($table)
+        ->row();
+
+    if (! $sale) {
+        return;
+    }
+
+    $items = get_items_by_type($relType, $relId);
+    $discounts = ppi_fetch_discounts_for_item_ids(array_map(function ($item) {
+        return (int) $item['id'];
+    }, $items));
+
+    $subtotal = 0.0;
+    $totalTax = 0.0;
+    $afterTaxLineDiscount = 0.0;
+    $taxes = [];
+
+    foreach ($items as $item) {
+        $isOptional = isset($item['is_optional']) && $item['is_optional'] == 1;
+        $isSelected = isset($item['is_selected']) && $item['is_selected'] == 1;
+
+        if ($isOptional && ! $isSelected) {
+            continue;
+        }
+
+        $discount = isset($discounts[(int) $item['id']]) ? $discounts[(int) $item['id']] : [];
+        $line = ppi_calculate_line_discount($item, $discount);
+        $lineSubtotal = $line['net_subtotal'];
+        $afterTaxLineDiscount += $line['after_tax_discount'];
+        $subtotal += $lineSubtotal;
+
+        if (! empty($item['taxes']) && is_array($item['taxes'])) {
+            foreach ($item['taxes'] as $tax) {
+                $taxrate = isset($tax['taxrate']) ? (float) $tax['taxrate'] : 0.0;
+                if ($taxrate == 0) {
+                    continue;
+                }
+
+                $taxname = $tax['taxname'];
+                $taxAmount = ($lineSubtotal / 100) * $taxrate;
+
+                if (! isset($taxes[$taxname])) {
+                    $taxes[$taxname] = 0.0;
+                }
+
+                $taxes[$taxname] += $taxAmount;
+            }
+        }
+    }
+
+    foreach ($taxes as $taxname => $taxAmount) {
+        if ((float) $sale->discount_percent != 0 && $sale->discount_type == 'before_tax') {
+            $taxAmount = $taxAmount - (($taxAmount * (float) $sale->discount_percent) / 100);
+        } elseif ((float) $sale->discount_total != 0 && $sale->discount_type == 'before_tax' && $subtotal > 0) {
+            $percentage = ((float) $sale->discount_total / $subtotal) * 100;
+            $taxAmount = $taxAmount - (($taxAmount * $percentage) / 100);
+        }
+
+        $totalTax += $taxAmount;
+    }
+
+    $total = $subtotal + $totalTax;
+
+    if ((float) $sale->discount_percent != 0 && $sale->discount_type == 'after_tax') {
+        $total -= ($total * (float) $sale->discount_percent) / 100;
+    } elseif ((float) $sale->discount_total != 0 && $sale->discount_type == 'after_tax') {
+        $total -= (float) $sale->discount_total;
+    }
+
+    $total -= $afterTaxLineDiscount;
+    $total += (float) $sale->adjustment;
+
+    $CI->db->where('id', $relId)->update($table, [
+        'subtotal'  => ppi_round_money($subtotal),
+        'total_tax' => ppi_round_money($totalTax),
+        'total'     => ppi_round_money($total),
+    ]);
 }
 
 function ppi_fetch_item_ids_for_sale($relId, $relType)
@@ -162,6 +266,8 @@ function ppi_handle_sale_save($relType, $relId)
                     'type'     => $type,
                     'tax_mode' => $mode,
                 ]);
+            } else {
+                ppi_delete_line_discount((int) $itemId);
             }
         }
     }
@@ -189,6 +295,8 @@ function ppi_handle_sale_save($relType, $relId)
                             'type'     => $type,
                             'tax_mode' => $mode,
                         ]);
+                    } else {
+                        ppi_delete_line_discount((int) $row['id']);
                     }
                 }
             }
@@ -199,6 +307,8 @@ function ppi_handle_sale_save($relType, $relId)
         $removed = array_map('intval', $post['removed_items']);
         ppi_delete_discounts_by_item_ids($removed);
     }
+
+    ppi_recalculate_sale_totals_with_line_discounts($relType, $relId);
 }
 
 // Filters for preview display (HTML/PDF)
@@ -251,5 +361,4 @@ hooks()->add_filter('item_preview_amount_with_currency', function($display){
     }
     return $display . '<br><span style="color:#777; font-size:85%">' . _l('ppi_line_discount_word') . ' ' . $formatted . ' (' . e($modeLabel) . ')</span>';
 }, 10, 4);
-
 

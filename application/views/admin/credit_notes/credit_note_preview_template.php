@@ -81,12 +81,12 @@ if ($total_reminders > 0) {
                         <div class="mtop10"></div>
                     </div>
                     <div class="pull-right _buttons">
-                        <?php if ($credit_note->status == 1 && ! empty($credit_note->clientid)) { ?>
+                        <?php if ($credit_note->status == Credit_notes_model::STATUS_OPEN && ! empty($credit_note->clientid)) { ?>
                         <a href="#" data-toggle="modal" data-target="#apply_credits" class="btn btn-primary">
                             <?= _l('apply_to_invoice'); ?>
                         </a>
                         <?php } ?>
-                        <?php if (staff_can('edit', 'credit_notes') && $credit_note->status != 3) { ?>
+                        <?php if (staff_can('edit', 'credit_notes') && $credit_note->status != Credit_notes_model::STATUS_VOID) { ?>
                         <a href="<?= admin_url('credit_notes/credit_note/' . $credit_note->id); ?>"
                             class="btn btn-default btn-with-tooltip sm:!tw-px-3" data-toggle="tooltip"
                             title="<?= e(_l('edit', _l('credit_note_lowercase'))); ?>"
@@ -127,7 +127,7 @@ if ($total_reminders > 0) {
                                 </li>
                             </ul>
                         </div>
-                        <?php if ($credit_note->status != 3 && ! empty($credit_note->clientid)) { ?>
+                        <?php if ($credit_note->status == Credit_notes_model::STATUS_OPEN && ! empty($credit_note->clientid)) { ?>
                         <a href="#" class="credit-note-send-to-client btn btn-default sm:!tw-px-3" data-toggle="modal"
                             data-target="#credit_note_send_to_client_modal">
                             <i class="fa-regular fa-envelope"></i>
@@ -143,7 +143,7 @@ if ($total_reminders > 0) {
                             <ul class="dropdown-menu dropdown-menu-right">
                                 <?php hooks()->do_action('credit_note_menu_links_start', $credit_note); ?>
                                 <?php
-                                   if ($credit_note->status == 1 && staff_can('edit', 'credit_notes')) { ?>
+                                   if ($credit_note->status == Credit_notes_model::STATUS_OPEN && staff_can('edit', 'credit_notes')) { ?>
                                 <li>
                                     <a href="#" onclick="refund_credit_note(); return false;" id="credit_note_refund">
                                         <?= _l('refund'); ?>
@@ -151,14 +151,14 @@ if ($total_reminders > 0) {
                                 </li>
                                 <?php }
                                    // You can only mark as void, if it's not closed, not void, no credits applied, no refunds applied
-if ($credit_note->status != 2 && $credit_note->status != 3 && ! $credit_note->credits_used && ! $credit_note->total_refunds && staff_can('edit', 'credit_notes')) { ?>
+if ($credit_note->status == Credit_notes_model::STATUS_OPEN && ! $credit_note->credits_used && ! $credit_note->total_refunds && staff_can('edit', 'credit_notes')) { ?>
                                 <li>
                                     <a
                                         href="<?= admin_url('credit_notes/mark_void/' . $credit_note->id); ?>">
                                         <?= _l('credit_note_status_void'); ?>
                                     </a>
                                 </li>
-                                <?php } elseif ($credit_note->status == 3 && staff_can('edit', 'credit_notes')) { ?>
+                                <?php } elseif ($credit_note->status == Credit_notes_model::STATUS_VOID && staff_can('edit', 'credit_notes')) { ?>
                                 <li>
                                     <a
                                         href="<?= admin_url('credit_notes/mark_open/' . $credit_note->id); ?>">
@@ -175,7 +175,7 @@ if ($credit_note->status != 2 && $credit_note->status != 3 && ! $credit_note->cr
 if (staff_can('delete', 'credit_notes')) {
     $delete_tooltip = '';
     $allow_delete   = true;
-    if ($credit_note->status == 2) {
+    if ($credit_note->status == Credit_notes_model::STATUS_CLOSED) {
         $delete_tooltip = _l('credits_applied_cant_delete_status_closed');
         $allow_delete   = false;
     } elseif ($credit_note->credits_used) {

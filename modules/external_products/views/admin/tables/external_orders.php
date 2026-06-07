@@ -8,7 +8,10 @@ $aColumns = [
     'target_id',
     'title',
     'status',
+    'status',
+    'id',
     'dateadded',
+    'id',
 ];
 
 $sIndexColumn = 'id';

@@ -744,7 +744,7 @@ function add_new_sales_item_post($item, $rel_id, $rel_type)
     $CI         = &get_instance();
     $isOptional = $item['is_optional'] ?? false;
 
-    $CI->db->insert(db_prefix() . 'itemable', [
+    $insert = [
         'description'      => $item['description'],
         'long_description' => nl2br($item['long_description']),
         'qty'              => $item['qty'],
@@ -755,13 +755,32 @@ function add_new_sales_item_post($item, $rel_id, $rel_type)
         'unit'             => $item['unit'],
         'is_optional'      => $isOptional ? 1 : 0,
         'is_selected'      => $isOptional ? ($item['is_selected'] ?? 0) : 1,
-    ]);
+    ];
+
+    if ($CI->db->field_exists('item_sku', db_prefix() . 'itemable')) {
+        $insert['item_sku'] = $item['item_sku'] ?? null;
+    }
+
+    if ($CI->db->field_exists('item_master_id', db_prefix() . 'itemable')) {
+        $insert['item_master_id'] = isset($item['item_master_id']) && is_numeric($item['item_master_id'])
+            ? (int) $item['item_master_id']
+            : null;
+    }
+
+    $CI->db->insert(db_prefix() . 'itemable', $insert);
 
     $id = $CI->db->insert_id();
 
     if ($custom_fields !== false) {
         handle_custom_fields_post($id, $custom_fields);
     }
+
+    hooks()->do_action('after_sales_item_added', [
+        'item_id'  => $id,
+        'item'     => $item,
+        'rel_id'   => $rel_id,
+        'rel_type' => $rel_type,
+    ]);
 
     return $id;
 }
@@ -808,13 +827,32 @@ function update_sales_item_post($item_id, $data, $field = '')
             'is_optional'      => $isOptional ? 1 : 0,
             'is_selected'      => $isOptional ? ($data['is_selected'] ?? 0) : 1,
         ];
+
+        $CI = &get_instance();
+        if ($CI->db->field_exists('item_sku', db_prefix() . 'itemable') && array_key_exists('item_sku', $data)) {
+            $update['item_sku'] = $data['item_sku'] ?: null;
+        }
+
+        if ($CI->db->field_exists('item_master_id', db_prefix() . 'itemable') && array_key_exists('item_master_id', $data)) {
+            $update['item_master_id'] = is_numeric($data['item_master_id']) ? (int) $data['item_master_id'] : null;
+        }
     }
 
     $CI = &get_instance();
     $CI->db->where('id', $item_id);
     $CI->db->update(db_prefix() . 'itemable', $update);
 
-    return $CI->db->affected_rows() > 0 ? true : false;
+    $updated = $CI->db->affected_rows() > 0;
+
+    if ($updated) {
+        hooks()->do_action('after_sales_item_updated', [
+            'item_id' => $item_id,
+            'item'    => $data,
+            'field'   => $field,
+        ]);
+    }
+
+    return $updated ? true : false;
 }
 
 /**

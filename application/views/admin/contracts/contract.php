@@ -27,6 +27,10 @@
                 <?php if (isset($contract)) { ?>
                 <div>
                     <div class="_buttons tw-space-x-1 tw-flex tw-items-center rtl:tw-space-x-reverse">
+                        <a href="<?= admin_url('contracts'); ?>" class="btn btn-default tw-shrink-0"
+                            data-toggle="tooltip" data-title="<?= _l('go_back'); ?>">
+                            <i class="fa fa-arrow-left"></i>
+                        </a>
                         <a href="<?= site_url('contract/' . $contract->id . '/' . $contract->hash); ?>"
                             target="_blank" class="tw-shrink-0">
                             <?= _l('view_contract'); ?>

@@ -658,6 +658,15 @@ body.page-small #header {
   right: 0;
 }
 
+#header .header-notifications>.dropdown-menu.notifications {
+  max-height: 600px;
+  max-height: min(600px, calc(100vh - 96px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 #header .header-notification-inner {
   position: relative;
   display: inline-flex;
@@ -5503,4 +5512,173 @@ div[contenteditable]:focus {
   width: -moz-available;
   width: -webkit-fill-available;
   width: fill-available;
+}
+
+/* Admin header visual refresh */
+#header {
+  --portal-header-ink: #172033;
+  --portal-header-muted: #647084;
+  --portal-header-line: #dce4ef;
+  --portal-header-soft: #f7f9fc;
+  --portal-header-hover: #edf3f8;
+  --portal-header-accent: #1f7a52;
+  --portal-header-accent-hover: #17633f;
+  background: #ffffff;
+  border-bottom: 1px solid var(--portal-header-line);
+  box-shadow: 0 10px 28px -26px rgba(15, 23, 42, 0.42);
+}
+
+#header::before {
+  height: 0;
+  background: transparent;
+}
+
+@media (min-width: 769px) {
+  #header,
+  .header-desktop-shell,
+  .header-nav {
+    min-height: 74px;
+    height: 74px;
+  }
+
+  .header-desktop-shell {
+    padding: 0 26px 0 22px;
+    gap: 26px;
+  }
+
+  .header-left-cluster {
+    flex-basis: 270px;
+    min-width: 270px;
+    gap: 16px;
+  }
+
+  #header .hide-menu {
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
+    border-color: var(--portal-header-line);
+    background: var(--portal-header-soft);
+    color: var(--portal-header-muted);
+    box-shadow: none;
+  }
+
+  #header .hide-menu:hover,
+  #header .hide-menu:focus {
+    background: var(--portal-header-hover);
+    color: var(--portal-header-ink);
+  }
+
+  #logo .header-logo-link {
+    min-height: 42px;
+  }
+
+  #logo img {
+    max-height: 38px;
+    max-width: 210px;
+    object-fit: contain;
+    filter: saturate(0.92);
+  }
+
+  #top_search {
+    max-width: 700px;
+  }
+
+  #search_input {
+    height: 46px;
+    border: 1px solid var(--portal-header-line) !important;
+    border-radius: 17px !important;
+    background: #fbfcfe !important;
+    color: var(--portal-header-ink) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+  }
+
+  #search_input:hover {
+    border-color: #c8d3df !important;
+    background: #ffffff !important;
+  }
+
+  #search_input:focus {
+    border-color: #9bb9ab !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(31, 122, 82, 0.1) !important;
+  }
+
+  #top_search_button {
+    top: 6px;
+  }
+
+  #top_search_button button {
+    color: #7b8797;
+  }
+
+  .header-right-cluster {
+    gap: 10px;
+    padding-left: 10px;
+  }
+
+  #header .header-quick-actions,
+  #header .header-utility-list {
+    gap: 6px;
+  }
+
+  #header .header-quick-actions {
+    margin-right: 6px;
+  }
+
+  #header .header-quick-create,
+  #header .header-quick-create span {
+    width: 42px;
+    height: 42px;
+  }
+
+  #header .header-quick-create span {
+    background: var(--portal-header-accent);
+    box-shadow: 0 14px 26px -18px rgba(31, 122, 82, 0.72);
+  }
+
+  #header .header-quick-create:hover span,
+  #header .header-quick-create:focus span {
+    background: var(--portal-header-accent-hover);
+  }
+
+  #header .header-icon-link,
+  #header .header-notifications .dropdown-toggle {
+    width: 36px;
+    height: 40px;
+    border-radius: 13px;
+    color: var(--portal-header-muted);
+  }
+
+  #header .header-icon-link:hover,
+  #header .header-icon-link:focus,
+  #header .header-notifications .dropdown-toggle:hover,
+  #header .header-notifications .dropdown-toggle:focus {
+    color: var(--portal-header-ink);
+    background: var(--portal-header-hover);
+    transform: none;
+  }
+
+  #header .header-settings-link {
+    height: 40px;
+    gap: 7px;
+    padding: 0 11px;
+    color: var(--portal-header-ink);
+    font-weight: 700;
+  }
+
+  #header .header-settings-link:hover,
+  #header .header-settings-link:focus {
+    background: var(--portal-header-hover);
+    transform: none;
+  }
+
+  #header .header-settings-link i {
+    color: var(--portal-header-accent);
+  }
+}
+
+@media (min-width: 1200px) {
+  .header-right-cluster {
+    gap: 12px;
+  }
 }

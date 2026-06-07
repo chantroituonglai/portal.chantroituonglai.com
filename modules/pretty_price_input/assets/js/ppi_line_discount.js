@@ -78,8 +78,8 @@
   }
 
   function findDescInputName(row){
-    var el = row.querySelector('input[name^="items"][name$="[description]"]'); if (el) return el.name;
-    el = row.querySelector('input[name^="newitems"][name$="[description]"]'); if (el) return el.name;
+    var el = row.querySelector('textarea[name^="items"][name$="[description]"], input[name^="items"][name$="[description]"]'); if (el) return el.name;
+    el = row.querySelector('textarea[name^="newitems"][name$="[description]"], input[name^="newitems"][name$="[description]"]'); if (el) return el.name;
     return null;
   }
   function parseItemRefFromName(descName){
@@ -168,16 +168,21 @@
     cell.appendChild(c.wrap);
   }
 
-  function computeRowDiscount(row){
-    var cwrap = row.querySelector('.ppi-line-discount-wrapper'); if (!cwrap) return 0;
-    var typeEl = cwrap.querySelector('.ppi-discount-type'); var pctEl = cwrap.querySelector('.ppi-line-discount'); var amtEl = cwrap.querySelector('.ppi-line-discount-amount'); var modeEl = cwrap.querySelector('.ppi-tax-mode');
-    if (!typeEl || !modeEl) return 0;
+  function getRowGrossSubtotal(row){
     var qtyEl = row.querySelector('[data-quantity], input[name*="[qty]"]');
     var rateEl = row.querySelector('td.rate input[name*="[rate]"]');
     var qty = qtyEl ? parseFloat((qtyEl.value+'').replace(/[^0-9.\-]/g,'')) : 0;
     var rate = rateEl ? parseFloat((rateEl.value+'').replace(/[^0-9.\-]/g,'')) : 0;
     if (isNaN(qty)) qty = 0; if (isNaN(rate)) rate = 0;
-    var subtotal = qty * rate;
+    return qty * rate;
+  }
+
+  function computeRowDiscount(row, modeFilter){
+    var cwrap = row.querySelector('.ppi-line-discount-wrapper'); if (!cwrap) return 0;
+    var typeEl = cwrap.querySelector('.ppi-discount-type'); var pctEl = cwrap.querySelector('.ppi-line-discount'); var amtEl = cwrap.querySelector('.ppi-line-discount-amount'); var modeEl = cwrap.querySelector('.ppi-tax-mode');
+    if (!typeEl || !modeEl) return 0;
+    if (modeFilter && modeEl.value !== modeFilter) return 0;
+    var subtotal = getRowGrossSubtotal(row);
     var taxes = 0;
     var taxSelects = row.querySelectorAll('select.tax');
     taxSelects.forEach(function(sel){ var parts = (sel.value||'').split('|'); var r = parseFloat(parts[1]); if(!isNaN(r)) taxes += (subtotal/100)*r; });
@@ -198,6 +203,40 @@
     });
   }
 
+  function applyBeforeTaxLineDiscountsToRows(){
+    var rows = document.querySelectorAll('.accounting-template table.items tbody tr.item');
+    rows.forEach(function(row){
+      var rateEl = row.querySelector('td.rate input[name*="[rate]"]');
+      var qtyEl = row.querySelector('[data-quantity], input[name*="[qty]"]');
+      if (!rateEl || !qtyEl) return;
+
+      var originalRate = rateEl.value;
+      row.setAttribute('data-ppi-original-rate', originalRate);
+
+      var qty = parseFloat((qtyEl.value+'').replace(/[^0-9.\-]/g,''));
+      var rate = parseFloat((originalRate+'').replace(/[^0-9.\-]/g,''));
+      if (isNaN(qty) || qty <= 0 || isNaN(rate)) return;
+
+      var grossSubtotal = qty * rate;
+      var discount = computeRowDiscount(row, 'before_tax');
+      var netSubtotal = Math.max(0, grossSubtotal - discount);
+      var effectiveRate = netSubtotal / qty;
+      var dp = (window.app && app.options ? app.options.decimal_places : 2);
+
+      rateEl.value = (Math.round(effectiveRate * Math.pow(10, dp)) / Math.pow(10, dp)).toFixed(dp);
+    });
+  }
+
+  function restoreOriginalRates(){
+    var rows = document.querySelectorAll('.accounting-template table.items tbody tr.item[data-ppi-original-rate]');
+    rows.forEach(function(row){
+      var rateEl = row.querySelector('td.rate input[name*="[rate]"]');
+      if (!rateEl) return;
+      rateEl.value = row.getAttribute('data-ppi-original-rate') || rateEl.value;
+      row.removeAttribute('data-ppi-original-rate');
+    });
+  }
+
   function applyAfterTaxAdjustment(){
     var rows = document.querySelectorAll('.accounting-template table.items tbody tr');
     var afterTaxTotal = 0;
@@ -215,43 +254,15 @@
     adjInput.value = (Math.round(finalAdj*100)/100).toFixed(2);
   }
 
-  // Aggregate BEFORE TAX line discounts into document Discount (fixed, before_tax)
-  function applyBeforeTaxAsDocumentDiscount(){
-    var rows = document.querySelectorAll('.accounting-template table.items tbody tr');
-    var beforeTaxTotal = 0;
-    rows.forEach(function(row){
-      var cwrap = row.querySelector('.ppi-line-discount-wrapper'); if (!cwrap) return;
-      var modeEl = cwrap.querySelector('.ppi-tax-mode'); if (!modeEl || modeEl.value !== 'before_tax') return;
-      beforeTaxTotal += computeRowDiscount(row);
-    });
-    var discountTotalInput = document.querySelector('input[name="discount_total"]');
-    var discountTypeSelect = document.querySelector('select[name="discount_type"]');
-    if (discountTotalInput) {
-      var dp = (window.app && app.options ? app.options.decimal_places : 2);
-      discountTotalInput.value = (Math.round(beforeTaxTotal * Math.pow(10,dp))/Math.pow(10,dp)).toFixed(dp);
-    }
-    if (discountTypeSelect) {
-      discountTypeSelect.value = beforeTaxTotal > 0 ? 'before_tax' : (discountTypeSelect.value || '');
-    }
-    if (typeof window.jQuery !== 'undefined') {
-      var $ = window.jQuery;
-      var $fixed = $('.discount-type-fixed');
-      var $percent = $('.discount-type-percent');
-      if ($fixed.length) { $fixed.addClass('selected'); }
-      if ($percent.length) { $percent.removeClass('selected'); }
-    }
-  }
-
   function wrapCalculateTotal(){
     if (!window.calculate_total || window.calculate_total.__ppiLineWrappedV2) return;
     var original = window.calculate_total;
     function pre(){
-      // Do not touch item rate inputs; instead drive document discounts/adjustment
-      applyBeforeTaxAsDocumentDiscount();
+      applyBeforeTaxLineDiscountsToRows();
       applyAfterTaxAdjustment();
     }
     function post(){
-      // After-tax already applied in pre; just refresh row notes
+      restoreOriginalRates();
       updatePerRowNotes();
     }
     window.calculate_total = function(){ pre(); try { return original.apply(this, arguments); } finally { post(); } };

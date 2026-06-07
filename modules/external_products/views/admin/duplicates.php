@@ -204,7 +204,7 @@
             tbody.empty();
 
             (parsed.data || []).forEach(function(row) {
-                tbody.append('<tr>' + row.join('') + '</tr>');
+                tbody.append('<tr><td>' + row.join('</td><td>') + '</td></tr>');
             });
 
             $('#duplicateDetailsTable').find('.keep-record').addClass('btn-success').removeClass('btn-warning').prop('disabled', false).text('<?php echo _l('keep_this'); ?>');
@@ -216,8 +216,7 @@
         var id = $(this).data('id');
         keepRecordId = id;
 
-        $('.duplicate-checkbox').prop('checked', false);
-        $('.duplicate-checkbox[value="' + id + '"]').prop('checked', true);
+        $('.duplicate-checkbox[value="' + id + '"]').prop('checked', false);
 
         $('.keep-record').removeClass('btn-warning').addClass('btn-success').prop('disabled', false).text('<?php echo _l('keep_this'); ?>');
         $(this).removeClass('btn-success').addClass('btn-warning').prop('disabled', true).text('<?php echo _l('keeping'); ?>');
@@ -229,13 +228,13 @@
             selectedIds.push($(this).val());
         });
 
-        if (selectedIds.length === 0) {
-            alert_float('warning', '<?php echo _l('please_select_records_to_delete'); ?>');
+        if (!keepRecordId) {
+            alert_float('warning', '<?php echo _l('please_select_a_record_to_keep'); ?>');
             return;
         }
 
-        if (keepRecordId && selectedIds.indexOf(keepRecordId) === -1) {
-            alert_float('warning', '<?php echo _l('please_select_a_record_to_keep'); ?>');
+        if (selectedIds.length === 0) {
+            alert_float('warning', '<?php echo _l('please_select_records_to_delete'); ?>');
             return;
         }
 
@@ -257,6 +256,9 @@
             keep_id: keepRecordId,
             delete_ids: deleteIds
         };
+        if (typeof csrfData !== 'undefined') {
+            payload[csrfData.token_name] = csrfData.hash;
+        }
 
         if (currentDuplicateType === 'sku' || currentDuplicateType === 'sku_conflict') {
             url = '<?php echo admin_url('external_products/resolve_duplicate_sku'); ?>';

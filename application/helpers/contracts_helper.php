@@ -98,6 +98,55 @@ function get_contract_templates()
 }
 
 /**
+ * Prepare a reusable copy of a contract without customer-specific data.
+ *
+ * @param  object $contract
+ * @param  array  $fields
+ * @return array
+ */
+function prepare_contract_copy_data($contract, $fields)
+{
+    $copyData = [];
+    $hasField = array_flip($fields);
+
+    $contract->content = restore_merge_fields($contract->content);
+
+    foreach ($fields as $field) {
+        if (isset($contract->$field)) {
+            $copyData[$field] = $contract->$field;
+        }
+    }
+
+    unset($copyData['id']);
+
+    $copyData['client']           = 0;
+    $copyData['trash']            = 0;
+    $copyData['isexpirynotified'] = 0;
+    $copyData['signed']           = 0;
+    $copyData['marked_as_signed'] = 0;
+    $copyData['signature']        = null;
+
+    foreach (['project_id', 'contacts_sent_to', 'last_sent_at', 'short_link'] as $field) {
+        if (isset($hasField[$field])) {
+            $copyData[$field] = null;
+        }
+    }
+
+    $copyData = array_merge($copyData, get_acceptance_info_array(true));
+
+    if ($contract->dateend) {
+        $dStart              = new DateTime($contract->datestart);
+        $dEnd                = new DateTime($contract->dateend);
+        $dDiff               = $dStart->diff($dEnd);
+        $copyData['dateend'] = date('Y-m-d', strtotime('+' . $dDiff->days . ' DAY'));
+    } else {
+        $copyData['dateend'] = '';
+    }
+
+    return $copyData;
+}
+
+/**
  * Send contract signed notification to staff members
  *
  * @param  int $contract_id

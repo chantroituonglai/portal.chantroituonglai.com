@@ -5,7 +5,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 /*
 Module Name: External Mapping Management
 Description: Manage external products, orders and their mapping with internal systems
-Version: 2.0.0
+Version: 2.0.3
 Author: Future Horizon Ltd Company
 Author URI: https://www.chantroituonglai.com
 Requires at least: 2.3.*
@@ -46,7 +46,6 @@ function external_products_add_head_components()
     if ('1' == get_option('external_products_enabled')) {
         $CI = &get_instance();
         echo '<link href="'.module_dir_url('external_products', 'assets/css/external_products.css').'?v='.$CI->app_scripts->core_version().'"  rel="stylesheet" type="text/css" />';
-        echo '<script src="'.module_dir_url('external_products', 'assets/js/external_products.js').'?v='.time().'"></script>';
     }
 }
 
@@ -56,7 +55,7 @@ function external_products_load_js()
 {
     if ('1' == get_option('external_products_enabled')) {
         $CI = &get_instance();
-        echo '<script src="'.module_dir_url('external_products', 'assets/js/external_products.js').'?v='.time().'"></script>';
+        echo '<script src="'.module_dir_url('external_products', 'assets/js/external_products.js').'?v='.$CI->app_scripts->core_version().'"></script>';
     }
 }
 
@@ -96,19 +95,10 @@ function external_products_module_init_menu_items()
 
     if (has_permission('external_products', '', 'view')) {
         $CI->app_menu->add_sidebar_children_item('external_products', [
-            'slug'     => 'External Products',
-            'name'     => _l('external_products'),
-            'href'     => admin_url('external_products'),
-            'position' => 1,
-        ]);
-    }
-
-    if (has_permission('external_products', '', 'view')) {
-        $CI->app_menu->add_sidebar_children_item('external_products', [
             'slug'     => 'external_products_mapping',
             'name'     => _l('external_products_mapping'),
             'href'     => admin_url('external_products/mapping'),
-            'position' => 2,
+            'position' => 1,
         ]);
     }
 
@@ -130,16 +120,6 @@ function external_products_module_init_menu_items()
         ]);
     }
 
-    // Order Management
-    if (has_permission('external_products', '', 'view')) {
-        $CI->app_menu->add_sidebar_children_item('external_products', [
-            'slug'     => 'external_orders',
-            'name'     => _l('external_orders'),
-            'href'     => admin_url('external_products/orders'),
-            'position' => 5,
-        ]);
-    }
-
     if (has_permission('external_products', '', 'view')) {
         $CI->app_menu->add_sidebar_children_item('external_products', [
             'slug'     => 'order_mapping',
@@ -156,6 +136,15 @@ function external_products_module_init_menu_items()
             'name'     => _l('haravan_products'),
             'href'     => admin_url('external_products/haravan_products'),
             'position' => 10,
+        ]);
+    }
+
+    if (has_permission('external_products', '', 'view')) {
+        $CI->app_menu->add_sidebar_children_item('external_products', [
+            'slug'     => 'external_system_settings',
+            'name'     => _l('external_systems_configuration'),
+            'href'     => admin_url('external_products/external_system_settings'),
+            'position' => 11,
         ]);
     }
 }

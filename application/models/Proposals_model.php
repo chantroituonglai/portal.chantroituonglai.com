@@ -142,7 +142,7 @@ class Proposals_model extends App_Model
                 }
             }
 
-            if ($data['rel_type'] == 'lead') {
+            if (isset($data['rel_type']) && $data['rel_type'] == 'lead') {
                 $this->load->model('leads_model');
                 $this->leads_model->log_lead_activity($data['rel_id'], 'not_lead_activity_created_proposal', false, serialize([
                     '<a href="' . admin_url('proposals/list_proposals/' . $insert_id) . '" target="_blank">' . $data['subject'] . '</a>',
@@ -163,6 +163,56 @@ class Proposals_model extends App_Model
         }
 
         return false;
+    }
+
+    public function create_empty_draft($context = [])
+    {
+        $this->load->model('currencies_model');
+        $baseCurrency = $this->currencies_model->get_base_currency();
+
+        $data = [
+            'subject'          => _l('new_proposal'),
+            'proposal_to'      => '',
+            'email'            => '',
+            'phone'            => '',
+            'address'          => '',
+            'city'             => '',
+            'state'            => '',
+            'zip'              => '',
+            'country'          => 0,
+            'date'             => _d(date('Y-m-d')),
+            'open_till'        => '',
+            'currency'         => $baseCurrency ? $baseCurrency->id : 0,
+            'subtotal'         => 0,
+            'total'            => 0,
+            'total_tax'        => 0,
+            'adjustment'       => 0,
+            'discount_percent' => 0,
+            'discount_total'   => 0,
+            'discount_type'    => '',
+            'status'           => 6,
+            'assigned'         => get_staff_user_id(),
+            'allow_comments'   => 1,
+            'show_quantity_as' => 1,
+        ];
+
+        if (!empty($context['customer_id'])) {
+            $data['rel_type'] = 'customer';
+            $data['rel_id']   = (int) $context['customer_id'];
+        } elseif (!empty($context['rel_type']) && !empty($context['rel_id'])) {
+            $data['rel_type'] = $context['rel_type'];
+            $data['rel_id']   = (int) $context['rel_id'];
+        }
+
+        if (!empty($context['project_id'])) {
+            $data['project_id'] = (int) $context['project_id'];
+        }
+
+        if (!empty($context['estimate_request_id'])) {
+            $data['estimate_request_id'] = $context['estimate_request_id'];
+        }
+
+        return $this->add($data);
     }
 
     /**

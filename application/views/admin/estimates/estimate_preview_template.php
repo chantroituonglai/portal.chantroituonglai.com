@@ -112,31 +112,31 @@ if ($total_reminders > 0) {
                         <div class="btn-group">
                             <a href="#" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false"><i
-                                    class="fa-regular fa-file-pdf"></i><?= is_mobile() ? ' PDF' : ''; ?>
+                                    class="fa-regular fa-file-pdf"></i><?= is_mobile() ? ' Print/PDF' : ''; ?>
                                 <span class="caret"></span></a>
                             <ul class="dropdown-menu dropdown-menu-right">
                                 <li class="hidden-xs">
                                     <a
                                         href="<?= admin_url('estimates/pdf/' . $estimate->id . '?output_type=I'); ?>">
-                                        <?= _l('view_pdf'); ?>
+                                        View Print Template
                                     </a>
                                 </li>
                                 <li class="hidden-xs">
-                                    <a href="<?= admin_url('estimates/pdf/' . $estimate->id . '?output_type=I'); ?>"
+                                    <a href="<?= admin_url('estimates/pdf/' . $estimate->id . '?print=true'); ?>"
                                         target="_blank">
-                                        <?= _l('view_pdf_in_new_window'); ?>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a
-                                        href="<?= admin_url('estimates/pdf/' . $estimate->id); ?>">
-                                        <?= _l('download'); ?>
+                                        View Print Template in New Tab
                                     </a>
                                 </li>
                                 <li>
                                     <a href="<?= admin_url('estimates/pdf/' . $estimate->id . '?print=true'); ?>"
                                         target="_blank">
-                                        <?= _l('print'); ?>
+                                        Download PDF / Save as PDF
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= admin_url('estimates/pdf/' . $estimate->id . '?print=true'); ?>"
+                                        target="_blank">
+                                        Print Template
                                     </a>
                                 </li>
                             </ul>

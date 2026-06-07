@@ -161,6 +161,24 @@ add_option('external_products_default_mapping_status', 'pending');
 add_option('haravan_api_enabled', 0);
 add_option('haravan_api_token', '');
 add_option('haravan_api_base_url', 'https://apis.haravan.com/com');
+add_option('external_products_lotte_api_token', '');
+
+if (!$CI->db->table_exists(db_prefix() . 'lotte_crawl_log')) {
+    $CI->db->query('CREATE TABLE `' . db_prefix() . 'lotte_crawl_log` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `triggered_at` datetime NOT NULL,
+        `trigger_source` varchar(50) DEFAULT NULL,
+        `from_date` varchar(20) DEFAULT NULL,
+        `to_date` varchar(20) DEFAULT NULL,
+        `orders_found` int(11) NOT NULL DEFAULT 0,
+        `orders_saved` int(11) NOT NULL DEFAULT 0,
+        `errors` text,
+        `status` varchar(30) NOT NULL DEFAULT \'running\',
+        PRIMARY KEY (`id`),
+        KEY `status` (`status`),
+        KEY `triggered_at` (`triggered_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+}
 
 // Log installation
 log_activity('External Products Management Module Installed');

@@ -18,17 +18,8 @@ class External_products extends AdminController
         if (!has_permission('external_products', '', 'view')) {
             access_denied('external_products View');
         }
-        close_setup_menu();
 
-        $data['title'] = _l('external_products');
-        if (has_permission('external_products', '', 'view')) {
-            if ($this->input->is_ajax_request()) {
-                $this->app->get_table_data(module_views_path('external_products', 'admin/tables/external_products'));
-            }
-            $this->load->view('admin/external_products', $data);
-        } else {
-            access_denied('external_products');
-        }
+        redirect(admin_url('external_products/mapping'));
     }
 
     public function mapping()
@@ -168,6 +159,8 @@ class External_products extends AdminController
 
     public function bulk_action()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'edit')) {
             access_denied('external_products Edit');
         }
@@ -205,28 +198,7 @@ class External_products extends AdminController
     public function get_mapping_data()
     {
         if ($this->input->is_ajax_request()) {
-            $mappings = $this->external_products_model->get_external_product_mapping();
-            $data = [];
-            
-            foreach ($mappings as $mapping) {
-                $row = [];
-                $row[] = '<div class="checkbox"><input type="checkbox" value="' . $mapping['id'] . '"><label></label></div>';
-                $row[] = $mapping['id'];
-                $row[] = $mapping['sku'];
-                $row[] = $mapping['mapping_id'];
-                $row[] = '<span class="mapping-type-badge ' . $mapping['mapping_type'] . '">' . format_mapping_type($mapping['mapping_type']) . '</span>';
-                $row[] = '<div class="row-options">
-                    <a href="' . admin_url('external_products/edit_mapping/' . $mapping['id']) . '" class="text-success">
-                        <i class="fa fa-pencil-square-o"></i>
-                    </a>
-                    <a href="' . admin_url('external_products/delete_mapping/' . $mapping['id']) . '" class="text-danger _delete">
-                        <i class="fa fa-remove"></i>
-                    </a>
-                </div>';
-                $data[] = $row;
-            }
-            
-            echo json_encode(['data' => $data]);
+            $this->app->get_table_data(module_views_path('external_products', 'admin/tables/external_products'));
         }
     }
 
@@ -305,6 +277,8 @@ class External_products extends AdminController
 
     public function resolve_duplicate_sku()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'edit')) {
             access_denied('external_products Edit');
         }
@@ -340,6 +314,8 @@ class External_products extends AdminController
 
     public function resolve_duplicate_mapping_id()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'edit')) {
             access_denied('external_products Edit');
         }
@@ -376,6 +352,8 @@ class External_products extends AdminController
 
     public function get_duplicate_details()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'view')) {
             ajax_access_denied();
         }
@@ -432,16 +410,13 @@ class External_products extends AdminController
         }
         close_setup_menu();
 
-        $data['title'] = _l('external_orders');
-        $data['external_systems'] = $this->external_products_model->get_external_systems();
-        if (has_permission('external_products', '', 'view')) {
-            if ($this->input->is_ajax_request()) {
-                $this->app->get_table_data(module_views_path('external_products', 'admin/tables/external_orders'));
-            }
-            $this->load->view('admin/orders', $data);
-        } else {
-            access_denied('external_products');
+        if ($this->input->is_ajax_request()) {
+            $this->app->get_table_data(module_views_path('external_products', 'admin/tables/external_orders'));
         }
+
+        $data['title']            = _l('external_orders');
+        $data['external_systems'] = $this->external_products_model->get_external_systems();
+        $this->load->view('admin/orders', $data);
     }
 
     public function add_order()
@@ -583,6 +558,8 @@ class External_products extends AdminController
 
     public function sync_orders()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'edit')) {
             access_denied('external_products Edit');
         }
@@ -731,6 +708,8 @@ class External_products extends AdminController
 
     public function delete_order_mapping_bulk()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'delete')) {
             access_denied('external_products Delete');
         }
@@ -754,13 +733,15 @@ class External_products extends AdminController
         } else {
             echo json_encode([
                 'success' => false,
-                'message' => _l('order_mapping_deleted_successfully')
+                'message' => _l('no_items_selected')
             ]);
         }
     }
 
     public function bulk_update_order_mapping()
     {
+        header('Content-Type: application/json');
+
         if (!has_permission('external_products', '', 'edit')) {
             access_denied('external_products Edit');
         }
@@ -938,31 +919,36 @@ class External_products extends AdminController
             access_denied('external_products Edit');
         }
 
+        $isAjax = $this->input->is_ajax_request() || $this->input->post();
+        if ($isAjax) {
+            header('Content-Type: application/json');
+        }
+
         if ($this->input->post()) {
             $sku = $this->input->post('sku');
         }
 
         if (empty($sku)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'SKU is required'
-            ]);
+            $this->respond_haravan_sync(false, 'SKU is required', $isAjax);
             return;
         }
 
         $result = $this->external_products_model->sync_haravan_product_by_sku($sku);
-        
-        if ($result['success']) {
+        $this->respond_haravan_sync((bool) $result['success'], $result['message'], $isAjax);
+    }
+
+    private function respond_haravan_sync($success, $message, $asJson)
+    {
+        if ($asJson) {
             echo json_encode([
-                'success' => true,
-                'message' => $result['message']
+                'success' => $success,
+                'message' => $message
             ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => $result['message']
-            ]);
+            return;
         }
+
+        set_alert($success ? 'success' : 'danger', $message);
+        redirect(admin_url('external_products/haravan_products'));
     }
 
     public function delete_haravan_product($id)
@@ -1079,6 +1065,11 @@ class External_products extends AdminController
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
 
+        if (!$this->authorize_lotte_endpoint()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized LOTTE crawl request']);
+            return;
+        }
+
         $cookie   = $this->input->post('cookie') ?: $this->input->get('cookie');
         $csrf_tag = $this->input->post('csrf_tag') ?: $this->input->get('csrf_tag');
         $from     = $this->input->post('from') ?: date('d/m/Y', strtotime('-30 days'));
@@ -1091,7 +1082,7 @@ class External_products extends AdminController
         }
 
         // Log bắt đầu
-        $log_id = $this->db->insert('lotte_crawl_log', [
+        $this->db->insert(db_prefix() . 'lotte_crawl_log', [
             'triggered_at'   => date('Y-m-d H:i:s'),
             'trigger_source' => $source,
             'from_date'      => $from,
@@ -1183,7 +1174,7 @@ class External_products extends AdminController
         }
 
         // Cập nhật log
-        $this->db->where('id', $log_id)->update('lotte_crawl_log', [
+        $this->db->where('id', $log_id)->update(db_prefix() . 'lotte_crawl_log', [
             'orders_found' => $orders_found,
             'orders_saved' => $orders_saved,
             'errors'       => empty($errors) ? null : implode('; ', $errors),
@@ -1210,8 +1201,13 @@ class External_products extends AdminController
         header('Content-Type: application/json');
         header('Access-Control-Allow-Origin: *');
 
-        $last = $this->db->order_by('id', 'DESC')->limit(1)->get('lotte_crawl_log')->row_array();
-        $total_orders = $this->db->where('rel', 'Order')->like('uniquekey', 'LOTTE%')->count_all_results('external_records');
+        if (!$this->authorize_lotte_endpoint()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized LOTTE status request']);
+            return;
+        }
+
+        $last = $this->db->order_by('id', 'DESC')->limit(1)->get(db_prefix() . 'lotte_crawl_log')->row_array();
+        $total_orders = $this->db->where('rel', 'Order')->like('uniquekey', 'LOTTE%')->count_all_results(db_prefix() . 'external_data_mapping');
 
         echo json_encode([
             'success'      => true,
@@ -1239,12 +1235,39 @@ class External_products extends AdminController
         header('Content-Type: application/json');
         header('Access-Control-Allow-Origin: *');
 
-        $logs = $this->db->order_by('id', 'DESC')->limit(20)->get('lotte_crawl_log')->result_array();
+        if (!$this->authorize_lotte_endpoint()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized LOTTE logs request']);
+            return;
+        }
+
+        $logs = $this->db->order_by('id', 'DESC')->limit(20)->get(db_prefix() . 'lotte_crawl_log')->result_array();
 
         echo json_encode([
             'success' => true,
             'logs'    => $logs,
         ]);
+    }
+
+    private function authorize_lotte_endpoint()
+    {
+        if (is_staff_logged_in() && has_permission('external_products', '', 'edit')) {
+            return true;
+        }
+
+        $configuredToken = get_option('external_products_lotte_api_token');
+        if (empty($configuredToken)) {
+            return false;
+        }
+
+        $providedToken = $this->input->post('token') ?: $this->input->get('token');
+        if (empty($providedToken)) {
+            $header = $this->input->get_request_header('Authorization');
+            if (stripos((string) $header, 'Bearer ') === 0) {
+                $providedToken = trim(substr($header, 7));
+            }
+        }
+
+        return hash_equals((string) $configuredToken, (string) $providedToken);
     }
 
 }

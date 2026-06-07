@@ -197,32 +197,32 @@ class Agent_noting extends AdminController
                 }
             }
 
-            // Prefer GeminiAI provider if available via registry
+            // Prefer FutureCRM Agent provider if available via registry
             if ($note === '') {
                 try {
-                    log_message("error", 'Agent Noting - Attempting GeminiAI provider');
-                    $provider = \app\services\ai\AiProviderRegistry::getProvider('geminiai');
-                    log_message("error", 'Agent Noting - GeminiAI provider obtained: ' . get_class($provider));
+                    log_message("error", 'Agent Noting - Attempting FutureCRM Agent provider');
+                    $provider = \app\services\ai\AiProviderRegistry::getProvider('futurecrmagent');
+                    log_message("error", 'Agent Noting - FutureCRM Agent provider obtained: ' . get_class($provider));
 
                     if (method_exists($provider, 'completeText')) {
-                        log_message("error", 'Agent Noting - Calling GeminiAI completeText method');
+                        log_message("error", 'Agent Noting - Calling FutureCRM Agent completeText method');
                         $note = (string)$provider->completeText($prompt, ['language' => $langCode]);
-                        log_message("error", 'Agent Noting - GeminiAI completeText response: ' . substr($note, 0, 200));
+                        log_message("error", 'Agent Noting - FutureCRM Agent completeText response: ' . substr($note, 0, 200));
                     } elseif (method_exists($provider, 'chat')) {
-                        log_message("error", 'Agent Noting - Calling GeminiAI chat method');
+                        log_message("error", 'Agent Noting - Calling FutureCRM Agent chat method');
                         $note = (string)$provider->chat($prompt, ['language' => $langCode]);
-                        log_message("error", 'Agent Noting - GeminiAI chat response: ' . substr($note, 0, 200));
+                        log_message("error", 'Agent Noting - FutureCRM Agent chat response: ' . substr($note, 0, 200));
                     } else {
-                        log_message("error", 'Agent Noting - GeminiAI provider has no suitable methods');
+                        log_message("error", 'Agent Noting - FutureCRM Agent provider has no suitable methods');
                     }
                 } catch (\Throwable $e) {
-                    log_message("error", 'Agent Noting: GeminiAI provider failed: ' . $e->getMessage());
-                    log_message("error", 'Agent Noting: GeminiAI error details: ' . json_encode([
+                    log_message("error", 'Agent Noting: FutureCRM Agent provider failed: ' . $e->getMessage());
+                    log_message("error", 'Agent Noting: FutureCRM Agent error details: ' . json_encode([
                         'error' => $e->getMessage(),
                         'file' => $e->getFile(),
                         'line' => $e->getLine()
                     ]));
-                    if (!$error) { $error = 'GeminiAI provider failed: ' . $e->getMessage(); }
+                    if (!$error) { $error = 'FutureCRM Agent provider failed: ' . $e->getMessage(); }
                 }
             }
 
@@ -395,7 +395,7 @@ class Agent_noting extends AdminController
     }
 
     /**
-     * Translate given text to target language using GeminiAI or OpenAI.
+     * Translate given text to target language using FutureCRM Agent or OpenAI.
      */
     private function translateToLanguage($text, $langCode)
     {
@@ -406,9 +406,9 @@ class Agent_noting extends AdminController
         $instruction = "Translate the following note into language: {$langCode}. Keep tone, formatting, and meaning. Return only the translated text.";
         $payload = $instruction . "\n\n=== NOTE ===\n" . $text;
 
-        // Try Gemini first
+        // Try FutureCRM Agent first
         try {
-            $provider = \app\services\ai\AiProviderRegistry::getProvider('geminiai');
+            $provider = \app\services\ai\AiProviderRegistry::getProvider('futurecrmagent');
             if (method_exists($provider, 'completeText')) {
                 return (string)$provider->completeText($payload, ['language' => $langCode]);
             } elseif (method_exists($provider, 'chat')) {

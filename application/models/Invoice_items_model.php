@@ -87,7 +87,8 @@ class Invoice_items_model extends App_Model
         $this->db->select($rateCurrencyColumns . '' . db_prefix() . 'items.id as itemid,rate,
             t1.taxrate as taxrate,t1.id as taxid,t1.name as taxname,
             t2.taxrate as taxrate_2,t2.id as taxid_2,t2.name as taxname_2,
-            description,long_description,group_id,' . db_prefix() . 'items_groups.name as group_name,unit');
+            description,long_description,group_id,' . db_prefix() . 'items_groups.name as group_name,unit,
+            sku_code,sku_name,commodity_code');
         $this->db->from(db_prefix() . 'items');
         $this->db->join('' . db_prefix() . 'taxes t1', 't1.id = ' . db_prefix() . 'items.tax', 'left');
         $this->db->join('' . db_prefix() . 'taxes t2', 't2.id = ' . db_prefix() . 'items.tax2', 'left');
@@ -117,6 +118,10 @@ class Invoice_items_model extends App_Model
             $this->db->select('*,' . db_prefix() . 'items_groups.name as group_name,' . db_prefix() . 'items.id as id');
             $this->db->where('group_id', $group['id']);
             $this->db->join(db_prefix() . 'items_groups', '' . db_prefix() . 'items_groups.id = ' . db_prefix() . 'items.group_id', 'left');
+            if ($this->db->table_exists(db_prefix() . 'item_sku_metadata')) {
+                $this->db->join(db_prefix() . 'item_sku_metadata ism', 'ism.item_id = ' . db_prefix() . 'items.id', 'left');
+                $this->db->where("(ism.sku_status IS NULL OR ism.sku_status NOT IN ('archived','deprecated'))", null, false);
+            }
             $this->db->order_by('description', 'asc');
             $_items = $this->db->get(db_prefix() . 'items')->result_array();
             if (count($_items) > 0) {
@@ -256,15 +261,26 @@ class Invoice_items_model extends App_Model
 
     public function search($q)
     {
-        $this->db->select('rate, id, description as name, long_description as subtext');
+        $this->db->select('rate, id, description as name, long_description as subtext, sku_code, sku_name, commodity_code');
+        $this->db->group_start();
         $this->db->like('description', $q);
         $this->db->or_like('long_description', $q);
+        $this->db->or_like('sku_code', $q);
+        $this->db->or_like('sku_name', $q);
+        $this->db->or_like('commodity_code', $q);
+        $this->db->group_end();
+        if ($this->db->table_exists(db_prefix() . 'item_sku_metadata')) {
+            $this->db->join(db_prefix() . 'item_sku_metadata ism', 'ism.item_id = ' . db_prefix() . 'items.id', 'left');
+            $this->db->where("(ism.sku_status IS NULL OR ism.sku_status NOT IN ('archived','deprecated'))", null, false);
+        }
 
         $items = $this->db->get(db_prefix() . 'items')->result_array();
 
         foreach ($items as $key => $item) {
-            $items[$key]['subtext'] = strip_tags(mb_substr($item['subtext'], 0, 200)) . '...';
-            $items[$key]['name']    = '(' . app_format_number($item['rate']) . ') ' . $item['name'];
+            $sku = $item['sku_code'] ?: $item['commodity_code'];
+            $subtext = strip_tags(mb_substr($item['subtext'], 0, 200));
+            $items[$key]['subtext'] = ($sku ? 'SKU: ' . $sku . ' | ' : '') . $subtext . '...';
+            $items[$key]['name']    = ($sku ? '[' . $sku . '] ' : '') . '(' . app_format_number($item['rate']) . ') ' . $item['name'];
         }
 
         return $items;

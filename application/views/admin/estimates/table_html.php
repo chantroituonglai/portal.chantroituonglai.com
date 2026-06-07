@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 $table_data = array(
-   _l('estimate_dt_table_heading_number'),
+   '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="estimates"><label></label></div> ' . _l('estimate_dt_table_heading_number'),
    _l('estimate_dt_table_heading_amount'),
    _l('estimates_total_tax'),
    array(

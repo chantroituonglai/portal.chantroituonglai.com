@@ -1,8 +1,10 @@
 /**
  * External Products Management Module JavaScript
  */
+(function ($, window) {
+    'use strict';
 
-var externalProductsConfig = {
+var externalProductsConfig = window.externalProductsConfig || {
     mappingUrl: typeof admin_url !== 'undefined' ? admin_url + 'external_products/mapping' : '',
     bulkActionUrl: typeof admin_url !== 'undefined' ? admin_url + 'external_products/bulk_action' : ''
 };
@@ -12,14 +14,12 @@ var externalProductsLang = {
     submit: (typeof appLang !== 'undefined' && appLang.submit) ? appLang.submit : 'Submit'
 };
 
-
-// Initialize when the window is fully loaded
-window.onload = function() {
-    // Initialize external products functionality
-    initExternalProducts();
-};
-
 function initExternalProducts() {
+    if (window.externalProductsInitialized) {
+        return;
+    }
+    window.externalProductsInitialized = true;
+
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
     
@@ -34,14 +34,14 @@ function initExternalProducts() {
 }
 
 function initSelectAll() {
-    $('#select_all').on('change', function() {
+    $('#select_all').off('change.externalProducts').on('change.externalProducts', function() {
         var isChecked = $(this).is(':checked');
         $('tbody input[type="checkbox"]').prop('checked', isChecked);
         toggleBulkActions();
     });
     
     // Individual checkbox change
-    $(document).on('change', 'tbody input[type="checkbox"]', function() {
+    $(document).off('change.externalProducts', 'tbody input[type="checkbox"]').on('change.externalProducts', 'tbody input[type="checkbox"]', function() {
         var totalCheckboxes = $('tbody input[type="checkbox"]').length;
         var checkedCheckboxes = $('tbody input[type="checkbox"]:checked').length;
         
@@ -52,7 +52,7 @@ function initSelectAll() {
 
 function initBulkActions() {
     // Bulk delete
-    $('#bulk_delete').on('click', function() {
+    $('#bulk_delete').off('click.externalProducts').on('click.externalProducts', function() {
         var selectedIds = getSelectedIds();
         
         if (selectedIds.length === 0) {
@@ -66,7 +66,7 @@ function initBulkActions() {
     });
     
     // Bulk sync
-    $('#bulk_sync').on('click', function() {
+    $('#bulk_sync').off('click.externalProducts').on('click.externalProducts', function() {
         var selectedIds = getSelectedIds();
         
         if (selectedIds.length === 0) {
@@ -80,7 +80,7 @@ function initBulkActions() {
 
 function initFormValidation() {
     // Add mapping form validation
-    $('#add_mapping_form').on('submit', function(e) {
+    $('#add_mapping_form').off('submit.externalProducts').on('submit.externalProducts', function(e) {
         e.preventDefault();
         
         if (validateMappingForm()) {
@@ -89,7 +89,7 @@ function initFormValidation() {
     });
     
     // Edit mapping form validation
-    $('#edit_mapping_form').on('submit', function(e) {
+    $('#edit_mapping_form').off('submit.externalProducts').on('submit.externalProducts', function(e) {
         e.preventDefault();
         
         if (validateMappingForm()) {
@@ -185,13 +185,19 @@ function toggleBulkActions() {
 }
 
 function performBulkAction(action, ids) {
+    var data = {
+        action: action,
+        ids: ids
+    };
+
+    if (typeof csrfData !== 'undefined') {
+        data[csrfData.token_name] = csrfData.hash;
+    }
+
     $.ajax({
         url: externalProductsConfig.bulkActionUrl,
         type: 'POST',
-        data: {
-            action: action,
-            ids: ids
-        },
+        data: data,
         beforeSend: function() {
             $('.bulk-actions button').prop('disabled', true);
         },
@@ -268,3 +274,9 @@ window.ExternalProducts = {
     formatMappingStatus: formatMappingStatus,
     formatSyncStatus: formatSyncStatus
 };
+
+$(function() {
+    initExternalProducts();
+});
+
+})(jQuery, window);

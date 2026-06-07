@@ -546,6 +546,51 @@ class Invoices_model extends App_Model
         return false;
     }
 
+    public function create_empty_draft($context = [])
+    {
+        $this->load->model('currencies_model');
+        $baseCurrency = $this->currencies_model->get_base_currency();
+
+        $data = [
+            'clientid'                 => (int) ($context['customer_id'] ?? 0),
+            'project_id'               => (int) ($context['project_id'] ?? 0),
+            'number'                   => self::STATUS_DRAFT_NUMBER,
+            'date'                     => _d(date('Y-m-d')),
+            'duedate'                  => '',
+            'currency'                 => $baseCurrency ? $baseCurrency->id : 0,
+            'subtotal'                 => 0,
+            'total'                    => 0,
+            'total_tax'                => 0,
+            'adjustment'               => 0,
+            'discount_percent'         => 0,
+            'discount_total'           => 0,
+            'discount_type'            => '',
+            'sale_agent'               => get_staff_user_id(),
+            'adminnote'                => '',
+            'clientnote'               => get_option('predefined_clientnote_invoice'),
+            'terms'                    => get_option('predefined_terms_invoice'),
+            'billing_street'           => '',
+            'billing_city'             => '',
+            'billing_state'            => '',
+            'billing_zip'              => '',
+            'billing_country'          => 0,
+            'shipping_street'          => '',
+            'shipping_city'            => '',
+            'shipping_state'           => '',
+            'shipping_zip'             => '',
+            'shipping_country'         => 0,
+            'include_shipping'         => 0,
+            'show_shipping_on_invoice' => 1,
+            'show_quantity_as'         => 1,
+            'recurring'                => 0,
+            'cycles'                   => 0,
+            'allowed_payment_modes'    => [],
+            'save_as_draft'            => true,
+        ];
+
+        return $this->add($data);
+    }
+
     public function get_expenses_to_bill($clientid)
     {
         $this->load->model('expenses_model');

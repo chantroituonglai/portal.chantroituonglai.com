@@ -3,7 +3,14 @@
 <div id="wrapper">
     <div class="content">
         <div class="row">
-            <?= form_open($this->uri->uri_string(), ['id' => 'credit-note-form', 'class' => '_transaction_form credit-note-form']);
+            <?php
+            $creditNoteFormAttrs = ['id' => 'credit-note-form', 'class' => '_transaction_form credit-note-form'];
+            if (isset($credit_note) && (int) $credit_note->status === Credit_notes_model::STATUS_DRAFT) {
+                $creditNoteFormAttrs['data-autosave-enabled'] = '1';
+                $creditNoteFormAttrs['data-autosave-url']     = admin_url('credit_notes/autosave_draft/' . $credit_note->id);
+            }
+            ?>
+            <?= form_open($this->uri->uri_string(), $creditNoteFormAttrs);
 if (isset($credit_note)) {
     echo form_hidden('isedit');
 }
@@ -15,6 +22,7 @@ if (isset($credit_note)) {
                     </span>
                     <?= isset($credit_note) ? format_credit_note_status($credit_note->status) : ''; ?>
                 </h4>
+                <span class="sales-draft-autosave-status text-muted mleft5"></span>
                 <div class="panel_s credit_note accounting-template">
                     <div class="additional"></div>
                     <div class="panel-body">
@@ -600,6 +608,7 @@ if (isset($credit_note)) {
     </div>
 </div>
 <?php init_tail(); ?>
+<script src="<?= base_url('assets/js/sales_draft_autosave.js'); ?>"></script>
 <script>
     $(function() {
         validate_credit_note_form();

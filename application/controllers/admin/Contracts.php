@@ -318,10 +318,11 @@ class Contracts extends AdminController
         $newId = $this->contracts_model->copy($id);
         if ($newId) {
             set_alert('success', _l('contract_copied_successfully'));
+            redirect(admin_url('contracts/contract/' . $newId));
         } else {
             set_alert('warning', _l('contract_copied_fail'));
         }
-        redirect(admin_url('contracts/contract/' . $newId));
+        redirect(admin_url('contracts'));
     }
 
     /* Delete contract from database */

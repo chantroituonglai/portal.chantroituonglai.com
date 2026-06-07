@@ -19,6 +19,10 @@ class Invoice_items extends AdminController
             access_denied('Invoice Items');
         }
 
+        if ($this->input->get('id')) {
+            redirect(admin_url('item_sku_manager/items/' . (int) $this->input->get('id')));
+        }
+
         $this->load->model('taxes_model');
         $data['taxes']        = $this->taxes_model->get();
         $data['items_groups'] = $this->invoice_items_model->get_groups();
@@ -236,7 +240,7 @@ class Invoice_items extends AdminController
 
         if ($id) {
             set_alert('success', _l('item_copy_success'));
-            return redirect(admin_url('invoice_items?id=' . $id));
+            return redirect(admin_url('item_sku_manager/items/' . $id));
         }
 
         set_alert('warning', _l('item_copy_fail'));

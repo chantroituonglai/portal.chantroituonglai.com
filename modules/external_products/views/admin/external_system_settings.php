@@ -187,11 +187,15 @@
 
     window.testHaravanConnection = function testHaravanConnection() {
         var sku = $('#haravan-test-sku').val();
+        var data = { test_sku: sku };
+        if (typeof csrfData !== 'undefined') {
+            data[csrfData.token_name] = csrfData.hash;
+        }
 
         $.ajax({
             url: '<?php echo admin_url('external_products/test_haravan_connection'); ?>',
             type: 'POST',
-            data: { test_sku: sku },
+            data: data,
             dataType: 'json',
             beforeSend: function () {
                 renderHaravanFeedback('#haravan-test-result', 'info', '<?php echo _l('processing'); ?>');
@@ -214,11 +218,15 @@
             renderHaravanFeedback('#haravan-sync-result', 'warning', '<?php echo _l('enter_sku_to_sync'); ?>');
             return;
         }
+        var data = { sku: sku };
+        if (typeof csrfData !== 'undefined') {
+            data[csrfData.token_name] = csrfData.hash;
+        }
 
         $.ajax({
             url: '<?php echo admin_url('external_products/sync_haravan_product'); ?>',
             type: 'POST',
-            data: { sku: sku },
+            data: data,
             dataType: 'json',
             beforeSend: function () {
                 renderHaravanFeedback('#haravan-sync-result', 'info', '<?php echo _l('processing'); ?>');
@@ -242,11 +250,15 @@
             renderHaravanFeedback('#haravan-external-sync-result', 'warning', '<?php echo _l('select_external_product_sku'); ?>');
             return;
         }
+        var data = { sku: sku };
+        if (typeof csrfData !== 'undefined') {
+            data[csrfData.token_name] = csrfData.hash;
+        }
 
         $.ajax({
             url: '<?php echo admin_url('external_products/sync_haravan_product'); ?>',
             type: 'POST',
-            data: { sku: sku },
+            data: data,
             dataType: 'json',
             beforeSend: function () {
                 renderHaravanFeedback('#haravan-external-sync-result', 'info', '<?php echo _l('processing'); ?>');

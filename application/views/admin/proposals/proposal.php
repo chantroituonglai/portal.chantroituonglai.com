@@ -19,7 +19,14 @@ if (isset($proposal) || ($this->input->get('rel_id') && $this->input->get('rel_t
     }
 }
 ?>
-            <?= form_open($this->uri->uri_string(), ['id' => 'proposal-form', 'class' => '_transaction_form proposal-form']);
+            <?php
+            $proposalFormAttrs = ['id' => 'proposal-form', 'class' => '_transaction_form proposal-form'];
+            if (isset($proposal) && (int) $proposal->status === 6) {
+                $proposalFormAttrs['data-autosave-enabled'] = '1';
+                $proposalFormAttrs['data-autosave-url']     = admin_url('proposals/autosave_draft/' . $proposal->id);
+            }
+            ?>
+            <?= form_open($this->uri->uri_string(), $proposalFormAttrs);
 
 if ($this->input->get('estimate_request_id')) {
     echo form_hidden('estimate_request_id', $this->input->get('estimate_request_id'));
@@ -33,6 +40,7 @@ if ($this->input->get('estimate_request_id')) {
                     </span>
                     <?= isset($proposal) ? format_proposal_status($proposal->status) : ''; ?>
                 </h4>
+                <span class="sales-draft-autosave-status text-muted mleft5"></span>
                 <div class="panel_s">
                     <div class="panel-body">
                         <div class="row">
@@ -303,6 +311,7 @@ echo render_select('assigned', $staff, ['staffid', ['firstname', 'lastname']], '
     </div>
 </div>
 <?php init_tail(); ?>
+<script src="<?= base_url('assets/js/sales_draft_autosave.js'); ?>"></script>
 <script>
     var _rel_id = $('#rel_id'),
         _rel_type = $('#rel_type'),

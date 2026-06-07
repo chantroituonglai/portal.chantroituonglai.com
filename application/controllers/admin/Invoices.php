@@ -360,6 +360,15 @@ class Invoices extends AdminController
             }
         }
         if ($id == '') {
+            if (staff_cant('create', 'invoices')) {
+                access_denied('invoices');
+            }
+
+            $id = $this->invoices_model->create_empty_draft($this->input->get());
+            if ($id) {
+                redirect(admin_url('invoices/invoice/' . $id));
+            }
+
             $title                  = _l('create_new_invoice');
             $data['billable_tasks'] = [];
         } else {
@@ -410,6 +419,37 @@ class Invoices extends AdminController
         $data['title']     = $title;
         $data['bodyclass'] = 'invoice';
         $this->load->view('admin/invoices/invoice', $data);
+    }
+
+    public function autosave_draft($id)
+    {
+        if ((!$this->input->is_ajax_request() && !$this->input->post('autosave_draft')) || staff_cant('edit', 'invoices')) {
+            ajax_access_denied();
+        }
+
+        $invoice = $this->invoices_model->get($id);
+        if (!$invoice || !user_can_view_invoice($id) || (int) $invoice->status !== Invoices_model::STATUS_DRAFT) {
+            echo json_encode(['success' => false, 'message' => _l('access_denied')]);
+            die;
+        }
+
+        $data = $this->input->post();
+        unset(
+            $data['autosave_draft'],
+            $data['save_as_draft'],
+            $data['save_and_send'],
+            $data['save_and_send_later'],
+            $data['save_and_record_payment']
+        );
+
+        $this->invoices_model->update($data, $id);
+
+        echo json_encode([
+            'success'  => true,
+            'id'       => (int) $id,
+            'saved_at' => date('H:i'),
+        ]);
+        die;
     }
 
     /* Get all invoice data used when user click on invoiec number in a datatable left side*/

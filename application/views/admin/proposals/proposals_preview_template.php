@@ -400,14 +400,132 @@ if (count($tags) > 0) {
                             </div>
                         </div>
                         <?php } ?>
-                        <div class="editable proposal tc-content" id="proposal_content_area"
-                            style="border:1px solid #d2d2d2;min-height:70px;border-radius:4px;">
-                            <?php if (empty($proposal->content)) {
-                                echo '<span class="text-danger text-uppercase mtop15 editor-add-content-notice"> ' . _l('click_to_add_content') . '</span>';
-                            } else {
-                                echo $proposal->content;
+                        <?php
+                            $proposalContent = (string) $proposal->content;
+                            $proposalContent = preg_replace(
+                                '/<div[^>]*class=(["\'])(?=[^"\']*table-responsive)[^"\']*\1[^>]*>\s*<table[\s\S]*?<\/table>\s*<\/div>/i',
+                                '{proposal_items}',
+                                $proposalContent,
+                                1
+                            );
+                            $proposalContent = preg_replace(
+                                '/<table[^>]*class=(["\'])(?=[^"\']*(items|proposal-items-preview|items-preview))[^"\']*\1[^>]*>[\s\S]*?<\/table>/i',
+                                '{proposal_items}',
+                                $proposalContent,
+                                1
+                            );
+                            $hasItemsPlaceholder = strpos($proposalContent, '{proposal_items}') !== false;
+                            $contentParts = $hasItemsPlaceholder
+                                ? explode('{proposal_items}', $proposalContent, 2)
+                                : [$proposalContent, ''];
+                            $afterItemsContent = $contentParts[1] ?? '';
+
+                            if ($afterItemsContent !== '') {
+                                // Legacy proposal content often stored the item totals after {proposal_items}.
+                                // The preview now renders totals from the current Perfex record, so strip stale totals tables.
+                                $afterItemsContent = preg_replace(
+                                    '/<table\b[^>]*>[\s\S]*?(?:Sub\s*Total|Discount|Total|VAT|Thu(?:ế|e)|estimate_(?:subtotal|discount|total))[\s\S]*?<\/table>/iu',
+                                    '',
+                                    $afterItemsContent
+                                );
                             }
-?>
+
+                            ob_start();
+                            $items = get_items_table_data($proposal, 'proposal', 'html', true)
+                                ->add_table_class('no-margin proposal-items-preview')
+                                ->set_headings('estimate');
+
+                            echo $items->table();
+                        ?>
+                            <div class="row mtop15 proposal-totals-viewer">
+                                <div class="col-md-6 col-md-offset-6">
+                                    <table class="table text-right">
+                                        <tbody>
+                                            <tr id="subtotal">
+                                                <td>
+                                                    <span class="bold tw-text-neutral-700">
+                                                        <?= _l('estimate_subtotal'); ?>
+                                                    </span>
+                                                </td>
+                                                <td class="subtotal">
+                                                    <?= e(app_format_money($proposal->subtotal, $proposal->currency_name)); ?>
+                                                </td>
+                                            </tr>
+                                            <?php if (is_sale_discount_applied($proposal)) { ?>
+                                            <tr>
+                                                <td>
+                                                    <span class="bold tw-text-neutral-700"><?= _l('estimate_discount'); ?>
+                                                        <?php if (is_sale_discount($proposal, 'percent')) { ?>
+                                                        (<?= e(app_format_number($proposal->discount_percent, true)); ?>%)
+                                                        <?php } ?>
+                                                    </span>
+                                                </td>
+                                                <td class="discount">
+                                                    <?= e('-' . app_format_money($proposal->discount_total, $proposal->currency_name)); ?>
+                                                </td>
+                                            </tr>
+                                            <?php } ?>
+                                            <?php
+                                                foreach ($items->taxes() as $tax) {
+                                                    echo '<tr class="tax-area"><td class="bold !tw-text-neutral-700">' . e($tax['taxname']) . ' (' . e(app_format_number($tax['taxrate'])) . '%)</td><td>' . e(app_format_money($tax['total_tax'], $proposal->currency_name)) . '</td></tr>';
+                                                }
+                                            ?>
+                                            <?php if ((int) $proposal->adjustment != 0) { ?>
+                                            <tr>
+                                                <td>
+                                                    <span class="bold tw-text-neutral-700">
+                                                        <?= _l('estimate_adjustment'); ?>
+                                                    </span>
+                                                </td>
+                                                <td class="adjustment">
+                                                    <?= e(app_format_money($proposal->adjustment, $proposal->currency_name)); ?>
+                                                </td>
+                                            </tr>
+                                            <?php } ?>
+                                            <tr>
+                                                <td>
+                                                    <span class="bold tw-text-neutral-700">
+                                                        <?= _l('estimate_total'); ?>
+                                                    </span>
+                                                </td>
+                                                <td class="total">
+                                                    <?= e(app_format_money($proposal->total, $proposal->currency_name)); ?>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <?php if (get_option('total_to_words_enabled') == 1) { ?>
+                            <div class="col-md-12 text-center proposal-html-total-to-words">
+                                <p class="tw-font-medium">
+                                    <?= _l('num_word'); ?>:
+                                    <span class="tw-text-neutral-500">
+                                        <?= $this->numberword->convert($proposal->total, $proposal->currency_name); ?>
+                                    </span>
+                                </p>
+                            </div>
+                            <?php }
+                            $proposalItems = ob_get_clean();
+                        ?>
+                        <div class="proposal-content-viewer" id="proposal_content_area">
+                            <?php if (trim(strip_tags($proposalContent)) === '' && ! $hasItemsPlaceholder) { ?>
+                                <span class="text-muted text-uppercase mtop15 proposal-empty-content-notice">
+                                    <?= _l('no_content'); ?>
+                                </span>
+                            <?php } else { ?>
+                                <?= $contentParts[0]; ?>
+                            <?php } ?>
+
+                            <div class="proposal-items-viewer">
+                                <?= $proposalItems; ?>
+                            </div>
+
+                            <?php if (trim(strip_tags($afterItemsContent)) !== '') { ?>
+                                <div class="proposal-content-after-items">
+                                    <?= $afterItemsContent; ?>
+                                </div>
+                            <?php } ?>
                         </div>
                         <?php if (! empty($proposal->signature)) { ?>
                         <div class="row mtop25">

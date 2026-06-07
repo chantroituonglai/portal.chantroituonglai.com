@@ -3197,6 +3197,7 @@ $lang['credit_note_number_decrement_on_delete']                  = 'Decrement cr
 $lang['credit_note_number_decrement_on_delete_help']             = 'Number will be decremented only if is last credit note created.';
 $lang['credit_note_status']                                      = 'Status';
 $lang['credit_note_status_open']                                 = 'Open';
+$lang['credit_note_status_draft']                                = 'Draft';
 $lang['credit_note_status_closed']                               = 'Closed';
 $lang['credit_note_status_void']                                 = 'Void';
 $lang['credit_note_mark_as_open']                                = 'Mark as Open';

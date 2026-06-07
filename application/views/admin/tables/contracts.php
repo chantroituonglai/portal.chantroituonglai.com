@@ -95,6 +95,10 @@ return App_table::find('contracts')
                 $subjectOutput .= ' | <a href="' . admin_url('contracts/contract/' . $aRow['id']) . '">' . _l('edit') . '</a>';
             }
 
+            if (staff_can('create', 'contracts')) {
+                $subjectOutput .= ' | <a href="' . admin_url('contracts/copy/' . $aRow['id']) . '">' . _l('contract_copy') . '</a>';
+            }
+
             if (staff_can('delete', 'contracts')) {
                 $subjectOutput .= ' | <a href="' . admin_url('contracts/delete/' . $aRow['id']) . '" class="_delete">' . _l('delete') . '</a>';
             }
@@ -102,7 +106,7 @@ return App_table::find('contracts')
             $subjectOutput .= '</div>';
             $row[] = $subjectOutput;
 
-            $row[] = '<a href="' . admin_url('clients/client/' . $aRow['client']) . '">' . e($aRow['company']) . '</a>';
+            $row[] = $aRow['client'] ? '<a href="' . admin_url('clients/client/' . $aRow['client']) . '">' . e($aRow['company']) . '</a>' : '';
 
             $row[] = e($aRow['type_name']);
 

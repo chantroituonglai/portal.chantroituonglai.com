@@ -151,7 +151,7 @@ function register_project_agent_hooks() {
     hooks()->add_action('after_cron_run', 'project_agent_module_cron_job');
     
     // AI Integration hooks
-    hooks()->add_action('after_geminiai_provider_registered', 'project_agent_register_ai_integration');
+    hooks()->add_action('after_futurecrmagent_provider_registered', 'project_agent_register_ai_integration');
     hooks()->add_filter('project_agent_ai_provider_selection', 'project_agent_filter_ai_provider');
 }
 
@@ -594,12 +594,12 @@ init_project_agent_module();
     add_option('project_agent_default_risk_level', 'low');
     add_option('project_agent_debug_enabled', 0);
     add_option('project_agent_system_prompt', 'You are a Project Management AI Assistant for Perfex CRM. Help users manage projects, tasks, estimates, and invoices through natural language interaction.');
-    add_option('project_agent_ai_provider', 'geminiai');
+    add_option('project_agent_ai_provider', 'futurecrmagent');
     // Context size guard
     add_option('project_agent_context_task_limit', 200);
     add_option('project_agent_context_milestone_limit', 100);
     add_option('project_agent_context_activity_limit', 50);
-    // Error explainer child agent (Gemini) settings
+    // Error explainer child agent (FutureCRM Agent) settings
     add_option('project_agent_error_explainer_enabled', 0);
     add_option('project_agent_error_explainer_api_key', '');
 

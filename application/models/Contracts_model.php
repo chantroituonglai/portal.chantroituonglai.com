@@ -22,7 +22,7 @@ class Contracts_model extends App_Model
         $this->db->select('*,' . db_prefix() . 'contracts_types.name as type_name,' . db_prefix() . 'contracts.id as id, ' . db_prefix() . 'contracts.addedfrom');
         $this->db->where($where);
         $this->db->join(db_prefix() . 'contracts_types', '' . db_prefix() . 'contracts_types.id = ' . db_prefix() . 'contracts.contract_type', 'left');
-        $this->db->join(db_prefix() . 'clients', '' . db_prefix() . 'clients.userid = ' . db_prefix() . 'contracts.client');
+        $this->db->join(db_prefix() . 'clients', '' . db_prefix() . 'clients.userid = ' . db_prefix() . 'contracts.client', 'left');
         if (is_numeric($id)) {
             $this->db->where(db_prefix() . 'contracts.id', $id);
             $contract = $this->db->get(db_prefix() . 'contracts')->row();
@@ -387,33 +387,12 @@ class Contracts_model extends App_Model
     {
         $contract       = $this->get($id, [], true);
         $fields         = $this->db->list_fields(db_prefix() . 'contracts');
-        $newContactData = [];
 
-        $contract->content = restore_merge_fields($contract->content);
-        foreach ($fields as $field) {
-            if (isset($contract->$field)) {
-                $newContactData[$field] = $contract->$field;
-            }
+        if (!$contract) {
+            return false;
         }
 
-        unset($newContactData['id']);
-
-        $newContactData['trash']            = 0;
-        $newContactData['isexpirynotified'] = 0;
-        $newContactData['signed']           = 0;
-        $newContactData['marked_as_signed'] = 0;
-        $newContactData['signature']        = null;
-
-        $newContactData = array_merge($newContactData, get_acceptance_info_array(true));
-
-        if ($contract->dateend) {
-            $dStart                    = new DateTime($contract->datestart);
-            $dEnd                      = new DateTime($contract->dateend);
-            $dDiff                     = $dStart->diff($dEnd);
-            $newContactData['dateend'] = _d(date('Y-m-d', strtotime(date('Y-m-d', strtotime('+' . $dDiff->days . 'DAY')))));
-        } else {
-            $newContactData['dateend'] = '';
-        }
+        $newContactData = prepare_contract_copy_data($contract, $fields);
 
         $newId = $this->add($newContactData);
 

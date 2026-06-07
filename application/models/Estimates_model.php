@@ -585,6 +585,54 @@ class Estimates_model extends App_Model
         return false;
     }
 
+    public function create_empty_draft($context = [])
+    {
+        $this->load->model('currencies_model');
+        $baseCurrency = $this->currencies_model->get_base_currency();
+
+        $data = [
+            'clientid'                  => (int) ($context['customer_id'] ?? 0),
+            'project_id'                => (int) ($context['project_id'] ?? 0),
+            'number'                    => get_option('next_estimate_number'),
+            'date'                      => _d(date('Y-m-d')),
+            'expirydate'                => '',
+            'currency'                  => $baseCurrency ? $baseCurrency->id : 0,
+            'subtotal'                  => 0,
+            'total'                     => 0,
+            'total_tax'                 => 0,
+            'adjustment'                => 0,
+            'discount_percent'          => 0,
+            'discount_total'            => 0,
+            'discount_type'             => '',
+            'status'                    => 1,
+            'sent'                      => 0,
+            'sale_agent'                => get_staff_user_id(),
+            'adminnote'                 => '',
+            'clientnote'                => get_option('predefined_clientnote_estimate'),
+            'terms'                     => get_option('predefined_terms_estimate'),
+            'reference_no'              => '',
+            'billing_street'            => '',
+            'billing_city'              => '',
+            'billing_state'             => '',
+            'billing_zip'               => '',
+            'billing_country'           => 0,
+            'shipping_street'           => '',
+            'shipping_city'             => '',
+            'shipping_state'            => '',
+            'shipping_zip'              => '',
+            'shipping_country'          => 0,
+            'include_shipping'          => 0,
+            'show_shipping_on_estimate' => 1,
+            'show_quantity_as'          => 1,
+        ];
+
+        if (!empty($context['estimate_request_id'])) {
+            $data['estimate_request_id'] = $context['estimate_request_id'];
+        }
+
+        return $this->add($data);
+    }
+
     /**
      * Get item by id
      *

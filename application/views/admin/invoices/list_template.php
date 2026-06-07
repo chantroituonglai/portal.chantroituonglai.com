@@ -44,6 +44,7 @@
             </div>
         </div>
         <div class="clearfix"></div>
+        <div class="row tw-mt-2 invoices-outlook-split">
         <div class="col-md-12" id="small-table">
             <div class="panel_s">
                 <div class="panel-body panel-table-full">
@@ -53,8 +54,10 @@
                 </div>
             </div>
         </div>
+        <div class="invoices-outlook-resizer"></div>
         <div class="col-md-7 small-table-right-col">
             <div id="invoice" class="hide"></div>
+        </div>
         </div>
     </div>
 </div>

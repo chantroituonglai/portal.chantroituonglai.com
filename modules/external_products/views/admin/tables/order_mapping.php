@@ -7,7 +7,7 @@ $aColumns = [
     'id',
     'uniquekey',
     'target_id',
-    'data',
+    'status',
     'status',
     'dateadded',
     'id',
@@ -19,7 +19,7 @@ $sTable       = db_prefix() . 'external_data_mapping';
 $join  = [];
 $where = ['AND rel = "Order"'];
 
-$additionalSelect = [];
+$additionalSelect = ['data'];
 
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalSelect);
 $output  = $result['output'];

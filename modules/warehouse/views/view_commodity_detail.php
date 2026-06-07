@@ -7,9 +7,16 @@
                 <div class="panel_s">
                     <div class="panel-body">               
                         <div class="clearfix"></div>
-                           <h4>
-                              <?php echo html_entity_decode($commodity_item->description); ?>
-                           </h4>
+                           <div class="tw-flex tw-items-center tw-justify-between">
+                              <h4 class="tw-m-0">
+                                 <?php echo html_entity_decode($commodity_item->description); ?>
+                              </h4>
+                              <?php if (has_permission('warehouse', '', 'edit') || is_admin()) { ?>
+                                 <a href="<?php echo admin_url('item_sku_manager/items/' . $commodity_item->id . '?context=warehouse'); ?>" class="btn btn-info">
+                                    <i class="fa fa-pencil-square-o tw-mr-1"></i><?php echo _l('edit'); ?> master item
+                                 </a>
+                              <?php } ?>
+                           </div>
 
 
                         <hr class="hr-panel-heading" /> 

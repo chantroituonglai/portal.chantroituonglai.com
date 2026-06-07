@@ -21,7 +21,7 @@
                         <?php if (has_permission('warehouse', '', 'create') || is_admin() || has_permission('warehouse', '', 'edit') ) { ?>
 
                           
-                        <a href="#" onclick="new_commodity_item(); return false;" class="btn btn-info pull-left display-block mr-4 button-margin-r-b" data-toggle="sidebar-right" data-target=".commodity_list-add-edit-modal">
+                        <a href="<?php echo admin_url('item_sku_manager/items/create?context=warehouse'); ?>" class="btn btn-info pull-left display-block mr-4 button-margin-r-b">
                             <?php echo _l('add'); ?>
                         </a>
 

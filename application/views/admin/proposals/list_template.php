@@ -47,7 +47,7 @@
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="row">
+    <div class="row tw-mt-2 proposals-outlook-split">
         <div class="col-md-12" id="small-table">
             <div class="panel_s">
                 <div class="panel-body">
@@ -55,7 +55,7 @@
                     <?= form_hidden('proposal_id', $proposal_id); ?>
                     <?php
             $table_data = [
-                _l('proposal') . ' #',
+                '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="proposals"><label></label></div> ' . _l('proposal') . ' #',
                 _l('proposal_subject'),
                 _l('proposal_to'),
                 _l('proposal_total'),
@@ -90,6 +90,7 @@ render_datatable($table_data, $class ?? 'proposals', [], [
                 </div>
             </div>
         </div>
+        <div class="proposals-outlook-resizer"></div>
         <div class="col-md-7 small-table-right-col">
             <div id="proposal" class="hide">
             </div>

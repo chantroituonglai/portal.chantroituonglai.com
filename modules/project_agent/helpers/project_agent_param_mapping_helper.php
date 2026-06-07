@@ -106,7 +106,7 @@ function project_agent_build_param_mapping_ai(array $actionRow)
         $prompt[] = json_encode($schema, JSON_UNESCAPED_UNICODE);
         $text = implode("\n", $prompt);
         // Call provider
-        $providerId = get_option('project_agent_ai_provider') ?: 'geminiai';
+        $providerId = get_option('project_agent_ai_provider') ?: 'futurecrmagent';
         try { $provider = \app\services\ai\AiProviderRegistry::getProvider($providerId); }
         catch (\Throwable $e) { $provider = \app\services\ai\AiProviderRegistry::getProvider('openai'); }
         $raw = $provider->chat($text);
@@ -146,7 +146,7 @@ function project_agent_build_params_schema_ai(array $actionRow, array $relatedTa
         $prompt[] = 'Action Description: ' . $desc;
         $text = implode("\n", $prompt);
         // Call provider
-        $providerId = get_option('project_agent_ai_provider') ?: 'geminiai';
+        $providerId = get_option('project_agent_ai_provider') ?: 'futurecrmagent';
         try { $provider = \app\services\ai\AiProviderRegistry::getProvider($providerId); }
         catch (\Throwable $e) { $provider = \app\services\ai\AiProviderRegistry::getProvider('openai'); }
         $raw = $provider->chat($text);

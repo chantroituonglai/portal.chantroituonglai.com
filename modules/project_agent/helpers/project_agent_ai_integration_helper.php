@@ -3,7 +3,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
  * Project Agent AI Integration Helper
- * Integrates Project Agent with Core AI Services and GeminiAI
+ * Integrates Project Agent with Core AI Services and FutureCRM Agent
  */
 
 // Load debug helper
@@ -27,9 +27,9 @@ class ProjectAgentAiIntegration {
     private function tryFallbackProvider() {
         pa_log_error('Attempting fallback AI provider...');
         
-        // If current provider is GeminiAI, try OpenAI
-        if ($this->aiProvider && get_class($this->aiProvider) === 'Perfexcrm\Geminiai\GeminiProvider') {
-            pa_log_error('Current provider is GeminiAI, trying OpenAI fallback...');
+        // If current provider is FutureCRM Agent, try OpenAI
+        if ($this->aiProvider && get_class($this->aiProvider) === 'Perfexcrm\Futurecrmagent\FuturecrmagentProvider') {
+            pa_log_error('Current provider is FutureCRM Agent, trying OpenAI fallback...');
             try {
                 $this->aiProvider = \app\services\ai\AiProviderRegistry::getProvider('openai');
                 if ($this->aiProvider) {
@@ -41,19 +41,19 @@ class ProjectAgentAiIntegration {
             }
         }
         
-        // If current provider is OpenAI, try GeminiAI
+        // If current provider is OpenAI, try FutureCRM Agent
         if ($this->aiProvider && get_class($this->aiProvider) === 'app\services\ai\OpenAiProvider') {
-            pa_log_error('Current provider is OpenAI, trying GeminiAI fallback...');
+            pa_log_error('Current provider is OpenAI, trying FutureCRM Agent fallback...');
             try {
                 if ($this->isGeminiaiModuleInstalled()) {
-                    $this->aiProvider = \app\services\ai\AiProviderRegistry::getProvider('geminiai');
+                    $this->aiProvider = \app\services\ai\AiProviderRegistry::getProvider('futurecrmagent');
                     if ($this->aiProvider) {
-                        pa_log_error('Fallback to GeminiAI successful: ' . get_class($this->aiProvider));
+                        pa_log_error('Fallback to FutureCRM Agent successful: ' . get_class($this->aiProvider));
                         return;
                     }
                 }
             } catch (\Throwable $e) {
-                pa_log_error('GeminiAI fallback failed: ' . $e->getMessage());
+                pa_log_error('FutureCRM Agent fallback failed: ' . $e->getMessage());
             }
         }
         
@@ -66,20 +66,20 @@ class ProjectAgentAiIntegration {
     private function initializeAiProvider() {
         pa_log_error('Initializing AI Provider...');
         try {
-            // First priority: Try to get GeminiAI provider (FHC's module)
+            // First priority: Try to get FutureCRM Agent provider (FHC's module)
             if ($this->isGeminiaiModuleInstalled()) {
-                pa_log_error('GeminiAI module is installed, trying to get provider...');
-                $this->aiProvider = \app\services\ai\AiProviderRegistry::getProvider('geminiai');
-                pa_log_error('GeminiAI provider obtained: ' . get_class($this->aiProvider));
-                log_message('error', 'Project Agent: Using GeminiAI provider (FHC module)');
+                pa_log_error('FutureCRM Agent module is installed, trying to get provider...');
+                $this->aiProvider = \app\services\ai\AiProviderRegistry::getProvider('futurecrmagent');
+                pa_log_error('FutureCRM Agent provider obtained: ' . get_class($this->aiProvider));
+                log_message('error', 'Project Agent: Using FutureCRM Agent provider (FHC module)');
                 return;
             } else {
-                pa_log_error('GeminiAI module is NOT installed');
+                pa_log_error('FutureCRM Agent module is NOT installed');
             }
 
 
         } catch (\Throwable $e) {
-            log_message('error', 'Project Agent: GeminiAI provider not available - ' . $e->getMessage());
+            log_message('error', 'Project Agent: FutureCRM Agent provider not available - ' . $e->getMessage());
         }
         
         try {
@@ -117,7 +117,7 @@ class ProjectAgentAiIntegration {
         // If still no provider, log warning and set to null
         $this->aiProvider = null;
         pa_log_error('No AI providers available - setting to null');
-        log_message('warning', 'Project Agent: No AI providers registered. Please install and configure an AI module (OpenAI or GeminiAI).');
+        log_message('warning', 'Project Agent: No AI providers registered. Please install and configure an AI module (OpenAI or FutureCRM Agent).');
     }
 
     /**
@@ -156,29 +156,29 @@ class ProjectAgentAiIntegration {
     }
     
     /**
-     * Check if GeminiAI module is installed and active
+     * Check if FutureCRM Agent module is installed and active
      */
     public function isGeminiaiModuleInstalled() {
         $CI = &get_instance();
         
         // Check if module directory exists
-        if (!is_dir(module_dir_path('geminiai'))) {
+        if (!is_dir(module_dir_path('futurecrmagent'))) {
             return false;
         }
         
         // Check if module is registered in database
         $CI->db->select('active');
         $CI->db->from(db_prefix() . 'modules');
-        $CI->db->where('module_name', 'geminiai');
+        $CI->db->where('module_name', 'futurecrmagent');
         $module = $CI->db->get()->row();
         
         if (!$module || !$module->active) {
             return false;
         }
         
-        // Check if GeminiAI provider is registered
+        // Check if FutureCRM Agent provider is registered
         try {
-            \app\services\ai\AiProviderRegistry::getProvider('geminiai');
+            \app\services\ai\AiProviderRegistry::getProvider('futurecrmagent');
             return true;
         } catch (Exception $e) {
             return false;
@@ -186,23 +186,23 @@ class ProjectAgentAiIntegration {
     }
     
     /**
-     * Get GeminiAI installation recommendation
+     * Get FutureCRM Agent installation recommendation
      */
     public function getGeminiaiRecommendation() {
         if ($this->isGeminiaiModuleInstalled()) {
             return [
                 'installed' => true,
-                'message' => 'GeminiAI module is installed and active',
-                'provider' => 'geminiai'
+                'message' => 'FutureCRM Agent module is installed and active',
+                'provider' => 'futurecrmagent'
             ];
         }
         
         return [
             'installed' => false,
-            'message' => 'For best AI quality, install GeminiAI module by FHC',
+            'message' => 'For best AI quality, install FutureCRM Agent module by FHC',
             'recommendation' => [
-                'title' => 'Install GeminiAI Module',
-                'description' => 'GeminiAI module provides superior AI capabilities for Project Agent',
+                'title' => 'Install FutureCRM Agent Module',
+                'description' => 'FutureCRM Agent module provides superior AI capabilities for Project Agent',
                 'benefits' => [
                     'Better response quality',
                     'Faster processing',
@@ -210,7 +210,7 @@ class ProjectAgentAiIntegration {
                     'Enhanced context understanding'
                 ],
                 'installation_url' => admin_url('modules'),
-                'module_name' => 'geminiai'
+                'module_name' => 'futurecrmagent'
             ]
         ];
     }
@@ -573,7 +573,7 @@ class ProjectAgentAiIntegration {
             $lines[] = '}';
             $prompt = implode("\n", $lines);
 
-            // Use standalone mini-agent (Gemini HTTP) to avoid provider recursion
+            // Use standalone mini-agent (FutureCRM Agent HTTP) to avoid provider recursion
             $response = $this->miniAgentExplainError($prompt);
             if (is_string($response) && trim($response) !== '') { 
                 // Try to parse as JSON first
@@ -628,132 +628,18 @@ class ProjectAgentAiIntegration {
     }
 
     /**
-     * Standalone Gemini mini-agent call using module option API key.
+     * Standalone FutureCRM Agent mini-agent call using module option API key.
      * Avoids using current provider to prevent recursion on provider errors.
      */
     private function miniAgentExplainError($prompt) {
-        $apiKey = (string) $this->safe_get_option('project_agent_error_explainer_api_key');
-        if (!$apiKey) { 
-            $this->pa_debug('[PA][mini-agent] No API key configured');
-            return null; 
-        }
-        
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . rawurlencode($apiKey);
-        $payload = [
-            'contents' => [
-                [ 'parts' => [ [ 'text' => $prompt ] ] ]
-            ],
-            'generationConfig' => [
-                'temperature' => 0.3,
-                'maxOutputTokens' => 512,
-                'responseMimeType' => 'application/json'
-            ]
-        ];
-        $body = json_encode($payload);
-        
-        $this->pa_debug('[PA][mini-agent] Request URL: ' . $url);
-        $this->pa_debug('[PA][mini-agent] Request payload: ' . substr($body, 0, 500) . '...');
-        
         try {
-            // Prefer cURL when available
-            if (function_exists('curl_init')) {
-                $ch = curl_init($url);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For development
-                $resp = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $curlError = curl_error($ch);
-                curl_close($ch);
-                
-                $this->pa_debug('[PA][mini-agent] HTTP Code: ' . $httpCode);
-                if ($curlError) {
-                    $this->pa_debug('[PA][mini-agent] cURL Error: ' . $curlError);
-                    return null;
-                }
-            } else {
-                // Fallback to stream context
-                $ctx = stream_context_create([
-                    'http' => [
-                        'method' => 'POST',
-                        'header' => "Content-Type: application/json\r\n",
-                        'content' => $body,
-                        'timeout' => 8
-                    ]
-                ]);
-                $resp = @file_get_contents($url, false, $ctx);
-                $httpCode = 200; // best-effort
-            }
-            
-            if (!is_string($resp) || trim($resp) === '') { 
-                $this->pa_debug('[PA][mini-agent] Empty response');
-                return null; 
-            }
-            
-            $this->pa_debug('[PA][mini-agent] Raw response: ' . substr($resp, 0, 1000) . '...');
-            
-            $decoded = json_decode($resp, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->pa_debug('[PA][mini-agent] JSON decode error: ' . json_last_error_msg());
+            $provider = \app\services\ai\AiProviderRegistry::getProvider('futurecrmagent');
+            if (!$provider) {
                 return null;
             }
-            
-            if (!is_array($decoded)) {
-                $this->pa_debug('[PA][mini-agent] Response is not array');
-                return null;
-            }
-            
-            // Check for API errors
-            if (isset($decoded['error'])) {
-                $this->pa_debug('[PA][mini-agent] API Error: ' . json_encode($decoded['error']));
-                return null;
-            }
-            
-            // Gemini response parsing
-            if (isset($decoded['candidates'][0]['content']['parts'][0]['text'])) {
-                $result = (string) $decoded['candidates'][0]['content']['parts'][0]['text'];
-                $this->pa_debug('[PA][mini-agent] Success: ' . substr($result, 0, 200) . '...');
-                
-                // Since we requested JSON response, try to validate it
-                $jsonTest = json_decode($result, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $this->pa_debug('[PA][mini-agent] Valid JSON response received');
-                } else {
-                    $this->pa_debug('[PA][mini-agent] Response is not valid JSON: ' . json_last_error_msg());
-                }
-                
-                return $result;
-            }
-            
-            if (isset($decoded['candidates'][0]['content']['parts']) && is_array($decoded['candidates'][0]['content']['parts'])) {
-                $txt = '';
-                foreach ($decoded['candidates'][0]['content']['parts'] as $p) {
-                    if (isset($p['text'])) { $txt .= $p['text'] . "\n"; }
-                }
-                $txt = trim($txt);
-                if ($txt !== '') { 
-                    $this->pa_debug('[PA][mini-agent] Success (multi-part): ' . substr($txt, 0, 200) . '...');
-                    
-                    // Since we requested JSON response, try to validate it
-                    $jsonTest = json_decode($txt, true);
-                    if (json_last_error() === JSON_ERROR_NONE) {
-                        $this->pa_debug('[PA][mini-agent] Valid JSON response received (multi-part)');
-                    } else {
-                        $this->pa_debug('[PA][mini-agent] Multi-part response is not valid JSON: ' . json_last_error_msg());
-                    }
-                    
-                    return $txt; 
-                }
-            }
-            
-            $this->pa_debug('[PA][mini-agent] No valid content found in response');
-            return null;
-            
+            return $provider->chat($prompt);
         } catch (\Throwable $e) {
-            $this->pa_debug('[PA][mini-agent] Exception: ' . $e->getMessage());
+            $this->pa_debug('[PA][mini-agent] FutureCRM Agent provider failed: ' . $e->getMessage());
             return null;
         }
     }

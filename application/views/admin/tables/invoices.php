@@ -110,7 +110,7 @@ return App_table::find('invoices')
             }
             $numberOutput .= '</div>';
 
-            $row[] = $numberOutput;
+            $row[] = '<span class="invoice-row-select"><div class="checkbox"><input type="checkbox" value="' . e($aRow['id']) . '"><label></label></div></span>' . $numberOutput;
 
             $row[] = '<span class="tw-font-medium">' . e(app_format_money($aRow['total'], $aRow['currency_name'])) . '</span>';
 

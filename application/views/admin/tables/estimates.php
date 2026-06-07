@@ -108,7 +108,7 @@ return App_table::find('estimates')
             }
             $numberOutput .= '</div>';
 
-            $row[] = $numberOutput;
+            $row[] = '<span class="estimate-row-select"><div class="checkbox"><input type="checkbox" value="' . e($aRow['id']) . '"><label></label></div></span>' . $numberOutput;
 
             $amount = '<span class="tw-font-medium">' . e(app_format_money($aRow['total'], $aRow['currency_name'])) . '</span>';
 

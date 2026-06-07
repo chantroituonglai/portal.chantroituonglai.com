@@ -4,7 +4,12 @@
     <div class="content">
         <div class="row">
             <?php
-            echo form_open($this->uri->uri_string(), ['id' => 'estimate-form', 'class' => '_transaction_form estimate-form']);
+            $estimateFormAttrs = ['id' => 'estimate-form', 'class' => '_transaction_form estimate-form'];
+            if (isset($estimate) && (int) $estimate->status === 1) {
+                $estimateFormAttrs['data-autosave-enabled'] = '1';
+                $estimateFormAttrs['data-autosave-url']     = admin_url('estimates/autosave_draft/' . $estimate->id);
+            }
+            echo form_open($this->uri->uri_string(), $estimateFormAttrs);
             if (isset($estimate)) {
                 echo form_hidden('isedit');
             }
@@ -17,6 +22,7 @@
                     </span>
                     <?php echo isset($estimate) ? format_estimate_status($estimate->status) : ''; ?>
                 </h4>
+                <span class="sales-draft-autosave-status text-muted mleft5"></span>
                 <?php $this->load->view('admin/estimates/estimate_template'); ?>
             </div>
             <?php echo form_close(); ?>
@@ -26,6 +32,7 @@
 </div>
 </div>
 <?php init_tail(); ?>
+<script src="<?php echo base_url('assets/js/sales_draft_autosave.js'); ?>"></script>
 <script>
 $(function() {
     validate_estimate_form();

@@ -7,11 +7,16 @@
                 <div class="panel_s">
                     <div class="panel-body">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <h4 class="no-margin"><?php echo _l('external_products_mapping'); ?></h4>
-                                <hr class="hr-panel-heading" />
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <a href="<?php echo admin_url('importsync/csv_mappings'); ?>" class="btn btn-default pull-right display-block mright5">
+                                    <i class="fa fa-upload"></i> Import
+                                </a>
                             </div>
                         </div>
+                        <hr class="hr-panel-heading" />
                         <div class="row" id="duplicateAlert" style="display: none;">
                             <div class="col-md-12">
                                 <div class="alert alert-warning">
@@ -21,6 +26,26 @@
                                     <a href="<?php echo admin_url('external_products/duplicates'); ?>" class="btn btn-sm btn-warning pull-right">
                                         <i class="fa fa-eye"></i> <?php echo _l('view_duplicates'); ?>
                                     </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="mapping_type_filter"><?php echo _l('mapping_type'); ?></label>
+                                    <select id="mapping_type_filter" name="mapping_type_filter" class="selectpicker" data-width="200px" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
+                                        <option value=""></option>
+                                        <option value="fast_barco">Fast Barco</option>
+                                        <option value="aeon_sku">AEON SKU</option>
+                                        <option value="emart">Emart</option>
+                                        <option value="emart_sku">Emart SKU</option>
+                                        <option value="woo">WooCommerce</option>
+                                        <option value="shopify">Shopify</option>
+                                        <option value="magento">Magento</option>
+                                        <option value="amazon">Amazon</option>
+                                        <option value="ebay">eBay</option>
+                                        <option value="other">Other</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -44,7 +69,7 @@
                             </div>
                         </div>
                         <div class="table-responsive mtop25">
-                            <table class="table dt-table table-external-products-mapping" data-order-col="1" data-order-type="desc">
+                            <table class="table dt-table-loading table-external-products-mapping" data-order-col="1" data-order-type="desc">
                                 <thead>
                                     <tr>
                                         <th>
@@ -81,9 +106,18 @@
 <?php init_tail(); ?>
 <script>
     $(function() {
+        init_selectpicker();
         checkForDuplicates();
 
-        var table = initDataTable('.table-external-products-mapping', '<?php echo admin_url('external_products/get_mapping_data'); ?>', [5], [5]);
+        var serverParams = {
+            mapping_type: '[name="mapping_type_filter"]'
+        };
+
+        var table = initDataTable('.table-external-products-mapping', '<?php echo admin_url('external_products/get_mapping_data'); ?>', [0, 5], [0, 5], serverParams, [1, 'desc']);
+
+        $('#mapping_type_filter').on('changed.bs.select clear.bs.select', function() {
+            table.ajax.reload();
+        });
 
         $('#select_all').on('change', function() {
             $('tbody input[type="checkbox"]').prop('checked', this.checked);
@@ -106,10 +140,15 @@
             }
 
             if (confirm('<?php echo _l('confirm_action_prompt'); ?>')) {
-                $.post('<?php echo admin_url('external_products/bulk_action'); ?>', {
+                var data = {
                     action: 'delete',
                     ids: selectedIds
-                }).done(function(response) {
+                };
+                if (typeof csrfData !== 'undefined') {
+                    data[csrfData.token_name] = csrfData.hash;
+                }
+
+                $.post('<?php echo admin_url('external_products/bulk_action'); ?>', data).done(function(response) {
                     var result = JSON.parse(response);
                     if (result.success) {
                         alert_float('success', result.message);

@@ -6982,6 +6982,9 @@ function add_item_to_preview(id) {
 
     $(".main select.tax").selectpicker("val", taxSelectedArray);
     $('.main input[name="unit"]').val(response.unit);
+    ensure_sales_item_sku_preview_inputs();
+    $('.main input[name="item_master_id"]').val(response.itemid || response.id || "");
+    $('.main input[name="item_sku"]').val(response.sku_code || response.commodity_code || "");
 
     var $currency = $("body").find(
       '.accounting-template select[name="currency"]'
@@ -7007,6 +7010,21 @@ function add_item_to_preview(id) {
       item_type: "item",
     });
   });
+}
+
+function ensure_sales_item_sku_preview_inputs() {
+  var previewArea = $(".main");
+  var target = previewArea.find("td:first");
+  if (target.length === 0) {
+    target = previewArea;
+  }
+  if (previewArea.find('input[name="item_master_id"]').length === 0) {
+    target.append('<input type="hidden" name="item_master_id" value="" disabled="disabled">');
+  }
+  if (previewArea.find('input[name="item_sku"]').length === 0) {
+    target.append('<input type="hidden" name="item_sku" value="" disabled="disabled">');
+  }
+  previewArea.find('input[name="item_master_id"], input[name="item_sku"]').prop("disabled", true);
 }
 
 function _set_item_preview_custom_fields_array(custom_fields) {
@@ -7070,6 +7088,9 @@ function add_task_to_preview_as_item(id) {
     previewArea.find('input[name="quantity"]').val(response.total_hours);
     previewArea.find('input[name="rate"]').val(response.hourly_rate);
     previewArea.find('input[name="unit"]').val("");
+    ensure_sales_item_sku_preview_inputs();
+    previewArea.find('input[name="item_master_id"]').val("");
+    previewArea.find('input[name="item_sku"]').val("");
     $('input[name="task_id"]').val(id);
     $(document).trigger({
       type: "item-added-to-preview",
@@ -7098,6 +7119,9 @@ function clear_item_preview_values(default_taxes) {
   previewArea.find("select.tax").selectpicker("val", last_taxes_applied);
   previewArea.find('input[name="rate"]').val("");
   previewArea.find('input[name="unit"]').val("");
+  ensure_sales_item_sku_preview_inputs();
+  previewArea.find('input[name="item_master_id"]').val("");
+  previewArea.find('input[name="item_sku"]').val("");
   previewArea.find('#main-optional').prop("checked", false);
   previewArea.find('#main-optional').trigger('change')
   previewArea.find('#main-optional-choosen').prop("checked", true);
@@ -7159,6 +7183,20 @@ function add_item_to_table(data, itemid, merge_invoice, bill_expense) {
       '<input type="hidden" class="order" name="newitems[' +
       item_key +
       '][order]">';
+
+    table_row +=
+      '<input type="hidden" name="newitems[' +
+      item_key +
+      '][item_master_id]" value="' +
+      (data.item_master_id || "") +
+      '">';
+
+    table_row +=
+      '<input type="hidden" name="newitems[' +
+      item_key +
+      '][item_sku]" value="' +
+      (data.item_sku || "") +
+      '">';
 
     table_row += "</td>";
 
@@ -7522,6 +7560,8 @@ function get_item_preview_values() {
   response.taxname = $(".main select.tax").selectpicker("val");
   response.rate = $('.main input[name="rate"]').val();
   response.unit = $('.main input[name="unit"]').val();
+  response.item_master_id = $('.main input[name="item_master_id"]').val();
+  response.item_sku = $('.main input[name="item_sku"]').val();
   response.is_optional = $('#main-optional').prop('checked') ? 1 : 0;
   response.is_selected = $('#main-optional-choosen').prop('checked') ? 1 : 0;
   return response;

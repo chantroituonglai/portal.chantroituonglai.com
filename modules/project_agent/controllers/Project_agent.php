@@ -25,7 +25,7 @@ class Project_agent extends AdminController {
         if ($this->input->post() && has_permission('project_agent', '', 'admin')) {
             $opt = function($key,$default=null){ return ($this->input->post($key)!==null) ? $this->input->post($key) : $default; };
             update_option('project_agent_ai_room_enabled', (int)$opt('project_agent_ai_room_enabled', 1));
-            update_option('project_agent_ai_provider', (string)$opt('project_agent_ai_provider', 'geminiai'));
+            update_option('project_agent_ai_provider', (string)$opt('project_agent_ai_provider', 'futurecrmagent'));
             update_option('project_agent_system_prompt', (string)$opt('project_agent_system_prompt'));
             update_option('project_agent_auto_confirm_threshold', (int)$opt('project_agent_auto_confirm_threshold', 1000));
             update_option('project_agent_memory_retention_days', (int)$opt('project_agent_memory_retention_days', 30));
@@ -111,7 +111,7 @@ class Project_agent extends AdminController {
             } catch (\Throwable $e) {}
         } catch (\Throwable $e) { $data['db_tables'] = []; }
         // Available providers (best-effort)
-        try { $data['providers'] = array_keys(\app\services\ai\AiProviderRegistry::getAllProviders()); } catch (\Throwable $e) { $data['providers'] = ['geminiai','openai']; }
+        try { $data['providers'] = array_keys(\app\services\ai\AiProviderRegistry::getAllProviders()); } catch (\Throwable $e) { $data['providers'] = ['futurecrmagent','openai']; }
         
         // Load actions for settings view
         $data['actions'] = $this->project_agent_model->get_actions(false);
@@ -356,7 +356,7 @@ class Project_agent extends AdminController {
         if ($this->input->post()) {
             $opt = function($key,$default=null){ return ($this->input->post($key)!==null) ? $this->input->post($key) : $default; };
             update_option('project_agent_ai_room_enabled', (int)$opt('project_agent_ai_room_enabled', 1));
-            update_option('project_agent_ai_provider', (string)$opt('project_agent_ai_provider', 'geminiai'));
+            update_option('project_agent_ai_provider', (string)$opt('project_agent_ai_provider', 'futurecrmagent'));
             update_option('project_agent_system_prompt', (string)$opt('project_agent_system_prompt'));
             update_option('project_agent_auto_confirm_threshold', (int)$opt('project_agent_auto_confirm_threshold', 1000));
             update_option('project_agent_memory_retention_days', (int)$opt('project_agent_memory_retention_days', 30));
@@ -433,7 +433,7 @@ class Project_agent extends AdminController {
             $data['db_tables'] = array_values(array_unique($unp));
             $data['db_table_models'] = $this->pa_build_table_model_index();
         } catch (\Throwable $e) { $data['db_tables'] = []; }
-        try { $data['providers'] = array_keys(\app\services\ai\AiProviderRegistry::getAllProviders()); } catch (\Throwable $e) { $data['providers'] = ['geminiai','openai']; }
+        try { $data['providers'] = array_keys(\app\services\ai\AiProviderRegistry::getAllProviders()); } catch (\Throwable $e) { $data['providers'] = ['futurecrmagent','openai']; }
         
         // Load actions for settings view
         $data['actions'] = $this->project_agent_model->get_actions(false);
@@ -1244,7 +1244,7 @@ class Project_agent extends AdminController {
             $text = implode("\n", $prompt);
             
             // Call AI provider
-            $providerId = get_option('project_agent_ai_provider') ?: 'geminiai';
+            $providerId = get_option('project_agent_ai_provider') ?: 'futurecrmagent';
             try { 
                 $provider = \app\services\ai\AiProviderRegistry::getProvider($providerId); 
             } catch (\Throwable $e) { 
@@ -2488,7 +2488,7 @@ class Project_agent extends AdminController {
         $data['modules'] = [
             'project_agent' => $this->app_modules->is_active('project_agent'),
             'openai' => $this->app_modules->is_active('openai'),
-            'geminiai' => $this->app_modules->is_active('geminiai')
+            'futurecrmagent' => $this->app_modules->is_active('futurecrmagent')
         ];
         
         $this->load->view('project_agent/admin/health', $data);

@@ -26,12 +26,17 @@ class External_products_model extends App_Model
         return false;
     }
 
-    public function get_external_product_mapping($id = false)
+    public function get_external_product_mapping($id = false, $mapping_type = null)
     {
         if ($id) {
             $this->db->where('id', $id);
             return $this->db->get(db_prefix() . 'external_products_mapping')->row();
         }
+
+        if (!empty($mapping_type)) {
+            $this->db->where('mapping_type', $mapping_type);
+        }
+
         $this->db->order_by('id', 'DESC');
         return $this->db->get(db_prefix() . 'external_products_mapping')->result_array();
     }
@@ -500,40 +505,15 @@ class External_products_model extends App_Model
 
     public function sync_orders_from_external_system($external_system)
     {
-        try {
-            // This is a placeholder for actual API integration
-            // In a real implementation, you would:
-            // 1. Connect to the external system API
-            // 2. Fetch orders
-            // 3. Process and insert them
-            
-            $orders_count = 0;
-            $message = 'Orders synced successfully';
-            
-            // Simulate API call
-            switch ($external_system->system_type) {
-                case 'ecommerce':
-                    // Simulate WooCommerce/Shopify/Magento API call
-                    $orders_count = rand(5, 20);
-                    break;
-                default:
-                    $orders_count = 0;
-                    $message = 'Unsupported system type';
-            }
-            
-            return [
-                'success' => true,
-                'count' => $orders_count,
-                'message' => $message
-            ];
-            
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'count' => 0,
-                'message' => $e->getMessage()
-            ];
-        }
+        $systemName = is_object($external_system) && isset($external_system->system_name)
+            ? $external_system->system_name
+            : 'Unknown';
+
+        return [
+            'success' => false,
+            'count'   => 0,
+            'message' => 'Order sync connector is not implemented for ' . $systemName . '. Configure a real connector before running sync.'
+        ];
     }
 
     // Order Mapping Methods (using existing tblexternal_data_mapping table)

@@ -214,6 +214,25 @@ class Migration_Version_200 extends App_module_migration
         add_option('haravan_api_enabled', 0);
         add_option('haravan_api_token', '');
         add_option('haravan_api_base_url', 'https://apis.haravan.com/com');
+        add_option('external_products_lotte_api_token', '');
+
+        $lotteLogTable = db_prefix() . 'lotte_crawl_log';
+        if (!$CI->db->table_exists($lotteLogTable)) {
+            $CI->db->query('CREATE TABLE `' . $lotteLogTable . '` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `triggered_at` datetime NOT NULL,
+                `trigger_source` varchar(50) DEFAULT NULL,
+                `from_date` varchar(20) DEFAULT NULL,
+                `to_date` varchar(20) DEFAULT NULL,
+                `orders_found` int(11) NOT NULL DEFAULT 0,
+                `orders_saved` int(11) NOT NULL DEFAULT 0,
+                `errors` text,
+                `status` varchar(30) NOT NULL DEFAULT \'running\',
+                PRIMARY KEY (`id`),
+                KEY `status` (`status`),
+                KEY `triggered_at` (`triggered_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+        }
 
         log_activity('External Products module migrated to version 2.0.0');
     }

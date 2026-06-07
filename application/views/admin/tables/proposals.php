@@ -90,7 +90,7 @@ return App_table::find('proposals')
             }
             $numberOutput .= '</div>';
 
-            $row[] = $numberOutput;
+            $row[] = '<span class="proposal-row-select"><div class="checkbox"><input type="checkbox" value="' . e($aRow[db_prefix() . 'proposals.id']) . '"><label></label></div></span>' . $numberOutput;
 
             $row[] = '<a href="' . admin_url('proposals/list_proposals/' . $aRow[db_prefix() . 'proposals.id']) . '"' . ($project_id ? 'target="_blank"' : 'onclick="init_proposal(' . $aRow[db_prefix() . 'proposals.id'] . '); return false;"') . '>' . e($aRow['subject']) . '</a>';
 

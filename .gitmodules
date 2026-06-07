@@ -1,0 +1,3 @@
+[submodule "modules/futureagent"]
+	path = modules/futureagent
+	url = https://github.com/chantroituonglai/futureagent.git

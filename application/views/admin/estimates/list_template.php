@@ -66,7 +66,7 @@ echo form_hidden('not_invoiced');
         </app-filters>
     </div>
     <div class="clearfix"></div>
-    <div class="row tw-mt-2">
+    <div class="row tw-mt-2 estimates-outlook-split">
         <div class="col-md-12" id="small-table">
             <div class="panel_s">
                 <div class="panel-body">
@@ -76,6 +76,7 @@ echo form_hidden('not_invoiced');
                 </div>
             </div>
         </div>
+        <div class="estimates-outlook-resizer"></div>
         <div class="col-md-7 small-table-right-col">
             <div id="estimate" class="hide">
             </div>

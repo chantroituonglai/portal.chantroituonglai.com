@@ -104,7 +104,7 @@ function project_agent_schema_ai_learn(array $tables) {
     $result['prompt'] = $prompt;
     // Call provider directly (bypass HTML flow)
     try {
-        $providerId = get_option('project_agent_ai_provider') ?: 'geminiai';
+        $providerId = get_option('project_agent_ai_provider') ?: 'futurecrmagent';
         try { $provider = \app\services\ai\AiProviderRegistry::getProvider($providerId); }
         catch (\Throwable $e) { $provider = \app\services\ai\AiProviderRegistry::getProvider('openai'); }
         $raw = $provider->chat($prompt);

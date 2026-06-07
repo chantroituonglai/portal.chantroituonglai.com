@@ -66,7 +66,7 @@ class Env_ver extends AdminController
     {
         $info = [
             'name' => 'External Mapping Management',
-            'version' => '2.0.0',
+            'version' => '2.0.1',
             'author' => 'Future Horizon Ltd Company',
             'author_uri' => 'https://www.chantroituonglai.com',
             'description' => 'Manage external products, orders and their mapping with internal systems',

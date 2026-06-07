@@ -119,6 +119,15 @@ class Estimates extends AdminController
             }
         }
         if ($id == '') {
+            if (staff_cant('create', 'estimates')) {
+                access_denied('estimates');
+            }
+
+            $id = $this->estimates_model->create_empty_draft($this->input->get());
+            if ($id) {
+                redirect(admin_url('estimates/estimate/' . $id));
+            }
+
             $title = _l('create_new_estimate');
         } else {
             $estimate = $this->estimates_model->get($id);
@@ -162,6 +171,31 @@ class Estimates extends AdminController
         $data['estimate_statuses'] = $this->estimates_model->get_statuses();
         $data['title']             = $title;
         $this->load->view('admin/estimates/estimate', $data);
+    }
+
+    public function autosave_draft($id)
+    {
+        if ((!$this->input->is_ajax_request() && !$this->input->post('autosave_draft')) || staff_cant('edit', 'estimates')) {
+            ajax_access_denied();
+        }
+
+        $estimate = $this->estimates_model->get($id);
+        if (!$estimate || !user_can_view_estimate($id) || (int) $estimate->status !== 1) {
+            echo json_encode(['success' => false, 'message' => _l('access_denied')]);
+            die;
+        }
+
+        $data = $this->input->post();
+        unset($data['autosave_draft'], $data['save_and_send'], $data['save_and_send_later']);
+
+        $this->estimates_model->update($data, $id);
+
+        echo json_encode([
+            'success'  => true,
+            'id'       => (int) $id,
+            'saved_at' => date('H:i'),
+        ]);
+        die;
     }
 
     public function clear_signature($id)
@@ -517,6 +551,16 @@ class Estimates extends AdminController
         $estimate        = $this->estimates_model->get($id);
         $estimate_number = format_estimate_number($estimate->id);
 
+        if ($this->input->get('output_type') === 'I' && !$this->input->get('print')) {
+            return $this->html_estimate($estimate, $estimate_number);
+        }
+
+        if ($this->input->get('print')) {
+            return $this->html_estimate($estimate, $estimate_number, [
+                'auto_print' => true,
+            ]);
+        }
+
         try {
             $pdf = estimate_pdf($estimate);
         } catch (Exception $e) {
@@ -544,6 +588,17 @@ class Estimates extends AdminController
                         ]);
 
         $pdf->Output($fileNameHookData['file_name'], $type);
+    }
+
+    protected function html_estimate($estimate, $estimate_number, array $options = [])
+    {
+        $this->load->view('admin/estimates/estimate_print_html', [
+            'estimate'        => $estimate,
+            'estimate_number' => $estimate_number,
+            'auto_print'      => !empty($options['auto_print']),
+        ]);
+
+        return null;
     }
 
     // Pipeline

@@ -76,7 +76,7 @@
 (function ($) {
     'use strict';
 
-    var table = initDataTable('.table-order-mapping', '<?php echo admin_url('external_products/order_mapping'); ?>', [0, 7], [0, 7], undefined, [1, 'desc']);
+    var table = initDataTable('.table-order-mapping', '<?php echo admin_url('external_products/order_mapping'); ?>', [0, 4, 7], [0, 4, 7], undefined, [1, 'desc']);
 
     function toggleBulkDeleteButton() {
         var checkedCount = $('.table-order-mapping tbody input.order-mapping-select:checked').length;

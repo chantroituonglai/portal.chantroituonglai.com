@@ -4,6 +4,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Credit_notes_model extends App_Model
 {
+    public const STATUS_OPEN   = 1;
+    public const STATUS_CLOSED = 2;
+    public const STATUS_VOID   = 3;
+    public const STATUS_DRAFT = 4;
+
     private $shipping_fields = ['shipping_street', 'shipping_city', 'shipping_city', 'shipping_state', 'shipping_zip', 'shipping_country'];
 
     public function __construct()
@@ -16,21 +21,28 @@ class Credit_notes_model extends App_Model
     {
         return hooks()->apply_filters('before_get_credit_notes_statuses', [
             [
-                'id'             => 1,
+                'id'             => self::STATUS_DRAFT,
+                'color'          => '#777',
+                'name'           => _l('credit_note_status_draft'),
+                'order'          => 0,
+                'filter_default' => true,
+            ],
+            [
+                'id'             => self::STATUS_OPEN,
                 'color'          => '#03a9f4',
                 'name'           => _l('credit_note_status_open'),
                 'order'          => 1,
                 'filter_default' => true,
                 ],
              [
-                'id'             => 2,
+                'id'             => self::STATUS_CLOSED,
                 'color'          => '#84c529',
                 'name'           => _l('credit_note_status_closed'),
                 'order'          => 2,
                 'filter_default' => true,
              ],
              [
-                'id'             => 3,
+                'id'             => self::STATUS_VOID,
                 'color'          => '#777',
                 'name'           => _l('credit_note_status_void'),
                 'order'          => 3,
@@ -174,6 +186,10 @@ class Credit_notes_model extends App_Model
     public function add($data)
     {
         $save_and_send = isset($data['save_and_send']);
+        if ($save_and_send && isset($data['status']) && (int) $data['status'] === self::STATUS_DRAFT) {
+            $save_and_send = false;
+            unset($data['save_and_send']);
+        }
 
         $data['prefix']        = get_option('credit_note_prefix');
         $data['number_format'] = get_option('credit_note_number_format');
@@ -234,6 +250,47 @@ class Credit_notes_model extends App_Model
         return false;
     }
 
+    public function create_empty_draft($context = [])
+    {
+        $this->load->model('currencies_model');
+        $baseCurrency = $this->currencies_model->get_base_currency();
+
+        $data = [
+            'clientid'                          => (int) ($context['customer_id'] ?? 0),
+            'project_id'                        => (int) ($context['project_id'] ?? 0),
+            'number'                            => get_option('next_credit_note_number'),
+            'date'                              => _d(date('Y-m-d')),
+            'currency'                          => $baseCurrency ? $baseCurrency->id : 0,
+            'subtotal'                          => 0,
+            'total'                             => 0,
+            'total_tax'                         => 0,
+            'adjustment'                        => 0,
+            'discount_percent'                  => 0,
+            'discount_total'                    => 0,
+            'discount_type'                     => '',
+            'status'                            => self::STATUS_DRAFT,
+            'adminnote'                         => '',
+            'clientnote'                        => get_option('predefined_clientnote_credit_note'),
+            'terms'                             => get_option('predefined_terms_credit_note'),
+            'reference_no'                      => '',
+            'billing_street'                    => '',
+            'billing_city'                      => '',
+            'billing_state'                     => '',
+            'billing_zip'                       => '',
+            'billing_country'                   => 0,
+            'shipping_street'                   => '',
+            'shipping_city'                     => '',
+            'shipping_state'                    => '',
+            'shipping_zip'                      => '',
+            'shipping_country'                  => 0,
+            'include_shipping'                  => 0,
+            'show_shipping_on_credit_note'      => 1,
+            'show_quantity_as'                  => 1,
+        ];
+
+        return $this->add($data);
+    }
+
     /**
      * Update proposal
      * @param  mixed $data $_POST data
@@ -244,6 +301,10 @@ class Credit_notes_model extends App_Model
     {
         $affectedRows  = 0;
         $save_and_send = isset($data['save_and_send']);
+        if ($save_and_send && isset($data['status']) && (int) $data['status'] === self::STATUS_DRAFT) {
+            $save_and_send = false;
+            unset($data['save_and_send']);
+        }
 
         $items = [];
         if (isset($data['items'])) {
@@ -482,7 +543,7 @@ class Credit_notes_model extends App_Model
         $has_permission_view = staff_can('view',  'credit_notes');
         $this->db->select('total,id');
         $this->db->where('clientid', $customer_id);
-        $this->db->where('status', 1);
+        $this->db->where('status', self::STATUS_OPEN);
         if (!$has_permission_view) {
             $this->db->where('addedfrom', get_staff_user_id());
         }
@@ -767,6 +828,11 @@ class Credit_notes_model extends App_Model
 
     public function apply_credits($id, $data)
     {
+        $creditNote = $this->get($id);
+        if (!$creditNote || (int) $creditNote->status !== self::STATUS_OPEN) {
+            return false;
+        }
+
         if ($data['amount'] == 0) {
             return false;
         }
@@ -825,10 +891,15 @@ class Credit_notes_model extends App_Model
 
     public function update_credit_note_status($id)
     {
+        $current = $this->db->select('status')->where('id', $id)->get(db_prefix() . 'creditnotes')->row();
+        if ($current && (int) $current->status === self::STATUS_DRAFT) {
+            return false;
+        }
+
         $total_refunds_by_credit_note = $this->total_refunds_by_credit_note($id);
         $total_credits_used           = $this->total_credits_used_by_credit_note($id);
 
-        $status = 1;
+        $status = self::STATUS_OPEN;
 
         // sum from table returns null if nothing found
         if ($total_credits_used || $total_refunds_by_credit_note) {
@@ -841,11 +912,11 @@ class Credit_notes_model extends App_Model
             if ($credit) {
                 if (function_exists('bccomp')) {
                     if (bccomp($credit->total, $compare, get_decimal_places()) === 0) {
-                        $status = 2;
+                        $status = self::STATUS_CLOSED;
                     }
                 } else {
                     if ($credit->total == $compare) {
-                        $status = 2;
+                        $status = self::STATUS_CLOSED;
                     }
                 }
             }
@@ -860,7 +931,7 @@ class Credit_notes_model extends App_Model
     public function get_open_credits($customer_id)
     {
         $has_permission_view = staff_can('view',  'credit_notes');
-        $this->db->where('status', 1);
+        $this->db->where('status', self::STATUS_OPEN);
         $this->db->where('clientid', $customer_id);
         if (!$has_permission_view) {
             $this->db->where('addedfrom', get_staff_user_id());

@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php if ($credit_note->status == 1) { ?>
+<?php if ($credit_note->status == Credit_notes_model::STATUS_OPEN) { ?>
 <!-- Modal Apply Credits -->
 <div class="modal fade apply-credits-to-invoice" id="apply_credits" data-credits-remaining="<?php echo e($credit_note->remaining_credits); ?>" tabindex="-1" role="dialog" aria-labelledby="modalLabelApplyCredits">
   <div class="modal-dialog modal-lg" role="document">

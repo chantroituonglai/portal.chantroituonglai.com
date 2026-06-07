@@ -3022,6 +3022,7 @@ $lang['credit_note_number_decrement_on_delete'] = 'Giảm số ghi chú tín d�
 $lang['credit_note_number_decrement_on_delete_help'] = 'Số sẽ bị giảm chỉ khi ghi chú cuối cùng được tạo.';
 $lang['credit_note_status'] = 'Trạng thái';
 $lang['credit_note_status_open'] = 'Mở';
+$lang['credit_note_status_draft'] = 'Nháp';
 $lang['credit_note_status_closed'] = 'Đã đóng';
 $lang['credit_note_status_void'] = 'Vô hiệu';
 $lang['credit_note_mark_as_open'] = 'Đánh dấu là Mở';

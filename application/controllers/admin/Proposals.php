@@ -166,6 +166,15 @@ class Proposals extends AdminController
             }
         }
         if ($id == '') {
+            if (staff_cant('create', 'proposals')) {
+                access_denied('proposals');
+            }
+
+            $id = $this->proposals_model->create_empty_draft($this->input->get());
+            if ($id) {
+                redirect(admin_url('proposals/proposal/' . $id));
+            }
+
             $title = _l('add_new', _l('proposal'));
         } else {
             $data['proposal'] = $this->proposals_model->get($id);
@@ -198,6 +207,32 @@ class Proposals extends AdminController
 
         $data['title'] = $title;
         $this->load->view('admin/proposals/proposal', $data);
+    }
+
+    public function autosave_draft($id)
+    {
+        if ((!$this->input->is_ajax_request() && !$this->input->post('autosave_draft')) || staff_cant('edit', 'proposals')) {
+            ajax_access_denied();
+        }
+
+        $proposal = $this->proposals_model->get($id);
+        if (!$proposal || !user_can_view_proposal($id) || (int) $proposal->status !== 6) {
+            echo json_encode(['success' => false, 'message' => _l('access_denied')]);
+            die;
+        }
+
+        $data = $this->input->post();
+        unset($data['autosave_draft'], $data['save_and_send']);
+        $data['status'] = 6;
+
+        $this->proposals_model->update($data, $id);
+
+        echo json_encode([
+            'success'  => true,
+            'id'       => (int) $id,
+            'saved_at' => date('H:i'),
+        ]);
+        die;
     }
 
     public function get_template()
